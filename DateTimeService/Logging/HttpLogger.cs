@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace DateTimeService
@@ -7,10 +8,12 @@ namespace DateTimeService
     public class HttpLogger : ILogger
     {
         private string filePath;
+        private List<string> logsCache;
         private static object _lock = new object();
         public HttpLogger(string path)
         {
             filePath = path;
+            logsCache = new List<string>();
         }
         public IDisposable BeginScope<TState>(TState state)
         {
@@ -29,10 +32,15 @@ namespace DateTimeService
             {
                 lock (_lock)
                 {
-                    
+                    logsCache.Add(formatter(state, exception));
                     //File.AppendAllText(filePath, formatter(state, exception) + Environment.NewLine);
                 }
             }
+        }
+
+        public void SendLogs()
+        {
+
         }
     }
 }
