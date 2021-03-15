@@ -6,7 +6,11 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
+using System.Net.Http.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace DateTimeService.Controllers
 {
@@ -15,76 +19,59 @@ namespace DateTimeService.Controllers
     public class DateTimeController : ControllerBase
     {
         private readonly ILogger<DateTimeController> _logger;
+        private readonly IHttpClientFactory _clientFactory;
 
-        public DateTimeController(ILogger<DateTimeController> logger)
+
+        public DateTimeController(ILogger<DateTimeController> logger, HttpClient httpClient, IHttpClientFactory clientFactory)
         {
             _logger = logger;
+            _clientFactory = clientFactory;
         }
 
         [HttpPost]
-        public IEnumerable<ResponseElement> Post(IEnumerable<RequestData> nomenclatures)
+        public async Task<ObjectResult> PostAsync(IEnumerable<RequestData> nomenclatures)
         {
 
             string connString = @"Server=tcp:192.168.1.14;Database=triovist;Uid=sa;Pwd=examplePass; Trusted_Connection = False;";
 
             //string connString = @"Server=localhost;Database=DevBase_cut_v3;Uid=sa;Pwd=; Trusted_Connection = False;";
 
-            string parametr2 = "";
-
-            foreach (var item in nomenclatures)
-            {
-                parametr2 += item.Nomenclature_id+",";
-            }
-
-            parametr2 = parametr2.Remove(parametr2.Length - 1);
-
             var result = new List<ResponseElement>();
+            var logElement = new ElasticLogElement
+            {
+                Path = HttpContext.Request.Path,
+                Host = HttpContext.Request.Host.ToString(),
+                RequestContent = JsonSerializer.Serialize(nomenclatures)
+            };
 
-            _logger.LogInformation(HttpContext.Request.ToString());
+
+            long sqlCommandExecutionTime = 0;
 
             try
             {
                 //sql connection object
                 using SqlConnection conn = new(connString);
 
-                //retrieve the SQL Server instance version
-                //                   string query = @"SELECT
-                //T4._Fld3480 AS nomenclature_id,
-                //CAST(SUM((T1.Fld21411Balance_ - T1.Fld21412Balance_)) AS NUMERIC(34, 3)) AS max_available_count 
-                //FROM (SELECT
-                //T2._Fld21408RRef AS Fld21408RRef,
-                //CAST(SUM(T2._Fld21412) AS NUMERIC(27, 3)) AS Fld21412Balance_,
-                //CAST(SUM(T2._Fld21411) AS NUMERIC(27, 3)) AS Fld21411Balance_
-                //FROM dbo._AccumRgT21444 T2 WITH(NOLOCK)
-                //LEFT OUTER JOIN dbo._Reference149 T3 WITH(NOLOCK)
-                //ON T2._Fld21408RRef = T3._IDRRef
-                //WHERE T2._Period = '5999-11-01 00:00:00' AND (((T2._Fld21424 = '2001-01-01 00:00:00') OR (T2._Fld21424 >= @P1)) AND (T3._Fld3480 IN (@P2)) AND (T3._Fld3514RRef = 0x84A6131B6DC5555A4627E85757507687)) AND (T2._Fld21412 <> 0 OR T2._Fld21411 <> 0) AND (T2._Fld21412 <> 0 OR T2._Fld21411 <> 0)
-                //GROUP BY T2._Fld21408RRef
-                //HAVING (CAST(SUM(T2._Fld21412) AS NUMERIC(27, 3))) <> 0.0 OR (CAST(SUM(T2._Fld21411) AS NUMERIC(27, 3))) <> 0.0) T1
-                //LEFT OUTER JOIN dbo._Reference149 T4 WITH(NOLOCK)
-                //ON T1.Fld21408RRef = T4._IDRRef
-                //WHERE ((T1.Fld21411Balance_ - T1.Fld21412Balance_) > 0)
-                //GROUP BY T1.Fld21408RRef,
-                //T4._Fld3480";
+                conn.StatisticsEnabled = true;
 
                 string query = @"SELECT
-                                        T4._Fld3480 AS nomenclature_id,
-                                        CAST(SUM((T1.Fld21411Balance_ - T1.Fld21412Balance_)) AS NUMERIC(34, 3)) AS max_available_count 
-                                        FROM (SELECT
-                                        T2._Fld21408RRef AS Fld21408RRef,
-                                        CAST(SUM(T2._Fld21412) AS NUMERIC(27, 3)) AS Fld21412Balance_,
-                                        CAST(SUM(T2._Fld21411) AS NUMERIC(27, 3)) AS Fld21411Balance_
-                                        FROM dbo._AccumRgT21444 T2 WITH(NOLOCK)
-                                        LEFT OUTER JOIN dbo._Reference149 T3 WITH(NOLOCK)
-                                        ON T2._Fld21408RRef = T3._IDRRef
-                                        WHERE T2._Period = '5999-11-01 00:00:00' AND (((T2._Fld21424 = '2001-01-01 00:00:00') OR (T2._Fld21424 >= @P1)) AND (T3._Fld3480 IN ({0})) AND (T3._Fld3514RRef = 0x84A6131B6DC5555A4627E85757507687)) AND (T2._Fld21412 <> 0 OR T2._Fld21411 <> 0) AND (T2._Fld21412 <> 0 OR T2._Fld21411 <> 0)
-                                        GROUP BY T2._Fld21408RRef
-                                        HAVING (CAST(SUM(T2._Fld21412) AS NUMERIC(27, 3))) <> 0.0 OR (CAST(SUM(T2._Fld21411) AS NUMERIC(27, 3))) <> 0.0) T1
-                                        LEFT OUTER JOIN dbo._Reference149 T4 WITH(NOLOCK)
-                                        ON T1.Fld21408RRef = T4._IDRRef
-                                        WHERE ((T1.Fld21411Balance_ - T1.Fld21412Balance_) > 0)
-                                        GROUP BY T1.Fld21408RRef,
-                                        T4._Fld3480";
+                    T4._Fld3480 AS nomenclature_id,
+                    CAST(SUM((T1.Fld21411Balance_ - T1.Fld21412Balance_)) AS NUMERIC(34, 3)) AS max_available_count 
+                    FROM (SELECT
+                    T2._Fld21408RRef AS Fld21408RRef,
+                    CAST(SUM(T2._Fld21412) AS NUMERIC(27, 3)) AS Fld21412Balance_,
+                    CAST(SUM(T2._Fld21411) AS NUMERIC(27, 3)) AS Fld21411Balance_
+                    FROM dbo._AccumRgT21444 T2 WITH(NOLOCK)
+                    LEFT OUTER JOIN dbo._Reference149 T3 WITH(NOLOCK)
+                    ON T2._Fld21408RRef = T3._IDRRef
+                    WHERE T2._Period = '5999-11-01 00:00:00' AND (((T2._Fld21424 = '2001-01-01 00:00:00') OR (T2._Fld21424 >= @P1)) AND (T3._Fld3480 IN ({0})) AND (T3._Fld3514RRef = 0x84A6131B6DC5555A4627E85757507687)) AND (T2._Fld21412 <> 0 OR T2._Fld21411 <> 0) AND (T2._Fld21412 <> 0 OR T2._Fld21411 <> 0)
+                    GROUP BY T2._Fld21408RRef
+                    HAVING (CAST(SUM(T2._Fld21412) AS NUMERIC(27, 3))) <> 0.0 OR (CAST(SUM(T2._Fld21411) AS NUMERIC(27, 3))) <> 0.0) T1
+                    LEFT OUTER JOIN dbo._Reference149 T4 WITH(NOLOCK)
+                    ON T1.Fld21408RRef = T4._IDRRef
+                    WHERE ((T1.Fld21411Balance_ - T1.Fld21412Balance_) > 0)
+                    GROUP BY T1.Fld21408RRef,
+                    T4._Fld3480";
 
 
                 var DateMove = DateTime.Now.AddMonths(24000);
@@ -137,19 +124,32 @@ namespace DateTimeService.Controllers
                     //Console.WriteLine("No data found.");
                 }
 
+                var stats = conn.RetrieveStatistics();
+                sqlCommandExecutionTime = (long)stats["ExecutionTime"];
+
                 //close data reader
                 dr.Close();
 
                 //close connection
                 conn.Close();
+
+                logElement.TimeSQLExecution = sqlCommandExecutionTime;
+                logElement.ResponseContent = JsonSerializer.Serialize(result);
+                logElement.Status = "Ok";
             }
             catch (Exception ex)
             {
-                //display error message
-                Console.WriteLine("Exception: " + ex.Message);
-            }
+                logElement.TimeSQLExecution = sqlCommandExecutionTime;
+                logElement.ErrorDescription = ex.Message;
+                logElement.Status = "Error";
+            }         
 
-            return result.ToArray();
+            //var client = _clientFactory.CreateClient("Elastic");
+            //var logResult = await client.PostAsJsonAsync("/", logElement);
+
+            
+
+            return Ok(result.ToArray());
         }
     }
 }
