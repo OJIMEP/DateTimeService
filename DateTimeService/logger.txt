@@ -1,0 +1,11 @@
+Application started. Press Ctrl+C to shut down.
+Hosting environment: Development
+Content root path: C:\repos\DateTimeService\DateTimeService
+Application started. Press Ctrl+C to shut down.
+Hosting environment: Development
+Content root path: C:\repos\DateTimeService\DateTimeService
+Application started. Press Ctrl+C to shut down.
+Hosting environment: Development
+Content root path: C:\repos\DateTimeService\DateTimeService
+Microsoft.AspNetCore.Http.DefaultHttpRequest
+Microsoft.AspNetCore.Http.DefaultHttpRequest
