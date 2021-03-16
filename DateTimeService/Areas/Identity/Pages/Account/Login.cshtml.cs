@@ -1,17 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text.Encodings.Web;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
-using DateTimeService.Areas.Identity.Data;
+﻿using DateTimeService.Areas.Identity.Data;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace DateTimeService.Areas.Identity.Pages.Account
 {
@@ -22,7 +19,7 @@ namespace DateTimeService.Areas.Identity.Pages.Account
         private readonly SignInManager<DateTimeServiceUser> _signInManager;
         private readonly ILogger<LoginModel> _logger;
 
-        public LoginModel(SignInManager<DateTimeServiceUser> signInManager, 
+        public LoginModel(SignInManager<DateTimeServiceUser> signInManager,
             ILogger<LoginModel> logger,
             UserManager<DateTimeServiceUser> userManager)
         {
@@ -77,7 +74,7 @@ namespace DateTimeService.Areas.Identity.Pages.Account
             returnUrl ??= Url.Content("~/");
 
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
-        
+
             if (ModelState.IsValid)
             {
                 // This doesn't count login failures towards account lockout

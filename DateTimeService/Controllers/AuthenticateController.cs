@@ -1,5 +1,6 @@
 ﻿using DateTimeService.Areas.Identity.Data;
 using DateTimeService.Areas.Identity.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -10,7 +11,6 @@ using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace DateTimeService.Controllers
@@ -29,6 +29,7 @@ namespace DateTimeService.Controllers
             this.roleManager = roleManager;
             _configuration = configuration;
         }
+        //TODO make delete and change password
 
         [HttpPost]
         [Route("login")]
@@ -69,6 +70,7 @@ namespace DateTimeService.Controllers
             return Unauthorized();
         }
 
+        [Authorize(Roles = UserRoles.Admin)]
         [HttpPost]
         [Route("register")]
         public async Task<IActionResult> Register([FromBody] RegisterModel model)
@@ -83,14 +85,27 @@ namespace DateTimeService.Controllers
                 SecurityStamp = Guid.NewGuid().ToString(),
                 UserName = model.Username
             };
+
             var result = await userManager.CreateAsync(user, model.Password);
-            
+
+            if (result.Succeeded)
+            {
+                foreach (var role in model.Roles)
+                {
+                    if (await roleManager.RoleExistsAsync(role))
+                    {
+                        await userManager.AddToRoleAsync(user, role);
+                    }
+                }
+            }
+
             if (!result.Succeeded)
-                return StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Error", Message = "User creation failed! Please check user details and try again.", Description = JsonSerializer.Serialize(result.Errors) });
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Error", Message = "User creation failed! Please check user details and try again.", Description = result.Errors });
 
             return Ok(new Response { Status = "Success", Message = "User created successfully!" });
         }
 
+        [Authorize(Roles = UserRoles.Admin)]
         [HttpPost]
         [Route("register-admin")]
         public async Task<IActionResult> RegisterAdmin([FromBody] RegisterModel model)
@@ -113,6 +128,8 @@ namespace DateTimeService.Controllers
                 await roleManager.CreateAsync(new IdentityRole(UserRoles.Admin));
             if (!await roleManager.RoleExistsAsync(UserRoles.User))
                 await roleManager.CreateAsync(new IdentityRole(UserRoles.User));
+            if (!await roleManager.RoleExistsAsync(UserRoles.MaxAvailableCount))
+                await roleManager.CreateAsync(new IdentityRole(UserRoles.MaxAvailableCount));
 
             if (await roleManager.RoleExistsAsync(UserRoles.Admin))
             {

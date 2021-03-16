@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Collections;
 
 namespace DateTimeService.Areas.Identity.Models
 {
@@ -9,6 +6,6 @@ namespace DateTimeService.Areas.Identity.Models
     {
         public string Status { get; set; }
         public string Message { get; set; }
-        public string Description { get; set; }
+        public IEnumerable Description { get; set; }
     }
 }

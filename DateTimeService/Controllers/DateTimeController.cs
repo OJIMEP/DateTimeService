@@ -1,17 +1,16 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using DateTimeService.Areas.Identity.Data;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Microsoft.AspNetCore.Authorization;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Net.Http;
-using System.Threading.Tasks;
-using System.Net.Http.Json;
 using System.Text.Json;
-using System.Text.Json.Serialization;
+using System.Threading.Tasks;
 
 namespace DateTimeService.Controllers
 {
@@ -29,6 +28,8 @@ namespace DateTimeService.Controllers
             _clientFactory = clientFactory;
         }
 
+        [Authorize(Roles = UserRoles.MaxAvailableCount + "," + UserRoles.Admin)]
+        [Route("MaxAvailableCount")]
         [HttpPost]
         public async Task<ObjectResult> PostAsync(IEnumerable<RequestData> nomenclatures)
         {
@@ -143,12 +144,12 @@ namespace DateTimeService.Controllers
                 logElement.TimeSQLExecution = sqlCommandExecutionTime;
                 logElement.ErrorDescription = ex.Message;
                 logElement.Status = "Error";
-            }         
+            }
 
             //var client = _clientFactory.CreateClient("Elastic");
             //var logResult = await client.PostAsJsonAsync("/", logElement);
 
-            
+
 
             return Ok(result.ToArray());
         }
