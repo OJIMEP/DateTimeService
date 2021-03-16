@@ -115,9 +115,9 @@ namespace DateTimeService
             app.UseAuthentication();
             app.UseAuthorization();
 
-            loggerFactory = LoggerFactory.Create(builder => builder.ClearProviders());
+            //loggerFactory = LoggerFactory.Create(builder => builder.ClearProviders());
 
-            loggerFactory.AddFile(Path.Combine(Directory.GetCurrentDirectory(), "logger.txt"));
+            loggerFactory.AddFile("192.168.2.16", 5049);
             var logger = loggerFactory.CreateLogger("HttpLogger");
 
             app.UseEndpoints(endpoints =>

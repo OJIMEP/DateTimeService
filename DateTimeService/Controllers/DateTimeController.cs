@@ -1,4 +1,6 @@
 ﻿using DateTimeService.Areas.Identity.Data;
+using DateTimeService.Data;
+using DateTimeService.Logging;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -9,6 +11,8 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Sockets;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -20,7 +24,6 @@ namespace DateTimeService.Controllers
     {
         private readonly ILogger<DateTimeController> _logger;
         private readonly IHttpClientFactory _clientFactory;
-
 
         public DateTimeController(ILogger<DateTimeController> logger, HttpClient httpClient, IHttpClientFactory clientFactory)
         {
@@ -43,7 +46,8 @@ namespace DateTimeService.Controllers
             {
                 Path = HttpContext.Request.Path,
                 Host = HttpContext.Request.Host.ToString(),
-                RequestContent = JsonSerializer.Serialize(nomenclatures)
+                RequestContent = JsonSerializer.Serialize(nomenclatures),
+                Id = Guid.NewGuid().ToString()
             };
 
 
@@ -147,9 +151,12 @@ namespace DateTimeService.Controllers
             }
 
             //var client = _clientFactory.CreateClient("Elastic");
-            //var logResult = await client.PostAsJsonAsync("/", logElement);
+            var logstringElement = JsonSerializer.Serialize(logElement);
 
+            _logger.LogInformation(logstringElement);
 
+            //_db.Logs.Add(logElement);
+            //await _db.SaveChangesAsync();
 
             return Ok(result.ToArray());
         }

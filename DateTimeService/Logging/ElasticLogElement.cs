@@ -2,6 +2,7 @@
 {
     public class ElasticLogElement
     {
+        public string Id { get; set; }
         public string Path { get; set; }
         public string Host { get; set; }
         public string ResponseContent { get; set; }

@@ -4,14 +4,16 @@ namespace DateTimeService
 {
     public class HttpLoggerProvider : ILoggerProvider
     {
-        private string path;
-        public HttpLoggerProvider(string _path)
+        private readonly string host;
+        private readonly int port;
+        public HttpLoggerProvider(string _host, int _port)
         {
-            path = _path;
+            host = _host;
+            port = _port;
         }
         public ILogger CreateLogger(string categoryName)
         {
-            return new HttpLogger(path);
+            return new HttpLogger(host,port);
         }
 
         public void Dispose()
