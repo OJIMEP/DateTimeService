@@ -1,10 +1,7 @@
 ﻿namespace DateTimeService
 {
-    public class ResponseElement
+    public class RequestDataMaxAvailableCount
     {
         public string Nomenclature_id { get; set; }
-
-        public decimal Max_available_count { get; set; }
-
     }
 }

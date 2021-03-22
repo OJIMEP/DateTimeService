@@ -4,7 +4,7 @@ namespace DateTimeService.Logging
 {
     public static class HttpLoggerExtensions
     {
-        public static ILoggerFactory AddFile(this ILoggerFactory factory, string host, int port)
+        public static ILoggerFactory AddHttp(this ILoggerFactory factory, string host, int port)
         {
             factory.AddProvider(new HttpLoggerProvider(host,port));
             return factory;

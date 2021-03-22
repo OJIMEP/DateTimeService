@@ -77,29 +77,21 @@ namespace DateTimeService
                 };
             });
 
-            //services.AddControllersWithViews();
-            //services.AddRazorPages();
-
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "DateTimeService", Version = "v1" });
-            });
-
-            services.AddHttpClient<DateTimeController>("Elastic", client =>
-            {
-                client.BaseAddress = new Uri("http://192.168.2.16:5046");
             });
 
         }
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory)
         {
-            if (env.IsDevelopment())
-            {
+            //if (env.IsDevelopment())
+            //{
                 app.UseDeveloperExceptionPage();
                 app.UseSwagger();
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "DateTimeService v1"));
-            }
+            //}
             //else
             //{
             //    app.UseExceptionHandler("/Home/Error");
@@ -117,9 +109,10 @@ namespace DateTimeService
 
             //loggerFactory = LoggerFactory.Create(builder => builder.ClearProviders());
 
-            loggerFactory.AddFile("192.168.2.16", 5049);
-            var logger = loggerFactory.CreateLogger("HttpLogger");
+            loggerFactory.AddHttp("192.168.2.16", 5048);
+            var logger = loggerFactory.CreateLogger("HttpLogger");           
 
+            
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
