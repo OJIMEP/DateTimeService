@@ -8,7 +8,7 @@ namespace DateTimeService.Models
     public class RequestDataAvailableDate
     {
         public string city_id { get; set; }
-        public string delivery_type { get; set; }
+        public string[] delivery_type { get; set; }
         public string[] codes { get; set; }
 
     }
