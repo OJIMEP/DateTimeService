@@ -18,8 +18,8 @@ namespace DateTimeService.Models
     public class ResponseAvailableDateDictElement
     {
         public string code { get; set; }
-        public DateTime courier { get; set; }
-        public DateTime self { get; set; }
+        public string courier { get; set; }
+        public string self { get; set; }
 
     }
 }

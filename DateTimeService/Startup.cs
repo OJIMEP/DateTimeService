@@ -2,6 +2,7 @@ using DateTimeService.Areas.Identity.Data;
 using DateTimeService.Controllers;
 using DateTimeService.Data;
 using DateTimeService.Logging;
+using DateTimeService.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -80,6 +81,11 @@ namespace DateTimeService
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "DateTimeService", Version = "v1" });
+            });
+
+            services.AddControllers().AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.Converters.Add(new CustomDateTimeConverter());
             });
 
         }

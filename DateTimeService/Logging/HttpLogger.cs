@@ -13,9 +13,7 @@ namespace DateTimeService
         private readonly string logsHost;
         private readonly int logsPort;
         readonly UdpClient udpClient;
-        TcpClient tcpClient;
-        //NetworkStream netStream;
-
+        
         public HttpLogger(string host, int port)
         {
             logsHost = host;
