@@ -78,25 +78,34 @@ namespace DateTimeService
                 };
             });
 
-            services.AddSwaggerGen(c =>
-            {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "DateTimeService", Version = "v1" });
-            });
-
-            services.AddControllers().AddJsonOptions(options =>
-            {
-                options.JsonSerializerOptions.Converters.Add(new CustomDateTimeConverter());
-            });
+            services.AddSwaggerGen();
+            //c =>
+            //{
+            //    c.SwaggerDoc("v1", new OpenApiInfo
+            //    {
+            //        Version = "v1",
+            //        Title = "DateTime API",
+            //        Description = "API для получения дат и интервалов доставки и самовывоза",
+            //        Contact = new OpenApiContact
+            //        {
+            //            Name = "Андрей Бородавко",
+            //            Email = "a.borodavko@21vek.by",
+            //        }
+            //    });
+            //});
 
         }
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory)
+        public void Configure(IApplicationBuilder app, ILoggerFactory loggerFactory)
         {
+
+            app.UseStaticFiles();
+
             //if (env.IsDevelopment())
             //{
-                app.UseDeveloperExceptionPage();
+            app.UseDeveloperExceptionPage();
                 app.UseSwagger();
-                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "DateTimeService v1"));
+                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger.json", "DateTimeService v1"));
             //}
             //else
             //{
@@ -104,9 +113,7 @@ namespace DateTimeService
             //    app.UseHsts();
             //}
 
-            app.UseHttpsRedirection();
-
-            app.UseStaticFiles();
+            app.UseHttpsRedirection();            
 
             app.UseRouting();
 

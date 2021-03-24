@@ -1,0 +1,572 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "DateTime Service",
+    "description": "Сервис получения дат доступности и интервалов доставки/самовывоза. Версия 2.0 переписана на .Net и прямые обращения к SQL.",
+    "termsOfService": "",
+    "version": "2.0",
+    "contact": {
+      "name": "Андрей Бородавко",
+      "email": "a.borodavko@21vek.by"
+    }
+  },
+  "externalDocs": {
+    "description": "Статья в базе знаний",
+    "url": "https://aggregator.atlassian.net/wiki/spaces/SS/pages/2088632339"
+  },
+  "servers": [
+    {
+      "url": "https://37.17.76.125:739/NetMS"
+    }
+  ],
+  "tags": [
+    {
+      "name": "DateTime",
+      "description": ""
+    },
+    {
+      "name": "Authenticate",
+      "description": ""
+    }
+  ],
+  "paths": {
+    "/api/DateTime/IntervalList": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "tags": [
+          "DateTime"
+        ],
+        "summary": "Получить интервалы доставки",
+        "description": "Получает список доступных интервалов доставки",
+        "requestBody": {
+          "description": "содержимое отправляемого запроса",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/payload_interval"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "запрос выполнен",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "properties": {
+                          "begin": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Начало интервала"
+                          },
+                          "end": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Конец интервала"
+                          }
+                        }
+                      },
+                      "example": [
+                        {
+                          "begin": "2021-03-23T19:00:00",
+                          "end": "2021-03-23T21:00:00"
+                        },
+                        {
+                          "begin": "2021-03-23T21:00:00",
+                          "end": "2021-03-23T23:00:00"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "внутренняя ошибка сервера",
+            "content": {}
+          }
+        },
+        "x-codegen-request-body-name": "body"
+      }
+    },
+    "/api/DateTime/AvailableDateList": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "tags": [
+          "DateTime"
+        ],
+        "summary": "Получить даты доступности",
+        "description": "Получает ближайшие доступные даты доставки и самовывоза по каждому товару",
+        "requestBody": {
+          "description": "содержимое отправляемого запроса",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/payload_availabledate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "запрос выполнен",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "object",
+                        "description": "Ключ - артикул",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Артикул"
+                          },
+                          "courier": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Дата курьерской доставки"
+                          },
+                          "self": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Дата самовывоза"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "data": {
+                    "101937": {
+                      "code": "101937",
+                      "courier": "2021-03-23T13:00:00",
+                      "self": "3999-11-11T00:00:00"
+                    },
+                    "1020938": {
+                      "code": "1020938",
+                      "courier": "2021-03-24T19:00:00",
+                      "self": "3999-11-11T00:00:00"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "внутренняя ошибка сервера",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/api/Authenticate/login": {
+      "post": {
+        "tags": [
+          "Authenticate"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginModel"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginModel"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Удачная аутентификация, возвращается токен",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string",
+                      "description": "Токен аутентификации для помещения в заголовок Authorization",
+                      "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiYWRtaW5AdGVzdC5jb20iLCJqdGkiOiJiZGY1MThlZC05MDg2LTQ2YmMtOGE5My1jNjNmMjgyMjVkMGQiLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJBZG1pbiIsImV4cCI6MTYxNjU5MTk1NSwiaXNzIjoiMjF2ZWsuYnkvMUMiLCJhdWQiOiJNaWNyb3NlcnZpY2VVc2VyIn0.s5HYYpZBF5POynoMYPDM1s10ti4aBc14MTu08i89ok4"
+                    },
+                    "expiration": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Срок действия токена",
+                      "example": "2021-03-24T13:24:25Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Неудачная аутентификация"
+          }
+        }
+      }
+    },
+    "/api/Authenticate/register": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "tags": [
+          "Authenticate"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterModel"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterModel"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "Status": {
+                      "type": "string",
+                      "description": "Статус операции",
+                      "example": "Success"
+                    },
+                    "Message": {
+                      "type": "string",
+                      "description": "Сообщение",
+                      "example": "User created successfully!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Не аутентифицирован"
+          },
+          "403": {
+            "description": "Не хватает ролей у пользователя для данного действия"
+          },
+          "500": {
+            "description": "Ошибка создания пользователя",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "Status": {
+                      "type": "string",
+                      "description": "Статус операции",
+                      "example": "Error"
+                    },
+                    "Message": {
+                      "type": "string",
+                      "description": "Сообщение",
+                      "example": "User creation failed! Please check user details and try again."
+                    },
+                    "Description": {
+                      "type": "string",
+                      "description": "Подробности ошибки",
+                      "example": "Слабый пароль"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Authenticate/register-admin": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "tags": [
+          "Authenticate"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterModel"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterModel"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "Status": {
+                      "type": "string",
+                      "description": "Статус операции",
+                      "example": "Success"
+                    },
+                    "Message": {
+                      "type": "string",
+                      "description": "Сообщение",
+                      "example": "User created successfully!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Не аутентифицирован"
+          },
+          "403": {
+            "description": "Не хватает ролей у пользователя для данного действия"
+          },
+          "500": {
+            "description": "Ошибка создания пользователя",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "Status": {
+                      "type": "string",
+                      "description": "Статус операции",
+                      "example": "Error"
+                    },
+                    "Message": {
+                      "type": "string",
+                      "description": "Сообщение",
+                      "example": "User creation failed! Please check user details and try again."
+                    },
+                    "Description": {
+                      "type": "string",
+                      "description": "Подробности ошибки",
+                      "example": "Слабый пароль"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "payload_interval": {
+        "properties": {
+          "address_id": {
+            "type": "string",
+            "description": "Код СОАТО адреса",
+            "example": "47175"
+          },
+          "delivery_type": {
+            "type": "array",
+            "description": "Вид доставки - самовывоз (self) или курьер (courier). Если не указан, то считается как доставка",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "self",
+              "courier"
+            ]
+          },
+          "floor": {
+            "type": "string",
+            "description": "Этаж",
+            "example": "8"
+          },
+          "order_items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/orderitem"
+            },
+            "description": "Список товаров",
+            "example": [
+              {
+                "code": "631176",
+                "quantity": 1
+              },
+              {
+                "code": "467878",
+                "quantity": 2
+              },
+              {
+                "code": "609204",
+                "quantity": 1
+              },
+              {
+                "code": "6082000",
+                "quantity": 6
+              }
+            ]
+          }
+        }
+      },
+      "payload_availabledate": {
+        "properties": {
+          "city_id": {
+            "type": "string",
+            "description": "Код города",
+            "example": "17030"
+          },
+          "delivery_type": {
+            "type": "array",
+            "description": "Вид доставки - самовывоз (self) или курьер (courier)",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "self",
+              "courier"
+            ]
+          },
+          "codes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Список артикулов",
+            "example": [
+              "358649",
+              "424941",
+              "1020938",
+              "5962720",
+              "6167903",
+              "380386",
+              "101937"
+            ]
+          }
+        }
+      },
+      "orderitem": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Артикул номенклатуры"
+          },
+          "quantity": {
+            "type": "number",
+            "description": "Количество"
+          }
+        },
+        "required": [
+          "code",
+          "quantity"
+        ]
+      },
+      "LoginModel": {
+        "required": [
+          "password",
+          "username"
+        ],
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RegisterModel": {
+        "required": [
+          "email",
+          "password",
+          "username"
+        ],
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "password": {
+            "type": "string"
+          },
+          "roles": {
+            "type": "array",
+            "description": "Список ролей для нового пользователя",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}
