@@ -20,7 +20,7 @@ namespace DateTimeService.Areas.Identity.Data
             }
             if (await userManager.FindByNameAsync(adminEmail) == null)
             {
-                DateTimeServiceUser admin = new DateTimeServiceUser { Email = adminEmail, UserName = adminEmail };
+                DateTimeServiceUser admin = new() { Email = adminEmail, UserName = adminEmail };
                 IdentityResult result = await userManager.CreateAsync(admin, password);
                 if (result.Succeeded)
                 {

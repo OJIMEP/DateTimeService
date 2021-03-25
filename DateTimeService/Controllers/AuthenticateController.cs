@@ -79,7 +79,7 @@ namespace DateTimeService.Controllers
             if (userExists != null)
                 return StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Error", Message = "User already exists!" });
 
-            DateTimeServiceUser user = new DateTimeServiceUser()
+            DateTimeServiceUser user = new()
             {
                 Email = model.Email,
                 SecurityStamp = Guid.NewGuid().ToString(),
@@ -114,7 +114,7 @@ namespace DateTimeService.Controllers
             if (userExists != null)
                 return StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Error", Message = "User already exists!" });
 
-            DateTimeServiceUser user = new DateTimeServiceUser()
+            DateTimeServiceUser user = new()
             {
                 Email = model.Email,
                 SecurityStamp = Guid.NewGuid().ToString(),
