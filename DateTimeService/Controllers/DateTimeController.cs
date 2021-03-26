@@ -215,11 +215,11 @@ where Геозона._IDRRef IN (
 	From dbo._Reference112 ГеоАдрес
 	Where ГеоАдрес._Fld25552 = @P4)
 
+CREATE CLUSTERED INDEX ix_tempCIndexAft ON #Temp_GeoData (СкладСсылка,ЗонаДоставкиРодительСсылка,Геозона);
+
 Select 
 	Номенклатура._IDRRef AS НоменклатураСсылка,
-	Номенклатура._Description AS НоменклатураНаименование,
 	Упаковки._IDRRef AS УпаковкаСсылка,
-	Упаковки._Description AS УпаковкаНаименование,
 	1 As Количество,
 	Упаковки._Fld6000 AS Вес,
 	Упаковки._Fld6006 AS Объем,
@@ -248,6 +248,25 @@ From
 		AND ГруппыПланирования._Marked = 0x00
 Where
 	Номенклатура._Fld3480 IN ({0})
+
+CREATE CLUSTERED INDEX ix_tempCIndexAft1 ON #Temp_Goods (НоменклатураСсылка,УпаковкаСсылка,ГруппаПланирования);
+
+--SELECT
+--	T4._Period AS Период,
+--	T4._Fld14558RRef AS Валюта,
+--	T4._Fld14559 AS Курс,
+--	T4._Fld14560 AS Кратность
+--Into #Temp_ExchangeRates
+--FROM (SELECT
+--		T3._Fld14558RRef AS Fld14558RRef,
+--		MAX(T3._Period) AS MAXPERIOD_
+--	FROM dbo._InfoRg14557 T3
+--	WHERE
+--	(T3._Fld14558RRef IN (0x80C2005056A128DA11E6339ED4C110DF,0x8265002522BD9FAE11E4C0CE6721009A,0x8265002522BD9FAE11E4C0CE67210099,0x8265002522BD9FAE11E4C0CE6721009B)) --валюты
+--	GROUP BY 
+--		T3._Fld14558RRef) T2
+--INNER JOIN dbo._InfoRg14557 T4 
+--	ON T2.Fld14558RRef = T4._Fld14558RRef AND T2.MAXPERIOD_ = T4._Period
 
 
 SELECT
@@ -305,7 +324,7 @@ WHERE
                 (SUM(T2._Fld21412) <> 0.0
                 OR SUM(T2._Fld21411) <> 0.0)
 				AND SUM(T2._Fld21412) - SUM(T2._Fld21411) <> 0.0
-                
+;
 
 SELECT
     T1._Fld23831RRef AS СкладИсточника,
@@ -315,26 +334,41 @@ SELECT
 Into #Temp_WarehouseDates
 FROM
     dbo._InfoRg23830 T1
-WHERE
+	Inner Join #Temp_Remains
+	ON T1._Fld23831RRef = #Temp_Remains.СкладИсточника
+	AND T1._Fld23832 = #Temp_Remains.ДатаСобытия
+	AND T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData)
+--WHERE
+--    T1._Fld23831RRef IN (
+--        SELECT
+--            T2.СкладИсточника AS СкладИсточника
+--        FROM
+--            #Temp_Remains T2 WITH(NOLOCK)) 
+--		--AND T1._Fld23832  @P_DateTimeNow
+--		AND T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData)
+    
+SELECT
+	T1._Fld23831RRef AS СкладИсточника,
+	T1._Fld23833RRef AS СкладНазначения,
+	MIN(T1._Fld23834) AS ДатаПрибытия 
+Into #Temp_MinimumWarehouseDates
+FROM
+    dbo._InfoRg23830 T1
+	WHERE
     T1._Fld23831RRef IN (
         SELECT
             T2.СкладИсточника AS СкладИсточника
         FROM
             #Temp_Remains T2 WITH(NOLOCK)) 
 		AND T1._Fld23832 > @P_DateTimeNow
+		AND T1._Fld23832 < @P_DateTimePeriodEnd
 		AND T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData)
+GROUP BY T1._Fld23831RRef,
+T1._Fld23833RRef
+
 
 ;
-With Temp_MinimumWarehouseDates AS 
-(
-SELECT
-	T1.СкладИсточника,
-	T1.СкладНазначения,
-	MIN(T1.ДатаПрибытия) AS ДатаПрибытия 
-FROM #Temp_WarehouseDates T1 WITH(NOLOCK)
-GROUP BY T1.СкладИсточника,
-T1.СкладНазначения
-)
+
 SELECT
     T1.НоменклатураСсылка,
     T1.Количество,
@@ -352,7 +386,7 @@ FROM
     LEFT OUTER JOIN #Temp_WarehouseDates T2 WITH(NOLOCK)
     ON (T1.СкладИсточника = T2.СкладИсточника)
     AND (T1.ДатаСобытия = T2.ДатаСобытия)
-    LEFT OUTER JOIN Temp_MinimumWarehouseDates T3 WITH(NOLOCK)
+    LEFT OUTER JOIN #Temp_MinimumWarehouseDates T3 WITH(NOLOCK)
     ON (T1.СкладИсточника = T3.СкладИсточника)
     AND (T1.ДатаСобытия = '2001-01-01 00:00:00')
 WHERE
@@ -400,6 +434,18 @@ FROM
 WHERE
     NOT T6.Источник_RRRef IS NULL
                 
+
+
+
+--SELECT
+--T1.НоменклатураСсылка,
+--T1.СкладНазначения,
+--MIN(T1.ДатаДоступности) AS ДатаДоступности
+--INto #Temp_ClosestDate
+--FROM #Temp_Sources T1 WITH(NOLOCK)
+--GROUP BY T1.НоменклатураСсылка,
+--T1.СкладНазначения
+
 ;
 
 With Temp_ExchangeRates AS (
@@ -408,6 +454,7 @@ SELECT
 	T4._Fld14558RRef AS Валюта,
 	T4._Fld14559 AS Курс,
 	T4._Fld14560 AS Кратность
+--Into #Temp_ExchangeRates
 FROM (SELECT
 		T3._Fld14558RRef AS Fld14558RRef,
 		MAX(T3._Period) AS MAXPERIOD_
@@ -446,8 +493,27 @@ FROM
         AND T1.Источник_RTRef = Резервирование._RecorderTRef
         AND T1.Источник_RRRef = Резервирование._RecorderRRef
     )
-;
 
+--SELECT
+--    T1.НоменклатураСсылка,
+--    T1.СкладНазначения,
+--    T1.ДатаДоступности,
+--    DATEADD(DAY, 4.0, T1.ДатаДоступности) AS ДатаДоступностиПлюс, --это параметр КоличествоДнейАнализа
+--    MIN(T1.Цена) AS ЦенаИсточника,
+--    MIN(T1.Цена / 100.0 * (100 - 3.0)) AS ЦенаИсточникаМинус --это параметр ПроцентДнейАнализа
+--Into #Temp_SupplyDocs
+--FROM
+--    #Temp_SourcesWithPrices T1 WITH(NOLOCK)
+--WHERE
+--    T1.Цена <> 0
+--    AND T1.Источник_RTRef = 0x00000153
+    
+--GROUP BY
+--    T1.НоменклатураСсылка,
+--    T1.ДатаДоступности,
+--    T1.СкладНазначения,
+--    DATEADD(DAY, 4.0, T1.ДатаДоступности)
+;
 With Temp_SupplyDocs AS
 (
 SELECT
@@ -457,6 +523,7 @@ SELECT
     DATEADD(DAY, 4.0, T1.ДатаДоступности) AS ДатаДоступностиПлюс, --это параметр КоличествоДнейАнализа
     MIN(T1.Цена) AS ЦенаИсточника,
     MIN(T1.Цена / 100.0 * (100 - 3.0)) AS ЦенаИсточникаМинус --это параметр ПроцентДнейАнализа
+--Into #Temp_SupplyDocs
 FROM
     #Temp_SourcesWithPrices T1 WITH(NOLOCK)
 WHERE
@@ -521,6 +588,7 @@ With Temp_ClosestDate AS
 T1.НоменклатураСсылка,
 T1.СкладНазначения,
 MIN(T1.ДатаДоступности) AS ДатаДоступности
+--INto #Temp_ClosestDate
 FROM #Temp_Sources T1 WITH(NOLOCK)
 GROUP BY T1.НоменклатураСсылка,
 T1.СкладНазначения
@@ -599,6 +667,60 @@ GROUP BY
     T1.ВремяНаОбслуживание,
     T1.ГруппаПланирования
 
+
+--SELECT
+--    CAST(
+--        SUM(
+--            CASE
+--                WHEN (МощностиДоставки._RecordKind = 0.0) THEN МощностиДоставки._Fld25107
+--                ELSE -(МощностиДоставки._Fld25107)
+--            END
+--        ) AS NUMERIC(16, 3)
+--    ) AS МассаОборот,
+--    CAST(
+--        SUM(
+--            CASE
+--                WHEN (МощностиДоставки._RecordKind = 0.0) THEN МощностиДоставки._Fld25108
+--                ELSE -(МощностиДоставки._Fld25108)
+--            END
+--        ) AS NUMERIC(16, 3)
+--    ) AS ОбъемОборот,
+--    CAST(
+--        SUM(
+--            CASE
+--                WHEN (МощностиДоставки._RecordKind = 0.0) THEN МощностиДоставки._Fld25201
+--                ELSE -(МощностиДоставки._Fld25201)
+--            END
+--        ) AS NUMERIC(16, 2)
+--    ) AS ВремяНаОбслуживаниеОборот,
+--    DATETIME2FROMPARTS(
+--        DATEPART(YEAR, МощностиДоставки._Period),
+--        DATEPART(MONTH, МощностиДоставки._Period),
+--        DATEPART(DAY, МощностиДоставки._Period),
+--        0,
+--        0,
+--        0,
+--        0,
+--        0
+--    ) AS Дата
+--Into #Temp_DeliveryPower
+--FROM
+--    dbo._AccumRg25104 МощностиДоставки
+--WHERE
+--    МощностиДоставки._Period >= @P_DateTimePeriodBegin
+--    AND МощностиДоставки._Period <= @P_DateTimePeriodEnd
+--    AND МощностиДоставки._Fld25105RRef in (Select ЗонаДоставкиРодительСсылка From #Temp_GeoData)
+--GROUP BY
+--    DATETIME2FROMPARTS(
+--        DATEPART(YEAR, МощностиДоставки._Period),
+--        DATEPART(MONTH, МощностиДоставки._Period),
+--        DATEPART(DAY, МощностиДоставки._Period),
+--        0,
+--        0,
+--        0,
+--        0,
+--        0
+--    )
 
 SELECT
     T1.НоменклатураСсылка,
@@ -724,6 +846,7 @@ HAVING
             ) AS NUMERIC(16, 0)
         ) > 0.0
     )
+
 ;
 With Temp_DeliveryPower AS
 (
@@ -762,6 +885,7 @@ SELECT
         0,
         0
     ) AS Дата
+--Into #Temp_DeliveryPower
 FROM
     dbo._AccumRg25104 МощностиДоставки
 WHERE
@@ -834,16 +958,22 @@ FROM
 GROUP BY
     T5._Fld3480
 
+
 DROP TABLE #Temp_GeoData
 DROP TABLE #Temp_WarehouseDates
+DROP TABLE #Temp_MinimumWarehouseDates
+--DROP TABLE #Temp_ExchangeRates
 DROP TABLE #Temp_Goods
 DROP TABLE #Temp_Remains
 DROP TABLE #Temp_Sources
+--DROP TABLE #Temp_ClosestDate
 DROP TABLE #Temp_SourcesWithPrices
+--DROP TABLE #Temp_SupplyDocs
 DROP TABLE #Temp_BestPriceAfterClosestDate
 DROP TABLE #Temp_SourcesCorrectedDate
 DROP TABLE #Temp_ClosestDatesByGoods
 DROP TABLE #Temp_ShipmentDates
+--DROP TABLE #Temp_DeliveryPower
 DROP TABLE #Temp_ShipmentDatesDeliveryCourier
 DROP TABLE #Temp_Intervals
 ";
