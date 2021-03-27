@@ -777,7 +777,8 @@ HAVING
             ) AS NUMERIC(16, 0)
         ) > 0.0
     )
-option (recompile)
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-03-27 00:00:00'));
+--option (recompile)
 --UNION
 --ALL
 INsert into #Temp_Intervals
@@ -816,7 +817,8 @@ HAVING
             ) AS NUMERIC(16, 0)
         ) > 0.0
     )
-option (recompile)
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-03-27 00:00:00'));
+--option (recompile)
 --UNION
 --ALL
 INsert into #Temp_Intervals
@@ -851,7 +853,8 @@ HAVING
             ) AS NUMERIC(16, 0)
         ) > 0.0
     )
-option (recompile)
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-03-27 00:00:00'));
+--option (recompile)
 ;
 
 CREATE CLUSTERED INDEX ix_tempCIndexIntervals ON #Temp_Intervals(Период,ГруппаПланирования,ВремяНачала asc);
@@ -967,7 +970,8 @@ FROM
     LEFT OUTER JOIN dbo._Reference149 T5 ON T1.НоменклатураСсылка = T5._IDRRef
 GROUP BY
     T5._Fld3480
-option (recompile)
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-03-27 00:00:00',@P_DateTimePeriodEnd='4021-03-31 00:00:00'));
+--option (recompile)
 
 DROP TABLE #Temp_GeoData
 DROP TABLE #Temp_WarehouseDates
