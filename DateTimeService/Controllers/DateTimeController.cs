@@ -215,7 +215,7 @@ where Геозона._IDRRef IN (
 	From dbo._Reference112 ГеоАдрес
 	Where ГеоАдрес._Fld25552 = @P4)
 
-CREATE CLUSTERED INDEX ix_tempCIndexAft ON #Temp_GeoData (СкладСсылка,ЗонаДоставкиРодительСсылка,Геозона);
+CREATE CLUSTERED INDEX ix_tempCIndexAft ON #Temp_GeoData(СкладСсылка,ЗонаДоставкиРодительСсылка,Геозона asc);
 
 Select 
 	Номенклатура._IDRRef AS НоменклатураСсылка,
@@ -741,8 +741,8 @@ GROUP BY
     T1.ВремяНаОбслуживание,
     T1.ГруппаПланирования
 
-
-SELECT
+;
+SELECT 
     T1._Period AS Период,
     T1._Fld25112RRef AS ГруппаПланирования,
 	DATEADD(
@@ -758,9 +758,10 @@ FROM
     INNER JOIN dbo._Reference23294 T2 ON (T1._Fld25112RRef = T2._IDRRef)
     AND (T1._Fld25202 >= T2._Fld25137)
     AND (NOT (((@P_TimeNow >= T2._Fld25138))))
+	Inner Join #Temp_GeoData ON T1._Fld25111RRef = #Temp_GeoData.Геозона
 WHERE
     T1._Period = @P_DateTimePeriodBegin
-    AND T1._Fld25111RRef in (Select Геозона From #Temp_GeoData) 
+    --AND T1._Fld25111RRef in (Select Геозона From #Temp_GeoData) 
 GROUP BY
     T1._Period,
     T1._Fld25112RRef,
@@ -776,8 +777,10 @@ HAVING
             ) AS NUMERIC(16, 0)
         ) > 0.0
     )
-UNION
-ALL
+option (recompile)
+--UNION
+--ALL
+INsert into #Temp_Intervals
 SELECT
     T3._Period,
     T3._Fld25112RRef,    
@@ -813,8 +816,10 @@ HAVING
             ) AS NUMERIC(16, 0)
         ) > 0.0
     )
-UNION
-ALL
+option (recompile)
+--UNION
+--ALL
+INsert into #Temp_Intervals
 SELECT
     T5._Period,
     T5._Fld25112RRef,    
@@ -846,8 +851,11 @@ HAVING
             ) AS NUMERIC(16, 0)
         ) > 0.0
     )
-
+option (recompile)
 ;
+
+CREATE CLUSTERED INDEX ix_tempCIndexIntervals ON #Temp_Intervals(Период,ГруппаПланирования,ВремяНачала asc);
+
 With Temp_DeliveryPower AS
 (
 SELECT
@@ -888,10 +896,12 @@ SELECT
 --Into #Temp_DeliveryPower
 FROM
     dbo._AccumRg25104 МощностиДоставки
+	Inner Join #Temp_GeoData ON МощностиДоставки._Fld25105RRef = #Temp_GeoData.ЗонаДоставкиРодительСсылка
+
 WHERE
     МощностиДоставки._Period >= @P_DateTimePeriodBegin
     AND МощностиДоставки._Period <= @P_DateTimePeriodEnd
-    AND МощностиДоставки._Fld25105RRef in (Select ЗонаДоставкиРодительСсылка From #Temp_GeoData)
+   -- AND МощностиДоставки._Fld25105RRef in (Select ЗонаДоставкиРодительСсылка From #Temp_GeoData)
 GROUP BY
     DATETIME2FROMPARTS(
         DATEPART(YEAR, МощностиДоставки._Period),
@@ -957,7 +967,7 @@ FROM
     LEFT OUTER JOIN dbo._Reference149 T5 ON T1.НоменклатураСсылка = T5._IDRRef
 GROUP BY
     T5._Fld3480
-
+option (recompile)
 
 DROP TABLE #Temp_GeoData
 DROP TABLE #Temp_WarehouseDates
