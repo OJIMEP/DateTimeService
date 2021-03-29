@@ -1039,7 +1039,7 @@ DROP TABLE #Temp_Intervals
                     cmd.Parameters.AddWithValue(parameters[i], data.codes[i]);
                 }
 
-                cmd.CommandText = string.Format(query, string.Join(", ", parameters), DateMove.ToString("yyyy-MM-dd HH:mm:ss"), DateMove.Date.ToString("yyyy-MM-dd HH:mm:ss"), DateMove.Date.AddDays(4).ToString("yyyy-MM-dd HH:mm:ss"));
+                cmd.CommandText = string.Format(query, string.Join(", ", parameters), DateMove.Date.ToString("yyyy-MM-dd HH:mm:ss"), DateMove.Date.ToString("yyyy-MM-dd HH:mm:ss"), DateMove.Date.AddDays(4).ToString("yyyy-MM-dd HH:mm:ss"));
 
                 //open connection
                 conn.Open();
