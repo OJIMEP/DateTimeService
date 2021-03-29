@@ -53,6 +53,7 @@ namespace DateTimeService.Controllers
                 Id = Guid.NewGuid().ToString()
             };
 
+            
 
             long sqlCommandExecutionTime = 0;
 
@@ -189,6 +190,26 @@ namespace DateTimeService.Controllers
                 Id = Guid.NewGuid().ToString()
             };
 
+            var Parameters1C = new List<GlobalParam1C>
+            {
+                new GlobalParam1C
+                {
+                    Name = "rsp_КоличествоДнейЗаполненияГрафика",
+                    DefaultDouble = 5
+                },
+                new GlobalParam1C
+                {
+                    Name = "КоличествоДнейАнализаЛучшейЦеныПриОтсрочкеЗаказа",
+                    DefaultDouble = 4
+                },
+                new GlobalParam1C
+                {
+                    Name = "ПроцентДнейАнализаЛучшейЦеныПриОтсрочкеЗаказа",
+                    DefaultDouble = 3
+                }
+            };
+
+            GlobalParam1C.FillValues(connString, Parameters1C, _logger);
 
             long sqlCommandExecutionTime = 0;
 
@@ -507,9 +528,9 @@ FROM
 --    T1.НоменклатураСсылка,
 --    T1.СкладНазначения,
 --    T1.ДатаДоступности,
---    DATEADD(DAY, 4.0, T1.ДатаДоступности) AS ДатаДоступностиПлюс, --это параметр КоличествоДнейАнализа
+--    DATEADD(DAY, {4}, T1.ДатаДоступности) AS ДатаДоступностиПлюс, --это параметр КоличествоДнейАнализа
 --    MIN(T1.Цена) AS ЦенаИсточника,
---    MIN(T1.Цена / 100.0 * (100 - 3.0)) AS ЦенаИсточникаМинус --это параметр ПроцентДнейАнализа
+--    MIN(T1.Цена / 100.0 * (100 - {5})) AS ЦенаИсточникаМинус --это параметр ПроцентДнейАнализа
 --Into #Temp_SupplyDocs
 --FROM
 --    #Temp_SourcesWithPrices T1 WITH(NOLOCK)
@@ -529,9 +550,9 @@ SELECT
     T1.НоменклатураСсылка,
     T1.СкладНазначения,
     T1.ДатаДоступности,
-    DATEADD(DAY, 4.0, T1.ДатаДоступности) AS ДатаДоступностиПлюс, --это параметр КоличествоДнейАнализа
+    DATEADD(DAY, {4}, T1.ДатаДоступности) AS ДатаДоступностиПлюс, --это параметр КоличествоДнейАнализа
     MIN(T1.Цена) AS ЦенаИсточника,
-    MIN(T1.Цена / 100.0 * (100 - 3.0)) AS ЦенаИсточникаМинус --это параметр ПроцентДнейАнализа
+    MIN(T1.Цена / 100.0 * (100 - {5})) AS ЦенаИсточникаМинус --это параметр ПроцентДнейАнализа
 --Into #Temp_SupplyDocs
 FROM
     #Temp_SourcesWithPrices T1 WITH(NOLOCK)
@@ -543,7 +564,7 @@ GROUP BY
     T1.НоменклатураСсылка,
     T1.ДатаДоступности,
     T1.СкладНазначения,
-    DATEADD(DAY, 4.0, T1.ДатаДоступности)
+    DATEADD(DAY, {4}, T1.ДатаДоступности)
 )
 
 SELECT
@@ -631,7 +652,7 @@ FROM
             AND (T4.ТипИсточника = 1)
     ) T3 ON (T1.НоменклатураСсылка = T3.НоменклатураСсылка)
     AND (
-        T3.ДатаДоступности <= DATEADD(DAY, 4, T3.БлижайшаяДата)
+        T3.ДатаДоступности <= DATEADD(DAY, {4}, T3.БлижайшаяДата)
     )
 GROUP BY
     T1.НоменклатураСсылка,
@@ -953,8 +974,8 @@ CASE
     MIN(ISNULL(T4.ДатаДоступности,@P_MaxDate)) AS available_date_self
 FROM
     #Temp_ShipmentDatesDeliveryCourier T1 WITH(NOLOCK)
-    INNER JOIN Temp_DeliveryPower T2 WITH(NOLOCK)
-    INNER JOIN #Temp_Intervals T3 WITH(NOLOCK)
+    Left JOIN Temp_DeliveryPower T2 WITH(NOLOCK)
+    Left JOIN #Temp_Intervals T3 WITH(NOLOCK)
     ON (T3.Период = T2.Дата) 
 	ON (T2.МассаОборот >= T1.Вес)
     AND (T2.ОбъемОборот >= T1.Объем)
@@ -1020,7 +1041,7 @@ DROP TABLE #Temp_Intervals
                 cmd.Parameters["@P_DateTimePeriodBegin"].Value = DateMove.Date;
 
                 cmd.Parameters.Add("@P_DateTimePeriodEnd", SqlDbType.DateTime);
-                cmd.Parameters["@P_DateTimePeriodEnd"].Value = DateMove.Date.AddDays(4);
+                cmd.Parameters["@P_DateTimePeriodEnd"].Value = DateMove.Date.AddDays(Parameters1C.First(x => x.Name.Contains("rsp_КоличествоДнейЗаполненияГрафика")).ValueDouble);
 
                 cmd.Parameters.Add("@P_TimeNow", SqlDbType.DateTime);
                 cmd.Parameters["@P_TimeNow"].Value = TimeNow;
@@ -1039,7 +1060,12 @@ DROP TABLE #Temp_Intervals
                     cmd.Parameters.AddWithValue(parameters[i], data.codes[i]);
                 }
 
-                cmd.CommandText = string.Format(query, string.Join(", ", parameters), DateMove.Date.ToString("yyyy-MM-dd HH:mm:ss"), DateMove.Date.ToString("yyyy-MM-dd HH:mm:ss"), DateMove.Date.AddDays(4).ToString("yyyy-MM-dd HH:mm:ss"));
+                cmd.CommandText = string.Format(query, string.Join(", ", parameters), 
+                    DateMove.Date.ToString("yyyy-MM-dd HH:mm:ss"), 
+                    DateMove.Date.ToString("yyyy-MM-dd HH:mm:ss"), 
+                    DateMove.Date.AddDays(Parameters1C.First(x => x.Name.Contains("rsp_КоличествоДнейЗаполненияГрафика")).ValueDouble).ToString("yyyy-MM-dd HH:mm:ss"),
+                    Parameters1C.First(x => x.Name.Contains("КоличествоДнейАнализаЛучшейЦеныПриОтсрочкеЗаказа")).ValueDouble,
+                    Parameters1C.First(x => x.Name.Contains("ПроцентДнейАнализаЛучшейЦеныПриОтсрочкеЗаказа")).ValueDouble);
 
                 //open connection
                 conn.Open();
@@ -1088,8 +1114,8 @@ DROP TABLE #Temp_Intervals
                 var resEl = new ResponseAvailableDateDictElement
                 {
                     code = result.code[i],
-                    courier = result.courier[i].ToString("yyyy-MM-dd"),
-                    self = result.self[i].ToString("yyyy-MM-dd")
+                    courier = result.courier[i].ToString("yyyy-MM-ddTHH:mm:ss"),
+                    self = result.self[i].ToString("yyyy-MM-ddTHH:mm:ss")
                 };
 
                 resultDict.data.Add(result.code[i],resEl);
