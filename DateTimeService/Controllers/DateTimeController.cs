@@ -346,7 +346,12 @@ FROM
 --            #Temp_Remains T2 WITH(NOLOCK)) 
 --		--AND T1._Fld23832  @P_DateTimeNow
 --		AND T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData)
-    
+   
+;
+With Temp_MaxRemains AS
+(
+	Select Max(ДатаСобытия) AS ДатаСобытия, СкладИсточника AS СкладИсточника From #Temp_Remains Group By СкладИсточника 
+)
 SELECT
 	T1._Fld23831RRef AS СкладИсточника,
 	T1._Fld23833RRef AS СкладНазначения,
@@ -354,18 +359,22 @@ SELECT
 Into #Temp_MinimumWarehouseDates
 FROM
     dbo._InfoRg23830 T1
+	Inner Join Temp_MaxRemains On T1._Fld23831RRef = Temp_MaxRemains.СкладИсточника
+	AND  T1._Fld23832 > @P_DateTimeNow
+		AND T1._Fld23832 <= DateAdd(DAY,1,Temp_MaxRemains.ДатаСобытия)
 	WHERE
-    T1._Fld23831RRef IN (
-        SELECT
-            T2.СкладИсточника AS СкладИсточника
-        FROM
-            #Temp_Remains T2 WITH(NOLOCK)) 
-		AND T1._Fld23832 > @P_DateTimeNow
-		AND T1._Fld23832 < @P_DateTimePeriodEnd
-		AND T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData)
+  --  T1._Fld23831RRef IN (
+  --      SELECT
+  --          T2.СкладИсточника AS СкладИсточника
+  --      FROM
+  --          #Temp_Remains T2 WITH(NOLOCK)) 
+		--AND T1._Fld23832 > @P_DateTimeNow
+		--AND T1._Fld23832 < @P_DateTimePeriodEnd
+		--AND 
+		T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData)
 GROUP BY T1._Fld23831RRef,
 T1._Fld23833RRef
-
+OPTION (OPTIMIZE FOR (@P_DateTimeNow='{1}'));
 
 ;
 
@@ -777,7 +786,7 @@ HAVING
             ) AS NUMERIC(16, 0)
         ) > 0.0
     )
-OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-03-27 00:00:00'));
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}'));
 --option (recompile)
 --UNION
 --ALL
@@ -817,7 +826,7 @@ HAVING
             ) AS NUMERIC(16, 0)
         ) > 0.0
     )
-OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-03-27 00:00:00'));
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}'));
 --option (recompile)
 --UNION
 --ALL
@@ -853,7 +862,7 @@ HAVING
             ) AS NUMERIC(16, 0)
         ) > 0.0
     )
-OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-03-27 00:00:00'));
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}'));
 --option (recompile)
 ;
 
@@ -970,7 +979,7 @@ FROM
     LEFT OUTER JOIN dbo._Reference149 T5 ON T1.НоменклатураСсылка = T5._IDRRef
 GROUP BY
     T5._Fld3480
-OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-03-27 00:00:00',@P_DateTimePeriodEnd='4021-03-31 00:00:00'));
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'));
 --option (recompile)
 
 DROP TABLE #Temp_GeoData
@@ -1030,7 +1039,7 @@ DROP TABLE #Temp_Intervals
                     cmd.Parameters.AddWithValue(parameters[i], data.codes[i]);
                 }
 
-                cmd.CommandText = string.Format(query, string.Join(", ", parameters));
+                cmd.CommandText = string.Format(query, string.Join(", ", parameters), DateMove.ToString("yyyy-MM-dd HH:mm:ss"), DateMove.Date.ToString("yyyy-MM-dd HH:mm:ss"), DateMove.Date.AddDays(4).ToString("yyyy-MM-dd HH:mm:ss"));
 
                 //open connection
                 conn.Open();
