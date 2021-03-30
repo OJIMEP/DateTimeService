@@ -39,7 +39,7 @@ namespace DateTimeService.Data
                 for (int i = 0; i < names.Count; i++)
                 {
                     parameters[i] = string.Format("@Article{0}", i);
-                    cmd.Parameters.AddWithValue(parameters[i], names[i]);
+                    cmd.Parameters.AddWithValue(parameters[i], names[i].Name);
                 }
 
                 cmd.CommandText = string.Format(queryParametrs, string.Join(", ", parameters));
@@ -54,7 +54,7 @@ namespace DateTimeService.Data
                 {
                     while (drParametrs.Read())
                     {
-                        names.First(x => x.Name.Contains(drParametrs.GetString(0))).ValueDouble = drParametrs.GetDouble(1);
+                        names.First(x => x.Name.Contains(drParametrs.GetString(0))).ValueDouble = (double)drParametrs.GetDecimal(1);
 
                         querySuccessful = true;
                     }

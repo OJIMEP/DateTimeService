@@ -10,5 +10,6 @@
         public long TimeSQLExecution { get; set; }
         public string Status { get; set; }
         public string ErrorDescription { get; set; }
+        public long TimeFullExecution { get; set; }
     }
 }

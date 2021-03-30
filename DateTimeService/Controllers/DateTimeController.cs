@@ -150,31 +150,14 @@ namespace DateTimeService.Controllers
             return Ok(result.ToArray());
         }
 
-        /// <summary>
-        /// Возвращает ближайшие даты возможной доставки или самовывоза для переданного списка артикулов
-        /// </summary>
-        /// <remarks>
-        /// Sample request:
-        ///
-        ///     POST api/DateTime/AvailableDate
-        ///     {
-        ///       "city_id": "17030",
-        ///       "codes": [
-        ///         "358649","424941","1020938"
-        ///       ]
-        ///     }
-        ///
-        /// </remarks>
-        /// <returns>Список артикулов с датами доставки и самовывоза</returns>
-        /// <response code="200">Успешное получение</response>
-        /// <response code="500">Ошибка соединения с БД</response>
+       
         [Authorize(Roles = UserRoles.AvailableDate + "," + UserRoles.Admin)]
         [Route("AvailableDate")]
         [HttpPost]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public IActionResult AvailableDate(RequestDataAvailableDate data)
         {
+
+            var executionStart = DateTime.Now;
 
             string connString = _configuration.GetConnectionString("1CDataSqlConnection");
 
@@ -182,6 +165,7 @@ namespace DateTimeService.Controllers
 
             ResponseAvailableDate result = new();
             
+
             var logElement = new ElasticLogElement
             {
                 Path = HttpContext.Request.Path,
@@ -272,22 +256,6 @@ Where
 
 CREATE CLUSTERED INDEX ix_tempCIndexAft1 ON #Temp_Goods (НоменклатураСсылка,УпаковкаСсылка,ГруппаПланирования);
 
---SELECT
---	T4._Period AS Период,
---	T4._Fld14558RRef AS Валюта,
---	T4._Fld14559 AS Курс,
---	T4._Fld14560 AS Кратность
---Into #Temp_ExchangeRates
---FROM (SELECT
---		T3._Fld14558RRef AS Fld14558RRef,
---		MAX(T3._Period) AS MAXPERIOD_
---	FROM dbo._InfoRg14557 T3
---	WHERE
---	(T3._Fld14558RRef IN (0x80C2005056A128DA11E6339ED4C110DF,0x8265002522BD9FAE11E4C0CE6721009A,0x8265002522BD9FAE11E4C0CE67210099,0x8265002522BD9FAE11E4C0CE6721009B)) --валюты
---	GROUP BY 
---		T3._Fld14558RRef) T2
---INNER JOIN dbo._InfoRg14557 T4 
---	ON T2.Fld14558RRef = T4._Fld14558RRef AND T2.MAXPERIOD_ = T4._Period
 
 
 SELECT
@@ -347,6 +315,8 @@ WHERE
 				AND SUM(T2._Fld21412) - SUM(T2._Fld21411) <> 0.0
 ;
 
+CREATE CLUSTERED INDEX ix_tempCIndexAft2 ON #Temp_Remains (НоменклатураСсылка,СкладИсточника,ДатаСобытия);
+
 SELECT
     T1._Fld23831RRef AS СкладИсточника,
     T1._Fld23832 AS ДатаСобытия,
@@ -359,20 +329,10 @@ FROM
 	ON T1._Fld23831RRef = #Temp_Remains.СкладИсточника
 	AND T1._Fld23832 = #Temp_Remains.ДатаСобытия
 	AND T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData)
---WHERE
---    T1._Fld23831RRef IN (
---        SELECT
---            T2.СкладИсточника AS СкладИсточника
---        FROM
---            #Temp_Remains T2 WITH(NOLOCK)) 
---		--AND T1._Fld23832  @P_DateTimeNow
---		AND T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData)
+
    
 ;
-With Temp_MaxRemains AS
-(
-	Select Max(ДатаСобытия) AS ДатаСобытия, СкладИсточника AS СкладИсточника From #Temp_Remains Group By СкладИсточника 
-)
+
 SELECT
 	T1._Fld23831RRef AS СкладИсточника,
 	T1._Fld23833RRef AS СкладНазначения,
@@ -380,18 +340,15 @@ SELECT
 Into #Temp_MinimumWarehouseDates
 FROM
     dbo._InfoRg23830 T1
-	Inner Join Temp_MaxRemains On T1._Fld23831RRef = Temp_MaxRemains.СкладИсточника
-	AND  T1._Fld23832 > @P_DateTimeNow
-		AND T1._Fld23832 <= DateAdd(DAY,1,Temp_MaxRemains.ДатаСобытия)
-	WHERE
-  --  T1._Fld23831RRef IN (
-  --      SELECT
-  --          T2.СкладИсточника AS СкладИсточника
-  --      FROM
-  --          #Temp_Remains T2 WITH(NOLOCK)) 
-		--AND T1._Fld23832 > @P_DateTimeNow
-		--AND T1._Fld23832 < @P_DateTimePeriodEnd
-		--AND 
+WHERE
+    T1._Fld23831RRef IN (
+        SELECT
+            T2.СкладИсточника AS СкладИсточника
+        FROM
+            #Temp_Remains T2 WITH(NOLOCK)) 
+		AND T1._Fld23832 > @P_DateTimeNow
+		AND T1._Fld23832 <= DateAdd(DAY,2,@P_DateTimeNow)
+		AND 
 		T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData)
 GROUP BY T1._Fld23831RRef,
 T1._Fld23833RRef
@@ -463,38 +420,15 @@ FROM
     AND (T6.ДатаСобытия = T7.ДатаСобытия)
 WHERE
     NOT T6.Источник_RRRef IS NULL
-                
-
-
-
---SELECT
---T1.НоменклатураСсылка,
---T1.СкладНазначения,
---MIN(T1.ДатаДоступности) AS ДатаДоступности
---INto #Temp_ClosestDate
---FROM #Temp_Sources T1 WITH(NOLOCK)
---GROUP BY T1.НоменклатураСсылка,
---T1.СкладНазначения
-
 ;
 
 With Temp_ExchangeRates AS (
 SELECT
-	T4._Period AS Период,
-	T4._Fld14558RRef AS Валюта,
-	T4._Fld14559 AS Курс,
-	T4._Fld14560 AS Кратность
---Into #Temp_ExchangeRates
-FROM (SELECT
-		T3._Fld14558RRef AS Fld14558RRef,
-		MAX(T3._Period) AS MAXPERIOD_
-	FROM dbo._InfoRg14557 T3
-	WHERE
-	(T3._Fld14558RRef IN (0x80C2005056A128DA11E6339ED4C110DF,0x8265002522BD9FAE11E4C0CE6721009A,0x8265002522BD9FAE11E4C0CE67210099,0x8265002522BD9FAE11E4C0CE6721009B)) --валюты
-	GROUP BY 
-		T3._Fld14558RRef) T2
-INNER JOIN dbo._InfoRg14557 T4 
-	ON T2.Fld14558RRef = T4._Fld14558RRef AND T2.MAXPERIOD_ = T4._Period
+	T1._Period AS Период,
+	T1._Fld14558RRef AS Валюта,
+	T1._Fld14559 AS Курс,
+	T1._Fld14560 AS Кратность
+FROM _InfoRgSL26678 T1
 	)
 SELECT
     T1.НоменклатураСсылка,
@@ -523,26 +457,6 @@ FROM
         AND T1.Источник_RTRef = Резервирование._RecorderTRef
         AND T1.Источник_RRRef = Резервирование._RecorderRRef
     )
-
---SELECT
---    T1.НоменклатураСсылка,
---    T1.СкладНазначения,
---    T1.ДатаДоступности,
---    DATEADD(DAY, {4}, T1.ДатаДоступности) AS ДатаДоступностиПлюс, --это параметр КоличествоДнейАнализа
---    MIN(T1.Цена) AS ЦенаИсточника,
---    MIN(T1.Цена / 100.0 * (100 - {5})) AS ЦенаИсточникаМинус --это параметр ПроцентДнейАнализа
---Into #Temp_SupplyDocs
---FROM
---    #Temp_SourcesWithPrices T1 WITH(NOLOCK)
---WHERE
---    T1.Цена <> 0
---    AND T1.Источник_RTRef = 0x00000153
-    
---GROUP BY
---    T1.НоменклатураСсылка,
---    T1.ДатаДоступности,
---    T1.СкладНазначения,
---    DATEADD(DAY, 4.0, T1.ДатаДоступности)
 ;
 With Temp_SupplyDocs AS
 (
@@ -553,7 +467,6 @@ SELECT
     DATEADD(DAY, {4}, T1.ДатаДоступности) AS ДатаДоступностиПлюс, --это параметр КоличествоДнейАнализа
     MIN(T1.Цена) AS ЦенаИсточника,
     MIN(T1.Цена / 100.0 * (100 - {5})) AS ЦенаИсточникаМинус --это параметр ПроцентДнейАнализа
---Into #Temp_SupplyDocs
 FROM
     #Temp_SourcesWithPrices T1 WITH(NOLOCK)
 WHERE
@@ -618,7 +531,6 @@ With Temp_ClosestDate AS
 T1.НоменклатураСсылка,
 T1.СкладНазначения,
 MIN(T1.ДатаДоступности) AS ДатаДоступности
---INto #Temp_ClosestDate
 FROM #Temp_Sources T1 WITH(NOLOCK)
 GROUP BY T1.НоменклатураСсылка,
 T1.СкладНазначения
@@ -652,7 +564,7 @@ FROM
             AND (T4.ТипИсточника = 1)
     ) T3 ON (T1.НоменклатураСсылка = T3.НоменклатураСсылка)
     AND (
-        T3.ДатаДоступности <= DATEADD(DAY, {4}, T3.БлижайшаяДата)
+        T3.ДатаДоступности <= DATEADD(DAY, {4}, T3.БлижайшаяДата) --это параметр КоличествоДнейАнализа
     )
 GROUP BY
     T1.НоменклатураСсылка,
@@ -698,59 +610,6 @@ GROUP BY
     T1.ГруппаПланирования
 
 
---SELECT
---    CAST(
---        SUM(
---            CASE
---                WHEN (МощностиДоставки._RecordKind = 0.0) THEN МощностиДоставки._Fld25107
---                ELSE -(МощностиДоставки._Fld25107)
---            END
---        ) AS NUMERIC(16, 3)
---    ) AS МассаОборот,
---    CAST(
---        SUM(
---            CASE
---                WHEN (МощностиДоставки._RecordKind = 0.0) THEN МощностиДоставки._Fld25108
---                ELSE -(МощностиДоставки._Fld25108)
---            END
---        ) AS NUMERIC(16, 3)
---    ) AS ОбъемОборот,
---    CAST(
---        SUM(
---            CASE
---                WHEN (МощностиДоставки._RecordKind = 0.0) THEN МощностиДоставки._Fld25201
---                ELSE -(МощностиДоставки._Fld25201)
---            END
---        ) AS NUMERIC(16, 2)
---    ) AS ВремяНаОбслуживаниеОборот,
---    DATETIME2FROMPARTS(
---        DATEPART(YEAR, МощностиДоставки._Period),
---        DATEPART(MONTH, МощностиДоставки._Period),
---        DATEPART(DAY, МощностиДоставки._Period),
---        0,
---        0,
---        0,
---        0,
---        0
---    ) AS Дата
---Into #Temp_DeliveryPower
---FROM
---    dbo._AccumRg25104 МощностиДоставки
---WHERE
---    МощностиДоставки._Period >= @P_DateTimePeriodBegin
---    AND МощностиДоставки._Period <= @P_DateTimePeriodEnd
---    AND МощностиДоставки._Fld25105RRef in (Select ЗонаДоставкиРодительСсылка From #Temp_GeoData)
---GROUP BY
---    DATETIME2FROMPARTS(
---        DATEPART(YEAR, МощностиДоставки._Period),
---        DATEPART(MONTH, МощностиДоставки._Period),
---        DATEPART(DAY, МощностиДоставки._Period),
---        0,
---        0,
---        0,
---        0,
---        0
---    )
 
 SELECT
     T1.НоменклатураСсылка,
@@ -791,7 +650,6 @@ FROM
 	Inner Join #Temp_GeoData ON T1._Fld25111RRef = #Temp_GeoData.Геозона
 WHERE
     T1._Period = @P_DateTimePeriodBegin
-    --AND T1._Fld25111RRef in (Select Геозона From #Temp_GeoData) 
 GROUP BY
     T1._Period,
     T1._Fld25112RRef,
@@ -926,15 +784,13 @@ SELECT
         0,
         0
     ) AS Дата
---Into #Temp_DeliveryPower
 FROM
     dbo._AccumRg25104 МощностиДоставки
-	Inner Join #Temp_GeoData ON МощностиДоставки._Fld25105RRef = #Temp_GeoData.ЗонаДоставкиРодительСсылка
-
+	--Inner Join #Temp_GeoData ON МощностиДоставки._Fld25105RRef = #Temp_GeoData.ЗонаДоставкиРодительСсылка
 WHERE
     МощностиДоставки._Period >= @P_DateTimePeriodBegin
     AND МощностиДоставки._Period <= @P_DateTimePeriodEnd
-   -- AND МощностиДоставки._Fld25105RRef in (Select ЗонаДоставкиРодительСсылка From #Temp_GeoData)
+    AND МощностиДоставки._Fld25105RRef IN (Select ЗонаДоставкиРодительСсылка From  #Temp_GeoData)
 GROUP BY
     DATETIME2FROMPARTS(
         DATEPART(YEAR, МощностиДоставки._Period),
@@ -975,7 +831,7 @@ CASE
 FROM
     #Temp_ShipmentDatesDeliveryCourier T1 WITH(NOLOCK)
     Left JOIN Temp_DeliveryPower T2 WITH(NOLOCK)
-    Left JOIN #Temp_Intervals T3 WITH(NOLOCK)
+    Inner JOIN #Temp_Intervals T3 WITH(NOLOCK)
     ON (T3.Период = T2.Дата) 
 	ON (T2.МассаОборот >= T1.Вес)
     AND (T2.ОбъемОборот >= T1.Объем)
@@ -1006,18 +862,14 @@ OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'));
 DROP TABLE #Temp_GeoData
 DROP TABLE #Temp_WarehouseDates
 DROP TABLE #Temp_MinimumWarehouseDates
---DROP TABLE #Temp_ExchangeRates
 DROP TABLE #Temp_Goods
 DROP TABLE #Temp_Remains
 DROP TABLE #Temp_Sources
---DROP TABLE #Temp_ClosestDate
 DROP TABLE #Temp_SourcesWithPrices
---DROP TABLE #Temp_SupplyDocs
 DROP TABLE #Temp_BestPriceAfterClosestDate
 DROP TABLE #Temp_SourcesCorrectedDate
 DROP TABLE #Temp_ClosestDatesByGoods
 DROP TABLE #Temp_ShipmentDates
---DROP TABLE #Temp_DeliveryPower
 DROP TABLE #Temp_ShipmentDatesDeliveryCourier
 DROP TABLE #Temp_Intervals
 ";
@@ -1120,13 +972,180 @@ DROP TABLE #Temp_Intervals
 
                 resultDict.data.Add(result.code[i],resEl);
             }
-            
+
+           
+            logElement.TimeFullExecution = (long)(DateTime.Now - executionStart).TotalMilliseconds;
 
             var logstringElement = JsonSerializer.Serialize(logElement);
 
             _logger.LogInformation(logstringElement);
 
             return Ok(resultDict);
+        }
+
+
+        [Authorize(Roles = UserRoles.AvailableDate + "," + UserRoles.Admin)]
+        [Route("IntervalList")]
+        [HttpPost]
+        public IActionResult IntervalList(RequestIntervalList data)
+        {
+
+            var executionStart = DateTime.Now;
+
+            string connString = _configuration.GetConnectionString("1CDataSqlConnection");
+
+            //string connString = @"Server=localhost;Database=DevBase_cut_v3;Uid=sa;Pwd=; Trusted_Connection = False;";
+
+            ResponseAvailableDate result = new();
+
+
+            var logElement = new ElasticLogElement
+            {
+                Path = HttpContext.Request.Path,
+                Host = HttpContext.Request.Host.ToString(),
+                RequestContent = JsonSerializer.Serialize(data),
+                Id = Guid.NewGuid().ToString()
+            };
+
+            var Parameters1C = new List<GlobalParam1C>
+            {
+                new GlobalParam1C
+                {
+                    Name = "rsp_КоличествоДнейЗаполненияГрафика",
+                    DefaultDouble = 5
+                },
+                new GlobalParam1C
+                {
+                    Name = "КоличествоДнейАнализаЛучшейЦеныПриОтсрочкеЗаказа",
+                    DefaultDouble = 4
+                },
+                new GlobalParam1C
+                {
+                    Name = "ПроцентДнейАнализаЛучшейЦеныПриОтсрочкеЗаказа",
+                    DefaultDouble = 3
+                }
+            };
+
+            GlobalParam1C.FillValues(connString, Parameters1C, _logger);
+
+            long sqlCommandExecutionTime = 0;
+
+            try
+            {
+                //sql connection object
+                using SqlConnection conn = new(connString);
+
+                conn.StatisticsEnabled = true;
+
+                string query = @"";
+
+
+                var DateMove = DateTime.Now.AddMonths(24000);
+                var TimeNow = new DateTime(2001, 1, 1, DateMove.Hour, DateMove.Minute, DateMove.Second);
+                var EmptyDate = new DateTime(2001, 1, 1, 0, 0, 0);
+                var MaxDate = new DateTime(5999, 11, 11, 0, 0, 0);
+
+                //define the SqlCommand object
+                SqlCommand cmd = new(query, conn);
+
+                cmd.Parameters.Add("@P4", SqlDbType.NVarChar);
+                //cmd.Parameters["@P4"].Value = data.city_id;
+
+                cmd.Parameters.Add("@P_DateTimeNow", SqlDbType.DateTime);
+                cmd.Parameters["@P_DateTimeNow"].Value = DateMove;
+
+                cmd.Parameters.Add("@P_DateTimePeriodBegin", SqlDbType.DateTime);
+                cmd.Parameters["@P_DateTimePeriodBegin"].Value = DateMove.Date;
+
+                cmd.Parameters.Add("@P_DateTimePeriodEnd", SqlDbType.DateTime);
+                cmd.Parameters["@P_DateTimePeriodEnd"].Value = DateMove.Date.AddDays(Parameters1C.First(x => x.Name.Contains("rsp_КоличествоДнейЗаполненияГрафика")).ValueDouble);
+
+                cmd.Parameters.Add("@P_TimeNow", SqlDbType.DateTime);
+                cmd.Parameters["@P_TimeNow"].Value = TimeNow;
+
+                cmd.Parameters.Add("@P_EmptyDate", SqlDbType.DateTime);
+                cmd.Parameters["@P_EmptyDate"].Value = EmptyDate;
+
+                cmd.Parameters.Add("@P_MaxDate", SqlDbType.DateTime);
+                cmd.Parameters["@P_MaxDate"].Value = MaxDate;
+
+
+                var parameters = new string[data.orderItems.Count];
+                //for (int i = 0; i < data.codes.Length; i++)
+                //{
+                //    parameters[i] = string.Format("@Article{0}", i);
+                //    cmd.Parameters.AddWithValue(parameters[i], data.codes[i]);
+                //}
+
+                cmd.CommandText = string.Format(query, string.Join(", ", parameters),
+                    DateMove.Date.ToString("yyyy-MM-dd HH:mm:ss"),
+                    DateMove.Date.ToString("yyyy-MM-dd HH:mm:ss"),
+                    DateMove.Date.AddDays(Parameters1C.First(x => x.Name.Contains("rsp_КоличествоДнейЗаполненияГрафика")).ValueDouble).ToString("yyyy-MM-dd HH:mm:ss"),
+                    Parameters1C.First(x => x.Name.Contains("КоличествоДнейАнализаЛучшейЦеныПриОтсрочкеЗаказа")).ValueDouble,
+                    Parameters1C.First(x => x.Name.Contains("ПроцентДнейАнализаЛучшейЦеныПриОтсрочкеЗаказа")).ValueDouble);
+
+                //open connection
+                conn.Open();
+
+                //execute the SQLCommand
+                SqlDataReader dr = cmd.ExecuteReader();
+
+                //check if there are records
+                if (dr.HasRows)
+                {
+                    while (dr.Read())
+                    {
+                        var article = dr.GetString(0);
+                        var availableDateCourier = dr.GetDateTime(1).AddMonths(-24000);
+                        var availableDateSelf = dr.GetDateTime(2).AddMonths(-24000);
+
+                        result.code.Add(article);
+                        result.courier.Add(availableDateCourier);
+                        result.self.Add(availableDateSelf);
+                    }
+                }
+
+                var stats = conn.RetrieveStatistics();
+                sqlCommandExecutionTime = (long)stats["ExecutionTime"];
+
+                //close data reader
+                dr.Close();
+
+                //close connection
+                conn.Close();
+
+                logElement.TimeSQLExecution = sqlCommandExecutionTime;
+                logElement.ResponseContent = JsonSerializer.Serialize(result);
+                logElement.Status = "Ok";
+            }
+            catch (Exception ex)
+            {
+                logElement.TimeSQLExecution = sqlCommandExecutionTime;
+                logElement.ErrorDescription = ex.Message;
+                logElement.Status = "Error";
+            }
+
+            var resultDict = new ResponseAvailableDateDict();
+            for (int i = 0; i < result.code.Count; i++)
+            {
+                var resEl = new ResponseAvailableDateDictElement
+                {
+                    code = result.code[i],
+                    courier = result.courier[i].ToString("yyyy-MM-ddTHH:mm:ss"),
+                    self = result.self[i].ToString("yyyy-MM-ddTHH:mm:ss")
+                };
+
+                resultDict.data.Add(result.code[i], resEl);
+            }
+
+
+            logElement.TimeFullExecution = (long)(DateTime.Now - executionStart).TotalMilliseconds;
+
+            var logstringElement = JsonSerializer.Serialize(logElement);
+
+            _logger.LogInformation(logstringElement);
+
+            return Problem(null,null,StatusCodes.Status501NotImplemented);//Ok(resultDict);
         }
 
     }
