@@ -16,7 +16,7 @@
   },
   "servers": [
     {
-      "url": "https://37.17.76.125:739/NetMS"
+      "url": "https://site.com/NetMS"
     }
   ],
   "tags": [
