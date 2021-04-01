@@ -33,6 +33,8 @@ namespace DateTimeService
         public void ConfigureServices(IServiceCollection services)
         {
 
+            services.AddCors();
+
             services.AddControllers();
 
             // For Entity Framework  
@@ -99,6 +101,9 @@ namespace DateTimeService
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory)
         {
 
+            //app.UseCors(builder => builder.AllowAnyHeader().AllowAnyMethod().SetIsOriginAllowedToAllowWildcardSubdomains().WithOrigins("https://*.21vek.by", "https://localhost*", "https://*.swagger.io"));
+            app.UseCors(builder => builder.AllowAnyHeader().AllowAnyMethod().SetIsOriginAllowedToAllowWildcardSubdomains().WithOrigins("*"));
+
             app.UseStaticFiles();
             app.UseSwagger();
             app.UseSwaggerUI(c => c.SwaggerEndpoint("/NetMS/swagger.json", "DateTimeService v1"));
@@ -116,6 +121,8 @@ namespace DateTimeService
             app.UseHttpsRedirection();            
 
             app.UseRouting();
+
+            
 
             app.UseAuthentication();
             app.UseAuthorization();
