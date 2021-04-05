@@ -6,5 +6,6 @@
         public const string User = "User";
         public const string MaxAvailableCount = "MaxAvailableCountUser";
         public const string AvailableDate = "AvailableDateUser";
+        public const string IntervalList = "IntervalListUser";
     }
 }

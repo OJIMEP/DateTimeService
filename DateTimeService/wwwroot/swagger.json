@@ -440,20 +440,19 @@
             "example": "47175"
           },
           "delivery_type": {
-            "type": "array",
+            "type": "string",
             "description": "Вид доставки - самовывоз (self) или курьер (courier). Если не указан, то считается как доставка",
-            "items": {
-              "type": "string"
-            },
-            "example": [
-              "self",
-              "courier"
-            ]
+            "example": "self"
           },
           "floor": {
-            "type": "string",
+            "type": "number",
             "description": "Этаж",
-            "example": "8"
+            "example": 8
+          },
+          "payment": {
+            "type": "string",
+            "description": "Тип оплаты: partly_pay, legal_entity, other",
+            "example": "other"
           },
           "order_items": {
             "type": "array",
