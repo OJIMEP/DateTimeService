@@ -22,12 +22,14 @@ namespace DateTimeService.Controllers
         private readonly UserManager<DateTimeServiceUser> userManager;
         private readonly RoleManager<IdentityRole> roleManager;
         private readonly IConfiguration _configuration;
+        private IUserService _userService;
 
-        public AuthenticateController(UserManager<DateTimeServiceUser> userManager, RoleManager<IdentityRole> roleManager, IConfiguration configuration)
+        public AuthenticateController(UserManager<DateTimeServiceUser> userManager, RoleManager<IdentityRole> roleManager, IConfiguration configuration, IUserService userService)
         {
             this.userManager = userManager;
             this.roleManager = roleManager;
-            _configuration = configuration;
+            this._configuration = configuration;
+            this._userService = userService;
         }
         //TODO make delete and change password
 
@@ -38,36 +40,44 @@ namespace DateTimeService.Controllers
             var user = await userManager.FindByNameAsync(model.Username);
             if (user != null && await userManager.CheckPasswordAsync(user, model.Password))
             {
-                var userRoles = await userManager.GetRolesAsync(user);
 
-                var authClaims = new List<Claim>
-                {
-                    new Claim(ClaimTypes.Name, user.UserName),
-                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                };
 
-                foreach (var userRole in userRoles)
-                {
-                    authClaims.Add(new Claim(ClaimTypes.Role, userRole));
-                }
+                var response = await _userService.AuthenticateAsync(model, ipAddress());
 
-                var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Secret"]));
+                if (response == null)
+                    return BadRequest();
 
-                var token = new JwtSecurityToken(
-                    issuer: _configuration["JWT:ValidIssuer"],
-                    audience: _configuration["JWT:ValidAudience"],
-                    expires: DateTime.Now.AddHours(3),
-                    claims: authClaims,
-                    signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
-                    );
+                //setTokenCookie(response.RefreshToken);
 
                 return Ok(new
                 {
-                    token = new JwtSecurityTokenHandler().WriteToken(token),
-                    expiration = token.ValidTo
+                    token = response.JwtToken,
+                    expiration = response.JwtValidTo,
+                    refresh = response.RefreshToken,
+                    expiration_refresh = response.RefreshValidTo 
                 });
             }
             return Unauthorized();
+        }
+
+        [HttpPost("refresh-token")]
+        public async Task<IActionResult> RefreshTokenAsync([FromBody] RefreshTokenModel model)
+        {
+            var refreshToken = model.refresh_token;
+            var response = await _userService.RefreshTokenAsync(refreshToken, ipAddress());
+
+            if (response == null)
+                return Unauthorized(new { message = "Invalid token" });
+
+            //setTokenCookie(response.RefreshToken);
+
+            return Ok(new
+            {
+                token = response.JwtToken,
+                expiration = response.JwtValidTo,
+                refresh = response.RefreshToken,
+                expiration_refresh = response.RefreshValidTo
+            });
         }
 
         [Authorize(Roles = UserRoles.Admin)]
@@ -137,6 +147,31 @@ namespace DateTimeService.Controllers
             }
 
             return Ok(new Response { Status = "Success", Message = "User created successfully!" });
+        }
+
+        [HttpPost("revoke-token")]
+        public IActionResult RevokeToken([FromBody] RefreshTokenModel model)
+        {
+            // accept token from request body or cookie
+            var token = model.refresh_token;
+
+            if (string.IsNullOrEmpty(token))
+                return BadRequest(new { message = "Token is required" });
+
+            var response = _userService.RevokeToken(token, ipAddress());
+
+            if (!response)
+                return NotFound(new { message = "Token not found" });
+
+            return Ok(new { message = "Token revoked" });
+        }
+
+        private string ipAddress()
+        {
+            if (Request.Headers.ContainsKey("X-Forwarded-For"))
+                return Request.Headers["X-Forwarded-For"];
+            else
+                return HttpContext.Connection.RemoteIpAddress.MapToIPv4().ToString();
         }
     }
 }

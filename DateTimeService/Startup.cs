@@ -80,6 +80,8 @@ namespace DateTimeService
                 };
             });
 
+            services.AddScoped<IUserService, UserService>();
+
             services.AddSwaggerGen();
             //c =>
             //{

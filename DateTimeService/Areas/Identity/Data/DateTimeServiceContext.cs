@@ -6,7 +6,6 @@ namespace DateTimeService.Data
 {
     public class DateTimeServiceContext : IdentityDbContext<DateTimeServiceUser>
     {
-        public DbSet<ElasticLogElement> Logs { get; set; }
         public DateTimeServiceContext(DbContextOptions<DateTimeServiceContext> options)
             : base(options)
         {
