@@ -39,7 +39,23 @@ namespace DateTimeService
             {
 
                 var logMessage = new ElasticLogMessage();
-                logMessage.message.Add(formatter(state, exception));
+                if (!formatter(state, exception).Contains("message"))
+                {
+                    var logElement = new ElasticLogElement
+                    {
+                        TimeSQLExecution = 0,
+                        ErrorDescription = formatter(state, exception),
+                        Status = "Info"
+                    };
+
+                    var logstringElement = JsonSerializer.Serialize(logElement);
+                    logMessage.message.Add(logstringElement);
+                }
+                else
+                {
+                    logMessage.message.Add(formatter(state, exception));
+                }
+                
 
                 var resultLog = JsonSerializer.Serialize(logMessage);
 
