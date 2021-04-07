@@ -30,7 +30,7 @@ namespace DateTimeService.Data
 
                 string queryParametrs = @"SELECT [_Fld22354]      
       ,[_Fld22355_N]     
-  FROM [triovist].[dbo].[_InfoRg22353]
+  FROM [dbo].[_InfoRg22353]
   where [_Fld22354] IN({0})";
 
                 SqlCommand cmd = new(queryParametrs, conn);

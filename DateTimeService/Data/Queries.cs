@@ -1169,6 +1169,7 @@ CREATE CLUSTERED INDEX ix_tempCIndexAft ON #Temp_GeoData(СкладСсылка,
 
 Select 
 	Номенклатура._IDRRef AS НоменклатураСсылка,
+    Номенклатура._Fld3480 AS article,
 	Упаковки._IDRRef AS УпаковкаСсылка,
 	1 As Количество,
 	Упаковки._Fld6000 AS Вес,
@@ -1229,7 +1230,6 @@ FROM
 			On Цены._Fld21443RRef = Temp_ExchangeRates.Валюта 
 		On T2._Fld21408RRef = Цены._Fld21408RRef
 		AND T2._Fld21410_RTRef = Цены._Fld21410_RTRef
-		AND T2._Fld21410_RRRef = Цены._Fld21410_RRRef
 		AND Цены._Fld21410_RTRef = 0x00000153 --Цены.Регистратор ССЫЛКА Документ.мегапрайсРегистрацияПрайса
 		And Цены._Fld21442<>0 AND (Цены._Fld21442 * Temp_ExchangeRates.Курс / Temp_ExchangeRates.Кратность >= Цены._Fld21982 OR Цены._Fld21411 >= Цены._Fld21616)
 		And Цены._Fld21408RRef IN(SELECT
@@ -1277,9 +1277,7 @@ FROM
 	Inner Join #Temp_Remains With (NOLOCK)
 	ON T1._Fld23831RRef = #Temp_Remains.СкладИсточника
 	AND T1._Fld23832 = #Temp_Remains.ДатаСобытия
-	AND T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData)
-
-   
+	AND T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData)   
 ;
 
 SELECT
@@ -1485,6 +1483,7 @@ T1.СкладНазначения
 )
 SELECT
     T1.НоменклатураСсылка,
+    T1.article,
     ISNULL(T3.СкладНазначения, T2.СкладНазначения) AS СкладНазначения,
     MIN(ISNULL(T3.ДатаДоступности, T2.ДатаДоступности)) AS БлижайшаяДата,
     1 AS Количество,
@@ -1516,6 +1515,7 @@ FROM
     )
 GROUP BY
     T1.НоменклатураСсылка,
+    T1.article,
     ISNULL(T3.СкладНазначения, T2.СкладНазначения),
     T1.Вес,
     T1.Объем,
@@ -1526,6 +1526,7 @@ GROUP BY
 
 SELECT
     T1.НоменклатураСсылка,
+    T1.article,
     T1.СкладНазначения,
     T1.Вес,
     T1.Объем,
@@ -1550,6 +1551,7 @@ Where
 	NOT T1.БлижайшаяДата IS NULL
 GROUP BY
     T1.НоменклатураСсылка,
+    T1.article,
     T1.СкладНазначения,
     T1.Вес,
     T1.Объем,
@@ -1560,6 +1562,7 @@ GROUP BY
 
 SELECT
     T1.НоменклатураСсылка,
+    T1.article,
     MIN(T1.ДатаДоступности) AS ДатаСоСклада,
     T1.Вес,
     T1.Объем,
@@ -1572,6 +1575,7 @@ FROM
 --    T1.СкладНазначения IN (@P1, @P2) --пока не имеет значения ибо в запросе не используются склады ПВЗ
 GROUP BY
     T1.НоменклатураСсылка,
+    T1.article,
     T1.Вес,
     T1.Объем,
     T1.ВремяНаОбслуживание,
@@ -1733,7 +1737,7 @@ GROUP BY
     CAST(CAST(МощностиДоставки._Period  AS DATE) AS DATETIME)
 )
 SELECT
-    T5._Fld3480 AS nomenclature_id,
+    T1.article AS nomenclature_id,
     MIN(
         ISNULL(
             T3.ВремяНачала,
@@ -1765,9 +1769,8 @@ FROM
     Left JOIN #Temp_ShipmentDates T4 WITH(NOLOCK)
     ON (T1.НоменклатураСсылка = T4.НоменклатураСсылка)
     AND (T4.СкладНазначения IN (NULL)) --склады ПВЗ
-    LEFT OUTER JOIN dbo._Reference149 T5 ON T1.НоменклатураСсылка = T5._IDRRef
 GROUP BY
-    T5._Fld3480
+    T1.article
 OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'));
 --option (recompile)
 
