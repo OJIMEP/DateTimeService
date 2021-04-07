@@ -298,8 +298,8 @@ namespace DateTimeService.Controllers
                 var resEl = new ResponseAvailableDateDictElement
                 {
                     code = result.code[i],
-                    courier = data.delivery_type.Contains("courier") ? result.courier[i].ToString("yyyy-MM-ddTHH:mm:ss") : null,
-                    self = data.delivery_type.Contains("self") ? result.self[i].ToString("yyyy-MM-ddTHH:mm:ss") : null
+                    courier = data.delivery_types.Contains("courier") ? result.courier[i].ToString("yyyy-MM-ddTHH:mm:ss") : null,
+                    self = data.delivery_types.Contains("self") ? result.self[i].ToString("yyyy-MM-ddTHH:mm:ss") : null
                 };
 
                 resultDict.data.Add(result.code[i], resEl);

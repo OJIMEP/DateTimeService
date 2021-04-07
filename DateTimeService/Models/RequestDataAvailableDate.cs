@@ -11,7 +11,7 @@ namespace DateTimeService.Models
         [Required]
         public string city_id { get; set; }
         [Required]
-        public string[] delivery_type { get; set; }
+        public string[] delivery_types { get; set; }
         [Required]
         public string[] codes { get; set; }
 

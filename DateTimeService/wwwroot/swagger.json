@@ -887,7 +887,7 @@
             "description": "Код города",
             "example": "17030"
           },
-          "delivery_type": {
+          "delivery_types": {
             "type": "array",
             "description": "Вид доставки - самовывоз (self) или курьер (courier)",
             "items": {
