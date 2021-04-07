@@ -954,7 +954,7 @@
         ],
         "type": "object",
         "properties": {
-          "username": {
+          "refresh_token": {
             "type": "string",
             "example": "L9kPss+GWOFDFtYWne8l/vinc7545ZtcCVofyL4uhLUiTeYjwUrjwu2nkR09TWOusjxMFUcC/Mm4AMO2KfQVmg=="
           }
