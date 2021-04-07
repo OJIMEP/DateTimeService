@@ -18,13 +18,25 @@ namespace DateTimeService.Areas.Identity.Data
             {
                 await roleManager.CreateAsync(new IdentityRole(UserRoles.MaxAvailableCount));
             }
+            if (await roleManager.FindByNameAsync(UserRoles.AvailableDate) == null)
+            {
+                await roleManager.CreateAsync(new IdentityRole(UserRoles.AvailableDate));
+            }
+            if (await roleManager.FindByNameAsync(UserRoles.IntervalList) == null)
+            {
+                await roleManager.CreateAsync(new IdentityRole(UserRoles.IntervalList));
+            }
+            if (await roleManager.FindByNameAsync(UserRoles.User) == null)
+            {
+                await roleManager.CreateAsync(new IdentityRole(UserRoles.User));
+            }
             if (await userManager.FindByNameAsync(adminEmail) == null)
             {
                 DateTimeServiceUser admin = new() { Email = adminEmail, UserName = adminEmail };
                 IdentityResult result = await userManager.CreateAsync(admin, password);
                 if (result.Succeeded)
                 {
-                    await userManager.AddToRoleAsync(admin, "admin");
+                    await userManager.AddToRoleAsync(admin, UserRoles.Admin);
                 }
             }
         }

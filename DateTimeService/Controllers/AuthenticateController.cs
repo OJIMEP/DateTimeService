@@ -31,7 +31,7 @@ namespace DateTimeService.Controllers
             this._configuration = configuration;
             this._userService = userService;
         }
-        //TODO make delete and change password
+        
 
         [HttpPost]
         [Route("login")]
@@ -80,6 +80,24 @@ namespace DateTimeService.Controllers
             });
         }
 
+        [HttpPost("revoke-token")]
+        public IActionResult RevokeToken([FromBody] RefreshTokenModel model)
+        {
+            // accept token from request body or cookie
+            var token = model.refresh_token;
+
+            if (string.IsNullOrEmpty(token))
+                return BadRequest(new { message = "Token is required" });
+
+            var response = _userService.RevokeToken(token, ipAddress());
+
+            if (!response)
+                return NotFound(new { message = "Token not found" });
+
+            return Ok(new { message = "Token revoked" });
+        }
+
+
         [Authorize(Roles = UserRoles.Admin)]
         [HttpPost]
         [Route("register")]
@@ -117,54 +135,82 @@ namespace DateTimeService.Controllers
 
         [Authorize(Roles = UserRoles.Admin)]
         [HttpPost]
-        [Route("register-admin")]
-        public async Task<IActionResult> RegisterAdmin([FromBody] RegisterModel model)
+        [Route("delete")]
+        public async Task<IActionResult> Delete([FromBody] DeleteModel model)
         {
-            var userExists = await userManager.FindByNameAsync(model.Username);
-            if (userExists != null)
-                return StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Error", Message = "User already exists!" });
+            var user = await userManager.FindByNameAsync(model.Username);
+            if (user == null)
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Error", Message = "User not found!" });
 
-            DateTimeServiceUser user = new()
-            {
-                Email = model.Email,
-                SecurityStamp = Guid.NewGuid().ToString(),
-                UserName = model.Username
-            };
-            var result = await userManager.CreateAsync(user, model.Password);
+            var result = await userManager.DeleteAsync(user);
+
             if (!result.Succeeded)
-                return StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Error", Message = "User creation failed! Please check user details and try again." });
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Error", Message = "User deletion failed! Please check user details and try again.", Description = result.Errors });
 
-            if (!await roleManager.RoleExistsAsync(UserRoles.Admin))
-                await roleManager.CreateAsync(new IdentityRole(UserRoles.Admin));
-            if (!await roleManager.RoleExistsAsync(UserRoles.User))
-                await roleManager.CreateAsync(new IdentityRole(UserRoles.User));
-            if (!await roleManager.RoleExistsAsync(UserRoles.MaxAvailableCount))
-                await roleManager.CreateAsync(new IdentityRole(UserRoles.MaxAvailableCount));
+            return Ok(new Response { Status = "Success", Message = "User deleted successfully!" });
+        }
 
-            if (await roleManager.RoleExistsAsync(UserRoles.Admin))
+
+        [Authorize(Roles = UserRoles.Admin)]
+        [HttpPost]
+        [Route("change-password")]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordModel model)
+        {
+
+            var user = await userManager.FindByNameAsync(model.Username);
+            if (user == null || !await userManager.CheckPasswordAsync(user, model.OldPassword))
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Error", Message = "User not found or wrong old password" });
+            
+            var result = await userManager.ChangePasswordAsync(user, model.OldPassword, model.NewPassword);
+
+            if (!result.Succeeded)
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Error", Message = "Password change is failed! Please check user details and try again.", Description = result.Errors });
+
+            return Ok(new Response { Status = "Success", Message = "Password changed password successfully!" });
+        }
+
+        [Authorize(Roles = UserRoles.Admin)]
+        [HttpPost]
+        [Route("modify-roles")]
+        public async Task<IActionResult> ModifyRoles([FromBody] ModifyRolesModel model)
+        {
+
+            var user = await userManager.FindByNameAsync(model.Username);
+            if (user == null)
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Error", Message = "User not found" });
+
+            List<string> successAddRoles = new ();
+            List<string> successDeleteRoles = new();
+
+            foreach (var role in model.addRoles)
             {
-                await userManager.AddToRoleAsync(user, UserRoles.Admin);
+                if (await roleManager.RoleExistsAsync(role))
+                {
+                    await userManager.AddToRoleAsync(user, role);
+                    successAddRoles.Add(role);
+                }
             }
 
-            return Ok(new Response { Status = "Success", Message = "User created successfully!" });
+            foreach (var role in model.deleteRoles)
+            {
+                if (await roleManager.RoleExistsAsync(role))
+                {
+                    await userManager.RemoveFromRoleAsync(user, role);
+                    successDeleteRoles.Add(role);
+                }
+            }
+
+            return Ok(new Response { Status = "Success", Message = "Added roles: "+string.Join(", ",successAddRoles) + ", deleted roles: " + string.Join(", ", successDeleteRoles) });
         }
 
-        [HttpPost("revoke-token")]
-        public IActionResult RevokeToken([FromBody] RefreshTokenModel model)
+        [Authorize(Roles = UserRoles.Admin)]
+        [HttpGet]
+        [Route("available-roles")]
+        public IActionResult GetAvailableRoles()
         {
-            // accept token from request body or cookie
-            var token = model.refresh_token;
-
-            if (string.IsNullOrEmpty(token))
-                return BadRequest(new { message = "Token is required" });
-
-            var response = _userService.RevokeToken(token, ipAddress());
-
-            if (!response)
-                return NotFound(new { message = "Token not found" });
-
-            return Ok(new { message = "Token revoked" });
+            return Ok(roleManager.Roles);
         }
+
 
         private string ipAddress()
         {

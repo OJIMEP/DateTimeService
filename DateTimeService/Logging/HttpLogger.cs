@@ -39,7 +39,7 @@ namespace DateTimeService
             {
 
                 var logMessage = new ElasticLogMessage();
-                if (!formatter(state, exception).Contains("message"))
+                if (!formatter(state, exception).Contains("ResponseContent"))
                 {
                     var logElement = new ElasticLogElement
                     {

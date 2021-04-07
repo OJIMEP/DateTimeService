@@ -9,7 +9,7 @@ namespace DateTimeService.Data
         public DateTimeServiceContext(DbContextOptions<DateTimeServiceContext> options)
             : base(options)
         {
-            Database.EnsureCreated();
+            //Database.EnsureCreated();
         }
 
         protected override void OnModelCreating(ModelBuilder builder)

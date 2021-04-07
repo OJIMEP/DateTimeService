@@ -93,15 +93,15 @@
               }
             }
           },
-          "500": {
-            "description": "внутренняя ошибка сервера",
-            "content": {}
-          },
           "401": {
             "description": "Не аутентифицирован"
           },
           "403": {
             "description": "Отсутствуют права на данный эндпоинт"
+          },
+          "500": {
+            "description": "внутренняя ошибка сервера",
+            "content": {}
           }
         },
         "x-codegen-request-body-name": "body"
@@ -179,15 +179,15 @@
               }
             }
           },
-          "500": {
-            "description": "внутренняя ошибка сервера",
-            "content": {}
-          },
           "401": {
             "description": "Не аутентифицирован"
           },
           "403": {
             "description": "Отсутствуют права на данный эндпоинт"
+          },
+          "500": {
+            "description": "внутренняя ошибка сервера",
+            "content": {}
           }
         }
       }
@@ -232,8 +232,19 @@
                     "expiration": {
                       "type": "string",
                       "format": "date-time",
-                      "description": "Срок действия токена",
+                      "description": "Срок действия токена в UTC",
                       "example": "2021-03-24T13:24:25Z"
+                    },
+                    "refresh": {
+                      "type": "string",
+                      "description": "Refresh токен",
+                      "example": "PUo3hQD2YR5J2qeDS/EUfep5LAz3uPod6W70m/zmqf0y8ZZThtvKJb6Ft6fqkf/I+Vw7moD8i1i3OEaPhB/PgQ=="
+                    },
+                    "expiration_refresh": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Срок действия refresh-токена в UTC",
+                      "example": "2021-04-08T08:01:51.979274Z"
                     }
                   }
                 }
@@ -241,7 +252,162 @@
             }
           },
           "401": {
-            "description": "Неудачная аутентификация"
+            "description": "Неудачная аутентификация",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "description": "Подробности",
+                      "example": "Invalid token"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Authenticate/refresh-token": {
+      "post": {
+        "tags": [
+          "Authenticate"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshTokenModel"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshTokenModel"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshTokenModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Токен валидный, возвращается новый набор, старый токен устаревает",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string",
+                      "description": "Токен аутентификации для помещения в заголовок Authorization",
+                      "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiYWRtaW5AdGVzdC5jb20iLCJqdGkiOiJiZGY1MThlZC05MDg2LTQ2YmMtOGE5My1jNjNmMjgyMjVkMGQiLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJBZG1pbiIsImV4cCI6MTYxNjU5MTk1NSwiaXNzIjoiMjF2ZWsuYnkvMUMiLCJhdWQiOiJNaWNyb3NlcnZpY2VVc2VyIn0.s5HYYpZBF5POynoMYPDM1s10ti4aBc14MTu08i89ok4"
+                    },
+                    "expiration": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Срок действия токена в UTC",
+                      "example": "2021-03-24T13:24:25Z"
+                    },
+                    "refresh": {
+                      "type": "string",
+                      "description": "Refresh токен",
+                      "example": "PUo3hQD2YR5J2qeDS/EUfep5LAz3uPod6W70m/zmqf0y8ZZThtvKJb6Ft6fqkf/I+Vw7moD8i1i3OEaPhB/PgQ=="
+                    },
+                    "expiration_refresh": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Срок действия refresh-токена в UTC",
+                      "example": "2021-04-08T08:01:51.979274Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Токен не валидный",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "description": "Описание результата",
+                      "example": "Invalid token"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Authenticate/revoke-token": {
+      "post": {
+        "tags": [
+          "Authenticate"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshTokenModel"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshTokenModel"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshTokenModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Токен отозван",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "description": "Описание результата",
+                      "example": "Token revoked"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Токен не валидный",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "description": "Описание результата",
+                      "example": "Invalid token"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -334,7 +500,7 @@
         }
       }
     },
-    "/api/Authenticate/register-admin": {
+    "/api/Authenticate/delete": {
       "post": {
         "security": [
           {
@@ -348,17 +514,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/RegisterModel"
+                "$ref": "#/components/schemas/DeleteModel"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/RegisterModel"
+                "$ref": "#/components/schemas/DeleteModel"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/RegisterModel"
+                "$ref": "#/components/schemas/DeleteModel"
               }
             }
           }
@@ -378,8 +544,7 @@
                     },
                     "Message": {
                       "type": "string",
-                      "description": "Сообщение",
-                      "example": "User created successfully!"
+                      "description": "Сообщение"
                     }
                   }
                 }
@@ -393,7 +558,7 @@
             "description": "Не хватает ролей у пользователя для данного действия"
           },
           "500": {
-            "description": "Ошибка создания пользователя",
+            "description": "Ошибка",
             "content": {
               "application/json": {
                 "schema": {
@@ -406,13 +571,247 @@
                     },
                     "Message": {
                       "type": "string",
-                      "description": "Сообщение",
-                      "example": "User creation failed! Please check user details and try again."
+                      "description": "Сообщение"
                     },
                     "Description": {
                       "type": "string",
-                      "description": "Подробности ошибки",
-                      "example": "Слабый пароль"
+                      "description": "Подробности ошибки"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Authenticate/change-password": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "tags": [
+          "Authenticate"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordModel"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordModel"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "Status": {
+                      "type": "string",
+                      "description": "Статус операции",
+                      "example": "Success"
+                    },
+                    "Message": {
+                      "type": "string",
+                      "description": "Сообщение"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Не аутентифицирован"
+          },
+          "403": {
+            "description": "Не хватает ролей у пользователя для данного действия"
+          },
+          "500": {
+            "description": "Ошибка",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "Status": {
+                      "type": "string",
+                      "description": "Статус операции",
+                      "example": "Error"
+                    },
+                    "Message": {
+                      "type": "string",
+                      "description": "Сообщение"
+                    },
+                    "Description": {
+                      "type": "string",
+                      "description": "Подробности ошибки"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Authenticate/modify-roles": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "tags": [
+          "Authenticate"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModifyRolesModel"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModifyRolesModel"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModifyRolesModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "Status": {
+                      "type": "string",
+                      "description": "Статус операции",
+                      "example": "Success"
+                    },
+                    "Message": {
+                      "type": "string",
+                      "description": "Сообщение"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Не аутентифицирован"
+          },
+          "403": {
+            "description": "Не хватает ролей у пользователя для данного действия"
+          },
+          "500": {
+            "description": "Ошибка",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "Status": {
+                      "type": "string",
+                      "description": "Статус операции",
+                      "example": "Error"
+                    },
+                    "Message": {
+                      "type": "string",
+                      "description": "Сообщение"
+                    },
+                    "Description": {
+                      "type": "string",
+                      "description": "Подробности ошибки"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Authenticate/available-roles": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "tags": [
+          "Authenticate"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "Status": {
+                      "type": "string",
+                      "description": "Статус операции",
+                      "example": "Success"
+                    },
+                    "Message": {
+                      "type": "string",
+                      "description": "Сообщение"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Не аутентифицирован"
+          },
+          "403": {
+            "description": "Не хватает ролей у пользователя для данного действия"
+          },
+          "500": {
+            "description": "Ошибка",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "Status": {
+                      "type": "string",
+                      "description": "Статус операции",
+                      "example": "Error"
+                    },
+                    "Message": {
+                      "type": "string",
+                      "description": "Сообщение"
+                    },
+                    "Description": {
+                      "type": "string",
+                      "description": "Подробности ошибки"
                     }
                   }
                 }
@@ -549,6 +948,19 @@
         },
         "additionalProperties": false
       },
+      "RefreshTokenModel": {
+        "required": [
+          "refresh_token"
+        ],
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "example": "L9kPss+GWOFDFtYWne8l/vinc7545ZtcCVofyL4uhLUiTeYjwUrjwu2nkR09TWOusjxMFUcC/Mm4AMO2KfQVmg=="
+          }
+        },
+        "additionalProperties": false
+      },
       "RegisterModel": {
         "required": [
           "email",
@@ -577,6 +989,61 @@
           }
         },
         "additionalProperties": false
+      },
+      "DeleteModel": {
+        "required": [
+          "username"
+        ],
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ChangePasswordModel": {
+        "required": [
+          "username",
+          "oldpassword",
+          "newpassword"
+        ],
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string"
+          },
+          "oldpassword": {
+            "type": "string"
+          },
+          "newpassword": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ModifyRolesModel": {
+        "required": [
+          "username"
+        ],
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string"
+          },
+          "addRoles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "deleteRoles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
       }
     }
   }

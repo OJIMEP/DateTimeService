@@ -1,6 +1,8 @@
 using DateTimeService.Areas.Identity.Data;
+using DateTimeService.Data;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -22,6 +24,18 @@ namespace DateTimeService
                 var services = scope.ServiceProvider;
                 try
                 {
+                    var db = scope.ServiceProvider.GetRequiredService<DateTimeServiceContext>();
+                    db.Database.Migrate();
+                }
+                catch (Exception ex)
+                {
+                    var logger = services.GetRequiredService<ILogger<Program>>();
+                    logger.LogError(ex, "An error occurred while migrating the database.");
+                }
+
+                
+                try
+                {
                     var userManager = services.GetRequiredService<UserManager<DateTimeServiceUser>>();
                     var rolesManager = services.GetRequiredService<RoleManager<IdentityRole>>();
                     var configuration = services.GetRequiredService<IConfiguration>();
@@ -32,6 +46,8 @@ namespace DateTimeService
                     var logger = services.GetRequiredService<ILogger<Program>>();
                     logger.LogError(ex, "An error occurred while seeding the database.");
                 }
+
+               
             }
 
             host.Run();
