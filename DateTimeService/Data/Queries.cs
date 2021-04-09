@@ -1241,7 +1241,7 @@ WHERE
     AND (
         (
             (T2._Fld21424 = '2001-01-01 00:00:00')
-            OR (T2._Fld21424 >= @P_DateTimeNow)
+            OR (Cast(T2._Fld21424 AS datetime)>= @P_DateTimeNow)
         )
         AND T2._Fld21408RRef IN (
             SELECT
@@ -1262,6 +1262,7 @@ HAVING
     (SUM(T2._Fld21412) <> 0.0
     OR SUM(T2._Fld21411) <> 0.0)
 	AND SUM(T2._Fld21412) - SUM(T2._Fld21411) <> 0.0
+OPTION (OPTIMIZE FOR (@P_DateTimeNow='{1}'));
 ;
 
 CREATE CLUSTERED INDEX ix_tempCIndexAft2 ON #Temp_Remains (НоменклатураСсылка,СкладИсточника,ДатаСобытия);
@@ -1293,10 +1294,9 @@ WHERE
             T2.СкладИсточника AS СкладИсточника
         FROM
             #Temp_Remains T2 WITH(NOLOCK)) 
-		AND T1._Fld23832 > @P_DateTimeNow
+		AND T1._Fld23832 >= @P_DateTimeNow
 		AND T1._Fld23832 <= DateAdd(DAY,2,@P_DateTimeNow)
-		AND 
-		T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData)
+		AND T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData)
 GROUP BY T1._Fld23831RRef,
 T1._Fld23833RRef
 OPTION (OPTIMIZE FOR (@P_DateTimeNow='{1}'));
@@ -1399,7 +1399,8 @@ FROM
     #Temp_Sources T1 WITH(NOLOCK)
     INNER JOIN dbo._AccumRg21407 Резервирование WITH(NOLOCK)
     LEFT OUTER JOIN Temp_ExchangeRates T3 WITH(NOLOCK)
-    ON (Резервирование._Fld21443RRef = T3.Валюта) ON (T1.НоменклатураСсылка = Резервирование._Fld21408RRef)
+        ON (Резервирование._Fld21443RRef = T3.Валюта) 
+    ON (T1.НоменклатураСсылка = Резервирование._Fld21408RRef)
     AND (
         T1.Источник_TYPE = 0x08
         AND T1.Источник_RTRef = Резервирование._RecorderTRef
@@ -1476,11 +1477,26 @@ With Temp_ClosestDate AS
 (SELECT
 T1.НоменклатураСсылка,
 T1.СкладНазначения,
-MIN(T1.ДатаДоступности) AS ДатаДоступности
+Cast(MIN(T1.ДатаДоступности)as datetime) AS ДатаДоступности
 FROM #Temp_Sources T1 WITH(NOLOCK)
 GROUP BY T1.НоменклатураСсылка,
 T1.СкладНазначения
 )
+SELECT
+            T4.НоменклатураСсылка,
+            T4.ДатаДоступности,
+            T4.СкладНазначения,
+            T5.ДатаДоступности AS БлижайшаяДата
+		Into #Temp_T3
+        FROM
+            #Temp_Sources T4 WITH(NOLOCK)
+            LEFT OUTER JOIN Temp_ClosestDate T5 WITH(NOLOCK)
+            ON (T4.НоменклатураСсылка = T5.НоменклатураСсылка)
+            AND (T4.СкладНазначения = T5.СкладНазначения)
+            AND (T4.ТипИсточника = 1)
+			AND T4.ДатаДоступности <= DATEADD(DAY, 4, T5.ДатаДоступности)
+
+
 SELECT
     T1.НоменклатураСсылка,
     T1.article,
@@ -1495,24 +1511,11 @@ SELECT
 into #Temp_ClosestDatesByGoods
 FROM
     #Temp_Goods T1 WITH(NOLOCK)
-    LEFT OUTER JOIN #Temp_SourcesCorrectedDate T2 WITH(NOLOCK)
+    LEFT JOIN #Temp_SourcesCorrectedDate T2 WITH(NOLOCK)
+        LEFT JOIN  #Temp_T3 T3 ON (T2.НоменклатураСсылка = T3.НоменклатураСсылка) 
+			And T2.СкладНазначения = T3.СкладНазначения
     ON (T1.НоменклатураСсылка = T2.НоменклатураСсылка)
-    LEFT OUTER JOIN (
-        SELECT
-            T4.НоменклатураСсылка,
-            T4.ДатаДоступности,
-            T4.СкладНазначения,
-            T5.ДатаДоступности AS БлижайшаяДата
-        FROM
-            #Temp_Sources T4 WITH(NOLOCK)
-            LEFT OUTER JOIN Temp_ClosestDate T5 WITH(NOLOCK)
-            ON (T4.НоменклатураСсылка = T5.НоменклатураСсылка)
-            AND (T4.СкладНазначения = T5.СкладНазначения)
-            AND (T4.ТипИсточника = 1)
-    ) T3 ON (T1.НоменклатураСсылка = T3.НоменклатураСсылка)
-    AND (
-        T3.ДатаДоступности <= DATEADD(DAY, {4}, T3.БлижайшаяДата) --это параметр КоличествоДнейАнализа
-    )
+    
 GROUP BY
     T1.НоменклатураСсылка,
     T1.article,
@@ -1787,6 +1790,7 @@ DROP TABLE #Temp_ClosestDatesByGoods
 DROP TABLE #Temp_ShipmentDates
 DROP TABLE #Temp_ShipmentDatesDeliveryCourier
 DROP TABLE #Temp_Intervals
+Drop Table #Temp_T3
 ";
     }
 }

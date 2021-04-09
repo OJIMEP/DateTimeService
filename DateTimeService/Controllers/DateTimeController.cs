@@ -245,9 +245,9 @@ namespace DateTimeService.Controllers
                 }
 
                 cmd.CommandText = string.Format(query, string.Join(", ", parameters),
-                    DateMove.Date.ToString("yyyy-MM-dd HH:mm:ss"),
-                    DateMove.Date.ToString("yyyy-MM-dd HH:mm:ss"),
-                    DateMove.Date.AddDays(Parameters1C.First(x => x.Name.Contains("rsp_КоличествоДнейЗаполненияГрафика")).ValueDouble).ToString("yyyy-MM-dd HH:mm:ss"),
+                    DateMove.Date.ToString("yyyy-MM-ddTHH:mm:ss"),
+                    DateMove.Date.ToString("yyyy-MM-ddTHH:mm:ss"),
+                    DateMove.Date.AddDays(Parameters1C.First(x => x.Name.Contains("rsp_КоличествоДнейЗаполненияГрафика")).ValueDouble).ToString("yyyy-MM-ddTHH:mm:ss"),
                     Parameters1C.First(x => x.Name.Contains("КоличествоДнейАнализаЛучшейЦеныПриОтсрочкеЗаказа")).ValueDouble,
                     Parameters1C.First(x => x.Name.Contains("ПроцентДнейАнализаЛучшейЦеныПриОтсрочкеЗаказа")).ValueDouble);
 
