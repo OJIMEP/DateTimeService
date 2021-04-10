@@ -27,11 +27,13 @@ namespace DateTimeService.Controllers
     {
         private readonly ILogger<DateTimeController> _logger;
         private readonly IConfiguration _configuration;
+        private ILoadBalancing _loadBalacing;
 
-        public DateTimeController(ILogger<DateTimeController> logger, IConfiguration configuration)
+        public DateTimeController(ILogger<DateTimeController> logger, IConfiguration configuration, ILoadBalancing loadBalancing)
         {
             _logger = logger;
             _configuration = configuration;
+            _loadBalacing = loadBalancing;
         }
 
         [Authorize(Roles = UserRoles.MaxAvailableCount + "," + UserRoles.Admin)]
@@ -154,12 +156,14 @@ namespace DateTimeService.Controllers
         [Authorize(Roles = UserRoles.AvailableDate + "," + UserRoles.Admin)]
         [Route("AvailableDate")]
         [HttpPost]
-        public IActionResult AvailableDate(RequestDataAvailableDate data)
+        public async Task<IActionResult> AvailableDateAsync(RequestDataAvailableDate data)
         {
 
             var executionStart = DateTime.Now;
 
-            string connString = _configuration.GetConnectionString("1CDataSqlConnection");
+            //string connString = _configuration.GetConnectionString("1CDataSqlConnection");
+
+            string connString = await _loadBalacing.GetDatabaseConnectionAsync();
 
             //string connString = @"Server=localhost;Database=DevBase_cut_v3;Uid=sa;Pwd=; Trusted_Connection = False;";
 

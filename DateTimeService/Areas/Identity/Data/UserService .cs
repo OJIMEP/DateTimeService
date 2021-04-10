@@ -35,14 +35,11 @@ namespace DateTimeService.Areas.Identity.Data
             DateTimeServiceContext context,
             UserManager<DateTimeServiceUser> userManager,
             IConfiguration configuration
-            //,
-            //IOptions<AppSettings> appSettings
             )
         {
             _context = context;
             this.userManager = userManager;
             _configuration = configuration;
-            //_appSettings = appSettings.Value;
         }
 
         public async Task<AuthenticateResponse> AuthenticateAsync(LoginModel model, string ipAddress)

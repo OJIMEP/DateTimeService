@@ -1148,7 +1148,6 @@ Drop TABLE #Temp_PlanningGroups
 Drop TABLE #Temp_Intervals";
 
 
-
         public const string AvailableDate = @"Select
 	IsNull(_Reference114_VT23370._Fld23372RRef,Геозона._Fld23104RRef) As СкладСсылка,
 	ЗоныДоставки._ParentIDRRef As ЗонаДоставкиРодительСсылка,
@@ -1791,6 +1790,16 @@ DROP TABLE #Temp_ShipmentDates
 DROP TABLE #Temp_ShipmentDatesDeliveryCourier
 DROP TABLE #Temp_Intervals
 Drop Table #Temp_T3
+";
+
+        public const string DatebaseBalancingReplicaFull = @"select datediff(ms, last_commit_time, getdate())
+from [master].[sys].[dm_hadr_database_replica_states]";
+
+        public const string DatebaseBalancingMain = @"select top (1) _IDRRef from dbo._Reference112";
+
+        public const string DatebaseBalancingReplicaTables = @"SELECT name
+FROM sys.databases
+WHERE OBJECT_ID(name+'.dbo.MSreplication_objects') IS NOT NULL
 ";
     }
 }

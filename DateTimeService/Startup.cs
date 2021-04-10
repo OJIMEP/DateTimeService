@@ -82,6 +82,8 @@ namespace DateTimeService
 
             services.AddScoped<IUserService, UserService>();
 
+            services.AddScoped<ILoadBalancing, LoadBalancing>();
+
             services.AddSwaggerGen();
             //c =>
             //{
