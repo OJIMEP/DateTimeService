@@ -850,7 +850,7 @@
           },
           "payment": {
             "type": "string",
-            "description": "Тип оплаты: partly_pay, legal_entity, other",
+            "description": "Тип оплаты: partly_pay, other",
             "example": "other"
           },
           "order_items": {
