@@ -19,8 +19,6 @@ namespace DateTimeService
             logsHost = host;
             logsPort = port;
             udpClient = new UdpClient(logsHost, logsPort);
-            //tcpClient = new TcpClient(logsHost, logsPort);
-            //netStream = tcpClient.GetStream();
         }
         public IDisposable BeginScope<TState>(TState state)
         {
@@ -59,28 +57,8 @@ namespace DateTimeService
 
                 var resultLog = JsonSerializer.Serialize(logMessage);
 
-                // UdpClient udpClient = new UdpClient("192.168.2.16", 5048);
                 Byte[] sendBytes = Encoding.UTF8.GetBytes(resultLog);
-
-                //if (!tcpClient.Connected)
-                //    tcpClient = new TcpClient(logsHost, logsPort);
-
-                //var netStream = tcpClient.GetStream();
-
-                //if (netStream.CanWrite)
-                //{
-                //    await netStream.WriteAsync(sendBytes.AsMemory(0, sendBytes.Length));
-                //}
-                //else
-                //{
-                //    Console.WriteLine("You cannot write data to this stream.");
-                //    tcpClient.Close();
-
-                //    // Closing the tcpClient instance does not close the network stream.
-                //    netStream.Close();
-                //    return;
-                //}
-                //netStream.Close();
+                
                 try
                 {
                     await udpClient.SendAsync(sendBytes, sendBytes.Length);

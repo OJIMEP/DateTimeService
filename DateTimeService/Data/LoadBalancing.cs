@@ -1,8 +1,11 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using DateTimeService.Controllers;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace DateTimeService.Data
@@ -20,10 +23,12 @@ namespace DateTimeService.Data
     public class LoadBalancing : ILoadBalancing
     {
         private readonly IConfiguration _configuration;
+        private readonly ILogger<DateTimeController> _logger;
 
-        public LoadBalancing(IConfiguration configuration)
+        public LoadBalancing(IConfiguration configuration, ILogger<DateTimeController> logger)
         {
             _configuration = configuration;
+            _logger = logger;
         }
 
         public async Task<string> GetDatabaseConnectionAsync()
@@ -32,7 +37,7 @@ namespace DateTimeService.Data
             
             var connectionParameters = _configuration.GetSection("OneSDatabases").Get<List<DatabaseConnectionParameter>>();
 
-            var timeMS = DateTime.Now.Millisecond;
+            var timeMS = DateTime.Now.Millisecond % 100;
             
             bool firstAvailable = false;
 
@@ -44,7 +49,7 @@ namespace DateTimeService.Data
                 foreach (var connParametr in connectionParameters)
                 {
                     percentCounter += connParametr.Priority;
-                    if (timeMS <= percentCounter*10 || firstAvailable)
+                    if (timeMS <= percentCounter || firstAvailable)
                         try
                         {
                             var queryStringCheck = "";
@@ -77,7 +82,17 @@ namespace DateTimeService.Data
                         }
                         catch (Exception ex)
                         {
-                            connString = ex.Message;
+                            var logElement = new ElasticLogElement
+                            {
+                                TimeSQLExecution = 0,
+                                ErrorDescription = ex.Message,
+                                Status = "Error",
+                                DatabaseConnection = LoadBalancing.RemoveCredentialsFromConnectionString(connParametr.Connection)
+                            };
+
+                            var logstringElement = JsonSerializer.Serialize(logElement);
+
+                            _logger.LogInformation(logstringElement);
                         }
                 }
                 if (result.Length > 0)
@@ -89,8 +104,24 @@ namespace DateTimeService.Data
             return result;
         }
 
+        public static string RemoveCredentialsFromConnectionString(string connectionString)
+        {
+            var connStringParts = connectionString.Split(";");
+
+            var resultString = "";
+
+            foreach (var item in connStringParts)
+            {
+                if (!item.Contains("Uid") && !item.Contains("User") && !item.Contains("Pwd") && !item.Contains("Password") && item.Length>0)
+                    resultString += (item+";");
+            }
+
+            return resultString;
+        }
 
     }
+
+
 
     public class DatabaseConnectionParameter
     {

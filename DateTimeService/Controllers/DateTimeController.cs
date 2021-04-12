@@ -39,10 +39,12 @@ namespace DateTimeService.Controllers
         [Authorize(Roles = UserRoles.MaxAvailableCount + "," + UserRoles.Admin)]
         [Route("MaxAvailableCount")]
         [HttpPost]
-        public ObjectResult MaxAvailableCount(IEnumerable<RequestDataMaxAvailableCount> nomenclatures)
+        public async Task<ObjectResult> MaxAvailableCountAsync(IEnumerable<RequestDataMaxAvailableCount> nomenclatures)
         {
 
-            string connString = _configuration.GetConnectionString("1CDataSqlConnection");
+            //string connString = _configuration.GetConnectionString("1CDataSqlConnection");
+
+            string connString = await _loadBalacing.GetDatabaseConnectionAsync();
 
             //string connString = @"Server=localhost;Database=DevBase_cut_v3;Uid=sa;Pwd=; Trusted_Connection = False;";
 
@@ -52,7 +54,9 @@ namespace DateTimeService.Controllers
                 Path = HttpContext.Request.Path,
                 Host = HttpContext.Request.Host.ToString(),
                 RequestContent = JsonSerializer.Serialize(nomenclatures),
-                Id = Guid.NewGuid().ToString()
+                Id = Guid.NewGuid().ToString(),
+                DatabaseConnection = LoadBalancing.RemoveCredentialsFromConnectionString(connString),
+                AuthenticatedUser = User.Identity.Name
             };
 
 
@@ -175,7 +179,9 @@ namespace DateTimeService.Controllers
                 Path = HttpContext.Request.Path,
                 Host = HttpContext.Request.Host.ToString(),
                 RequestContent = JsonSerializer.Serialize(data),
-                Id = Guid.NewGuid().ToString()
+                Id = Guid.NewGuid().ToString(),
+                DatabaseConnection = LoadBalancing.RemoveCredentialsFromConnectionString(connString),
+                AuthenticatedUser = User.Identity.Name
             };
 
             var Parameters1C = new List<GlobalParam1C>
@@ -323,12 +329,14 @@ namespace DateTimeService.Controllers
         [Authorize(Roles = UserRoles.IntervalList + "," + UserRoles.Admin)]
         [Route("IntervalList")]
         [HttpPost]
-        public IActionResult IntervalList(RequestIntervalList data)
+        public async Task<IActionResult> IntervalListAsync(RequestIntervalList data)
         {
 
             var executionStart = DateTime.Now;
 
-            string connString = _configuration.GetConnectionString("1CDataSqlConnection");
+            string connString = await _loadBalacing.GetDatabaseConnectionAsync();
+
+            //string connString = _configuration.GetConnectionString("1CDataSqlConnection");
 
             //string connString = @"Server=localhost;Database=DevBase_cut_v3;Uid=sa;Pwd=; Trusted_Connection = False;";
 
@@ -340,7 +348,9 @@ namespace DateTimeService.Controllers
                 Path = HttpContext.Request.Path,
                 Host = HttpContext.Request.Host.ToString(),
                 RequestContent = JsonSerializer.Serialize(data),
-                Id = Guid.NewGuid().ToString()
+                Id = Guid.NewGuid().ToString(),
+                DatabaseConnection = LoadBalancing.RemoveCredentialsFromConnectionString(connString),
+                AuthenticatedUser = User.Identity.Name
             };
 
             var Parameters1C = new List<GlobalParam1C>
@@ -440,9 +450,9 @@ namespace DateTimeService.Controllers
                     }
 
                     cmd.CommandText = string.Format(query, string.Join(", ", parameters),
-                        DateMove.Date.ToString("yyyy-MM-dd HH:mm:ss"),
-                        DateMove.Date.ToString("yyyy-MM-dd HH:mm:ss"),
-                        DateMove.Date.AddDays(Parameters1C.First(x => x.Name.Contains("rsp_КоличествоДнейЗаполненияГрафика")).ValueDouble).ToString("yyyy-MM-dd HH:mm:ss"),
+                        DateMove.Date.ToString("yyyy-MM-ddTHH:mm:ss"),
+                        DateMove.Date.ToString("yyyy-MM-ddTHH:mm:ss"),
+                        DateMove.Date.AddDays(Parameters1C.First(x => x.Name.Contains("rsp_КоличествоДнейЗаполненияГрафика")).ValueDouble).ToString("yyyy-MM-ddTHH:mm:ss"),
                         Parameters1C.First(x => x.Name.Contains("КоличествоДнейАнализаЛучшейЦеныПриОтсрочкеЗаказа")).ValueDouble,
                         Parameters1C.First(x => x.Name.Contains("ПроцентДнейАнализаЛучшейЦеныПриОтсрочкеЗаказа")).ValueDouble);
 

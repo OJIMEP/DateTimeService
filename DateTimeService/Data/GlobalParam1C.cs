@@ -73,7 +73,8 @@ namespace DateTimeService.Data
                 {
                     TimeSQLExecution = 0,
                     ErrorDescription = ex.Message,
-                    Status = "Error"
+                    Status = "Error",
+                    DatabaseConnection = LoadBalancing.RemoveCredentialsFromConnectionString(connString)
                 };
 
                 var logstringElement = JsonSerializer.Serialize(logElement);
