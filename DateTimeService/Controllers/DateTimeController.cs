@@ -27,13 +27,15 @@ namespace DateTimeService.Controllers
     {
         private readonly ILogger<DateTimeController> _logger;
         private readonly IConfiguration _configuration;
-        private ILoadBalancing _loadBalacing;
+        private readonly ILoadBalancing _loadBalacing;
+        private readonly IGeoZones _geoZones;
 
-        public DateTimeController(ILogger<DateTimeController> logger, IConfiguration configuration, ILoadBalancing loadBalancing)
+        public DateTimeController(ILogger<DateTimeController> logger, IConfiguration configuration, ILoadBalancing loadBalancing, IGeoZones geoZones)
         {
             _logger = logger;
             _configuration = configuration;
             _loadBalacing = loadBalancing;
+            _geoZones = geoZones;
         }
 
         [Authorize(Roles = UserRoles.MaxAvailableCount + "," + UserRoles.Admin)]
@@ -380,17 +382,28 @@ namespace DateTimeService.Controllers
             GlobalParam1C.FillValues(connString, Parameters1C, _logger);
 
             long sqlCommandExecutionTime = 0;
+            string zoneId = "";
 
-            if (!GeoAdress.AdressExists(connString, data.address_id, _logger))
-            {
+            //if (!_geoZones.AdressExists(connString, data.address_id))
+            //{
                 //TODO: добавить обращение к сервисам для получения геозоны
+
+                var coords = await _geoZones.GetAddressCoordinates(data.address_id);
+                if (coords.AvailableToUse)
+                {
+                    zoneId = await _geoZones.GetGeoZoneID(coords);
+                }
+
                 
+            //}
+
+            if(zoneId == "")
+            {
                 logElement.TimeSQLExecution = 0;
-                logElement.ErrorDescription = "Address not found in 1C";
+                logElement.ErrorDescription = "Геозону адреса не нашли в сервисах.";
                 logElement.Status = "Error";
             }
             else
-            {
                 try
                 {
                     //sql connection object
@@ -497,7 +510,7 @@ namespace DateTimeService.Controllers
                     logElement.ErrorDescription = ex.Message;
                     logElement.Status = "Error";
                 }
-            }
+
 
             logElement.TimeFullExecution = (long)(DateTime.Now - executionStart).TotalMilliseconds;
 

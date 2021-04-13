@@ -13,5 +13,8 @@
         public long TimeFullExecution { get; set; }
         public string DatabaseConnection { get; set; }
         public string AuthenticatedUser { get; set; }
+        public long TimeBtsExecution { get; set; }
+        public long TimeLocationExecution { get; set; }
+
     }
 }

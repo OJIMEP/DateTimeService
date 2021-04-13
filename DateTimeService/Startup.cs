@@ -82,7 +82,11 @@ namespace DateTimeService
 
             services.AddScoped<IUserService, UserService>();
 
-            services.AddScoped<ILoadBalancing, LoadBalancing>();
+            services.AddScoped<ILoadBalancing, LoadBalancing>();            
+
+            services.AddHttpClient<IGeoZones, GeoZones>();
+
+            services.AddScoped<IGeoZones, GeoZones>();
 
             services.AddSwaggerGen();
             //c =>

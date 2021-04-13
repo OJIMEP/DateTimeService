@@ -12,11 +12,6 @@ namespace DateTimeService.Data
 {
     public interface ILoadBalancing
     {
-        //Task<AuthenticateResponse> AuthenticateAsync(LoginModel model, string ipAddress);
-        //Task<AuthenticateResponse> RefreshTokenAsync(string token, string ipAddress);
-        //bool RevokeToken(string token, string ipAddress);
-        //IEnumerable<DateTimeServiceUser> GetAll();
-        //DateTimeServiceUser GetById(int id);
         Task<string> GetDatabaseConnectionAsync();
     }
 
