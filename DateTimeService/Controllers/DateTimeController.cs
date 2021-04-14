@@ -385,7 +385,7 @@ namespace DateTimeService.Controllers
             long sqlCommandExecutionTime = 0;
             string zoneId = "";
 
-            bool alwaysCheckGeozone = true;
+            bool alwaysCheckGeozone = _configuration.GetValue<bool>("alwaysCheckGeozone");
 
             bool adressExists = _geoZones.AdressExists(connString, data.address_id);
 
