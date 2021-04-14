@@ -20,16 +20,69 @@ using System.Xml.Serialization;
 [System.SerializableAttribute()]
 [System.Diagnostics.DebuggerStepThroughAttribute()]
 [System.ComponentModel.DesignerCategoryAttribute("code")]
-[System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://ws.vrptwserver.beltranssat.by/")]
-[System.Xml.Serialization.XmlRootAttribute(Namespace = "http://ws.vrptwserver.beltranssat.by/", IsNullable = false)]
-public partial class addZone
+[System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true, Namespace = "http://schemas.xmlsoap.org/soap/envelope/")]
+[System.Xml.Serialization.XmlRootAttribute(Namespace = "http://schemas.xmlsoap.org/soap/envelope/", IsNullable = false)]
+public partial class Envelope
 {
 
-    private zoneJaxb zoneField;
+    private EnvelopeBody[] itemsField;
 
     /// <remarks/>
-    [System.Xml.Serialization.XmlElementAttribute(Form = System.Xml.Schema.XmlSchemaForm.Unqualified, IsNullable = true)]
-    public zoneJaxb zone
+    [System.Xml.Serialization.XmlElementAttribute("Body")]
+    public EnvelopeBody[] Items
+    {
+        get
+        {
+            return this.itemsField;
+        }
+        set
+        {
+            this.itemsField = value;
+        }
+    }
+}
+
+/// <remarks/>
+[System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.8.3928.0")]
+[System.SerializableAttribute()]
+[System.Diagnostics.DebuggerStepThroughAttribute()]
+[System.ComponentModel.DesignerCategoryAttribute("code")]
+[System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true, Namespace = "http://schemas.xmlsoap.org/soap/envelope/")]
+public partial class EnvelopeBody
+{
+
+    private getZoneByCoordsResponse getZoneByCoordsResponseField;
+
+    /// <remarks/>
+    [System.Xml.Serialization.XmlElementAttribute(Namespace = "http://ws.vrptwserver.beltranssat.by/")]
+    public getZoneByCoordsResponse getZoneByCoordsResponse
+    {
+        get
+        {
+            return this.getZoneByCoordsResponseField;
+        }
+        set
+        {
+            this.getZoneByCoordsResponseField = value;
+        }
+    }
+}
+
+/// <remarks/>
+[System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.8.3928.0")]
+[System.SerializableAttribute()]
+[System.Diagnostics.DebuggerStepThroughAttribute()]
+[System.ComponentModel.DesignerCategoryAttribute("code")]
+[System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true, Namespace = "http://ws.vrptwserver.beltranssat.by/")]
+[System.Xml.Serialization.XmlRootAttribute(Namespace = "http://ws.vrptwserver.beltranssat.by/", IsNullable = false)]
+public partial class getZoneByCoordsResponse
+{
+
+    private getZoneByCoordsResponseZone zoneField;
+
+    /// <remarks/>
+    [System.Xml.Serialization.XmlElementAttribute(Form = System.Xml.Schema.XmlSchemaForm.Unqualified)]
+    public getZoneByCoordsResponseZone zone
     {
         get
         {
@@ -47,18 +100,15 @@ public partial class addZone
 [System.SerializableAttribute()]
 [System.Diagnostics.DebuggerStepThroughAttribute()]
 [System.ComponentModel.DesignerCategoryAttribute("code")]
-[System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://ws.vrptwserver.beltranssat.by/")]
-public partial class zoneJaxb
+[System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true, Namespace = "http://ws.vrptwserver.beltranssat.by/")]
+public partial class getZoneByCoordsResponseZone
 {
 
     private string idField;
 
     private string nameField;
 
-    private string polygonWktField;
-
     /// <remarks/>
-    [System.Xml.Serialization.XmlElementAttribute(IsNullable = true)]
     public string id
     {
         get
@@ -81,380 +131,6 @@ public partial class zoneJaxb
         set
         {
             this.nameField = value;
-        }
-    }
-
-    /// <remarks/>
-    public string polygonWkt
-    {
-        get
-        {
-            return this.polygonWktField;
-        }
-        set
-        {
-            this.polygonWktField = value;
-        }
-    }
-}
-
-/// <remarks/>
-[System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.8.3928.0")]
-[System.SerializableAttribute()]
-[System.Diagnostics.DebuggerStepThroughAttribute()]
-[System.ComponentModel.DesignerCategoryAttribute("code")]
-[System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://ws.vrptwserver.beltranssat.by/")]
-[System.Xml.Serialization.XmlRootAttribute(Namespace = "http://ws.vrptwserver.beltranssat.by/", IsNullable = false)]
-public partial class addZoneResponse
-{
-
-    private System.Nullable<bool> returnField;
-
-    /// <remarks/>
-    [System.Xml.Serialization.XmlElementAttribute(IsNullable = true)]
-    public System.Nullable<bool> @return
-    {
-        get
-        {
-            return this.returnField;
-        }
-        set
-        {
-            this.returnField = value;
-        }
-    }
-}
-
-/// <remarks/>
-[System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.8.3928.0")]
-[System.SerializableAttribute()]
-[System.Diagnostics.DebuggerStepThroughAttribute()]
-[System.ComponentModel.DesignerCategoryAttribute("code")]
-[System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://ws.vrptwserver.beltranssat.by/")]
-[System.Xml.Serialization.XmlRootAttribute(Namespace = "http://ws.vrptwserver.beltranssat.by/", IsNullable = false)]
-public partial class deleteZone
-{
-
-    private string zoneIdField;
-
-    /// <remarks/>
-    [System.Xml.Serialization.XmlElementAttribute(IsNullable = true)]
-    public string zoneId
-    {
-        get
-        {
-            return this.zoneIdField;
-        }
-        set
-        {
-            this.zoneIdField = value;
-        }
-    }
-}
-
-/// <remarks/>
-[System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.8.3928.0")]
-[System.SerializableAttribute()]
-[System.Diagnostics.DebuggerStepThroughAttribute()]
-[System.ComponentModel.DesignerCategoryAttribute("code")]
-[System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://ws.vrptwserver.beltranssat.by/")]
-[System.Xml.Serialization.XmlRootAttribute(Namespace = "http://ws.vrptwserver.beltranssat.by/", IsNullable = false)]
-public partial class deleteZoneResponse
-{
-
-    private System.Nullable<bool> returnField;
-
-    /// <remarks/>
-    [System.Xml.Serialization.XmlElementAttribute(IsNullable = true)]
-    public System.Nullable<bool> @return
-    {
-        get
-        {
-            return this.returnField;
-        }
-        set
-        {
-            this.returnField = value;
-        }
-    }
-}
-
-/// <remarks/>
-[System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.8.3928.0")]
-[System.SerializableAttribute()]
-[System.Diagnostics.DebuggerStepThroughAttribute()]
-[System.ComponentModel.DesignerCategoryAttribute("code")]
-[System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://ws.vrptwserver.beltranssat.by/")]
-[System.Xml.Serialization.XmlRootAttribute(Namespace = "http://ws.vrptwserver.beltranssat.by/", IsNullable = false)]
-public partial class getZone
-{
-
-    private string zoneIdField;
-
-    private System.Nullable<bool> geomNeededField;
-
-    private bool geomNeededFieldSpecified;
-
-    /// <remarks/>
-    [System.Xml.Serialization.XmlElementAttribute(IsNullable = true)]
-    public string zoneId
-    {
-        get
-        {
-            return this.zoneIdField;
-        }
-        set
-        {
-            this.zoneIdField = value;
-        }
-    }
-
-    /// <remarks/>
-    [System.Xml.Serialization.XmlElementAttribute(IsNullable = true)]
-    public System.Nullable<bool> geomNeeded
-    {
-        get
-        {
-            return this.geomNeededField;
-        }
-        set
-        {
-            this.geomNeededField = value;
-        }
-    }
-
-    /// <remarks/>
-    [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool geomNeededSpecified
-    {
-        get
-        {
-            return this.geomNeededFieldSpecified;
-        }
-        set
-        {
-            this.geomNeededFieldSpecified = value;
-        }
-    }
-}
-
-/// <remarks/>
-[System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.8.3928.0")]
-[System.SerializableAttribute()]
-[System.Diagnostics.DebuggerStepThroughAttribute()]
-[System.ComponentModel.DesignerCategoryAttribute("code")]
-[System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://ws.vrptwserver.beltranssat.by/")]
-[System.Xml.Serialization.XmlRootAttribute(Namespace = "http://ws.vrptwserver.beltranssat.by/", IsNullable = false)]
-public partial class getZoneByCoords
-{
-
-    private System.Nullable<double> latitudeField;
-
-    private System.Nullable<double> longitudeField;
-
-    private System.Nullable<bool> geomNeededField;
-
-    private bool geomNeededFieldSpecified;
-
-    /// <remarks/>
-    [System.Xml.Serialization.XmlElementAttribute(IsNullable = true)]
-    public System.Nullable<double> latitude
-    {
-        get
-        {
-            return this.latitudeField;
-        }
-        set
-        {
-            this.latitudeField = value;
-        }
-    }
-
-    /// <remarks/>
-    [System.Xml.Serialization.XmlElementAttribute(IsNullable = true)]
-    public System.Nullable<double> longitude
-    {
-        get
-        {
-            return this.longitudeField;
-        }
-        set
-        {
-            this.longitudeField = value;
-        }
-    }
-
-    /// <remarks/>
-    [System.Xml.Serialization.XmlElementAttribute(IsNullable = true)]
-    public System.Nullable<bool> geomNeeded
-    {
-        get
-        {
-            return this.geomNeededField;
-        }
-        set
-        {
-            this.geomNeededField = value;
-        }
-    }
-
-    /// <remarks/>
-    [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool geomNeededSpecified
-    {
-        get
-        {
-            return this.geomNeededFieldSpecified;
-        }
-        set
-        {
-            this.geomNeededFieldSpecified = value;
-        }
-    }
-}
-
-/// <remarks/>
-[System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.8.3928.0")]
-[System.SerializableAttribute()]
-[System.Diagnostics.DebuggerStepThroughAttribute()]
-[System.ComponentModel.DesignerCategoryAttribute("code")]
-[System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://ws.vrptwserver.beltranssat.by/")]
-[System.Xml.Serialization.XmlRootAttribute(Namespace = "http://ws.vrptwserver.beltranssat.by/", IsNullable = false)]
-public partial class getZoneByCoordsResponse
-{
-
-    private zoneJaxb zoneField;
-
-    /// <remarks/>
-    [System.Xml.Serialization.XmlElementAttribute(Form = System.Xml.Schema.XmlSchemaForm.Unqualified)]
-    public zoneJaxb zone
-    {
-        get
-        {
-            return this.zoneField;
-        }
-        set
-        {
-            this.zoneField = value;
-        }
-    }
-}
-
-/// <remarks/>
-[System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.8.3928.0")]
-[System.SerializableAttribute()]
-[System.Diagnostics.DebuggerStepThroughAttribute()]
-[System.ComponentModel.DesignerCategoryAttribute("code")]
-[System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://ws.vrptwserver.beltranssat.by/")]
-[System.Xml.Serialization.XmlRootAttribute(Namespace = "http://ws.vrptwserver.beltranssat.by/", IsNullable = false)]
-public partial class getZoneResponse
-{
-
-    private zoneJaxb zoneField;
-
-    /// <remarks/>
-    [System.Xml.Serialization.XmlElementAttribute(Form = System.Xml.Schema.XmlSchemaForm.Unqualified)]
-    public zoneJaxb zone
-    {
-        get
-        {
-            return this.zoneField;
-        }
-        set
-        {
-            this.zoneField = value;
-        }
-    }
-}
-
-/// <remarks/>
-[System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.8.3928.0")]
-[System.SerializableAttribute()]
-[System.Diagnostics.DebuggerStepThroughAttribute()]
-[System.ComponentModel.DesignerCategoryAttribute("code")]
-[System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://ws.vrptwserver.beltranssat.by/")]
-[System.Xml.Serialization.XmlRootAttribute(Namespace = "http://ws.vrptwserver.beltranssat.by/", IsNullable = false)]
-public partial class getZonesIds
-{
-}
-
-/// <remarks/>
-[System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.8.3928.0")]
-[System.SerializableAttribute()]
-[System.Diagnostics.DebuggerStepThroughAttribute()]
-[System.ComponentModel.DesignerCategoryAttribute("code")]
-[System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://ws.vrptwserver.beltranssat.by/")]
-[System.Xml.Serialization.XmlRootAttribute(Namespace = "http://ws.vrptwserver.beltranssat.by/", IsNullable = false)]
-public partial class getZonesIdsResponse
-{
-
-    private string[] zoneIdField;
-
-    /// <remarks/>
-    [System.Xml.Serialization.XmlElementAttribute("zoneId", IsNullable = true)]
-    public string[] zoneId
-    {
-        get
-        {
-            return this.zoneIdField;
-        }
-        set
-        {
-            this.zoneIdField = value;
-        }
-    }
-}
-
-/// <remarks/>
-[System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.8.3928.0")]
-[System.SerializableAttribute()]
-[System.Diagnostics.DebuggerStepThroughAttribute()]
-[System.ComponentModel.DesignerCategoryAttribute("code")]
-[System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://ws.vrptwserver.beltranssat.by/")]
-[System.Xml.Serialization.XmlRootAttribute(Namespace = "http://ws.vrptwserver.beltranssat.by/", IsNullable = false)]
-public partial class updateZone
-{
-
-    private zoneJaxb zoneField;
-
-    /// <remarks/>
-    [System.Xml.Serialization.XmlElementAttribute(Form = System.Xml.Schema.XmlSchemaForm.Unqualified, IsNullable = true)]
-    public zoneJaxb zone
-    {
-        get
-        {
-            return this.zoneField;
-        }
-        set
-        {
-            this.zoneField = value;
-        }
-    }
-}
-
-/// <remarks/>
-[System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.8.3928.0")]
-[System.SerializableAttribute()]
-[System.Diagnostics.DebuggerStepThroughAttribute()]
-[System.ComponentModel.DesignerCategoryAttribute("code")]
-[System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://ws.vrptwserver.beltranssat.by/")]
-[System.Xml.Serialization.XmlRootAttribute(Namespace = "http://ws.vrptwserver.beltranssat.by/", IsNullable = false)]
-public partial class updateZoneResponse
-{
-
-    private System.Nullable<bool> returnField;
-
-    /// <remarks/>
-    [System.Xml.Serialization.XmlElementAttribute(IsNullable = true)]
-    public System.Nullable<bool> @return
-    {
-        get
-        {
-            return this.returnField;
-        }
-        set
-        {
-            this.returnField = value;
         }
     }
 }

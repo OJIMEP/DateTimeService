@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Sockets;
@@ -384,23 +385,32 @@ namespace DateTimeService.Controllers
             long sqlCommandExecutionTime = 0;
             string zoneId = "";
 
-            //if (!_geoZones.AdressExists(connString, data.address_id))
-            //{
-                //TODO: добавить обращение к сервисам для получения геозоны
+            bool alwaysCheckGeozone = true;
 
+            bool adressExists = _geoZones.AdressExists(connString, data.address_id);
+
+            if (!adressExists || alwaysCheckGeozone)
+            {
+                //TODO: добавить обращение к сервисам для получения геозоны
+                Stopwatch stopwatch = new();
+                stopwatch.Start();
                 var coords = await _geoZones.GetAddressCoordinates(data.address_id);
+                stopwatch.Stop();
+                logElement.TimeLocationExecution = stopwatch.ElapsedMilliseconds;
+                stopwatch.Reset();
+                stopwatch.Start();
                 if (coords.AvailableToUse)
                 {
                     zoneId = await _geoZones.GetGeoZoneID(coords);
                 }
+                stopwatch.Stop();
+                logElement.TimeBtsExecution = stopwatch.ElapsedMilliseconds;
+            }
 
-                
-            //}
-
-            if(zoneId == "")
+            if (!adressExists && zoneId == "")
             {
                 logElement.TimeSQLExecution = 0;
-                logElement.ErrorDescription = "Геозону адреса не нашли в сервисах.";
+                logElement.ErrorDescription = "Адрес и геозона не найдены!";
                 logElement.Status = "Error";
             }
             else
@@ -451,6 +461,10 @@ namespace DateTimeService.Controllers
 
                     cmd.Parameters.Add("@P_MaxDate", SqlDbType.DateTime);
                     cmd.Parameters["@P_MaxDate"].Value = MaxDate;
+
+                    cmd.Parameters.Add("@P_GeoCode", SqlDbType.NVarChar);
+                    cmd.Parameters["@P_GeoCode"].Value = zoneId;
+
 
 
                     var parameters = new string[data.orderItems.Count];

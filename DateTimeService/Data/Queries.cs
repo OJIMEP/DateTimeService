@@ -20,13 +20,15 @@ From dbo._Reference114 Геозона With (NOLOCK)
 	on Геозона._Fld2847RRef = ЗоныДоставки._IDRRef
 	Inner Join _Reference99 ЗоныДоставкиРодитель With (NOLOCK)
 	on ЗоныДоставки._ParentIDRRef = ЗоныДоставкиРодитель._IDRRef
-where Геозона._IDRRef IN (
+where
+	(@P_GeoCode = '' AND 
+Геозона._IDRRef IN (
 	Select Top 1 --по адресу находим геозону
 	ГеоАдрес._Fld2785RRef 
 	From dbo._Reference112 ГеоАдрес With (NOLOCK)
-	Where ГеоАдрес._Fld25155 = @P4)
+	Where ГеоАдрес._Fld25155 = @P4))
+OR Геозона._Fld21249 = @P_GeoCode
 
-CREATE CLUSTERED INDEX ix_tempCIndexAft ON #Temp_GeoData(СкладСсылка,ЗонаДоставкиРодительСсылка,Геозона asc);
 
 /*Создание таблицы товаров и ее наполнение данными из БД*/
 Create Table #Temp_GoodsBegin 
@@ -449,8 +451,6 @@ HAVING
     OR SUM(T2._Fld21411) <> 0.0)
 	AND SUM(T2._Fld21412) - SUM(T2._Fld21411) <> 0.0
 	
-CREATE CLUSTERED INDEX ix_tempCIndexAft1 ON #Temp_Remains (НоменклатураСсылка,СкладИсточника, Источник_RRRef,ДатаСобытия);
-
 SELECT Distinct
     T1._Fld23831RRef AS СкладИсточника,
     T1._Fld23832 AS ДатаСобытия,
@@ -842,8 +842,6 @@ Having
 OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'));
 
 CREATE CLUSTERED INDEX ix_tempCIndexAft11 ON #Temp_DeliveryPower(Дата); 
-
-
 
 
 /*Тут начинаются интервалы, которые рассчитанные*/

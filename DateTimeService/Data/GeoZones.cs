@@ -4,8 +4,10 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.Globalization;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -117,19 +119,29 @@ namespace DateTimeService.Data
            
             client.Timeout = new TimeSpan(0, 0, 1);
             client.DefaultRequestHeaders.Add("Accept", "application/vnd.api+json");
-            client.DefaultRequestHeaders.Add("Content-Type", "application/vnd.api+json");
+            //client.DefaultRequestHeaders.Add("Content-Type", "application/vnd.api+json");
 
             string connString = _configuration.GetConnectionString("api21vekby_location");
+            var uri = new Uri(connString + address_id);
+            HttpRequestMessage request = new(HttpMethod.Get, uri)
+            {
+                Content = new StringContent("{}",
+                                                Encoding.UTF8,
+                                                "application/vnd.api+json")//CONTENT-TYPE header
+            };
 
-            //var uri = new Uri("https://api.site.com/v2/location.ones?address_id="+address_id);           
-            var uri = new Uri(connString + address_id);           
+
+            request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/vnd.api+json");
 
             try
             {
-                var responseString = await client.GetStringAsync(uri);
+                var response = await client.SendAsync(request);
+                var responseString = await response.Content.ReadAsStringAsync();
                 var locationsResponse = JsonSerializer.Deserialize<LocationsResponse>(responseString);
-                result.X_coordinates = Double.Parse(locationsResponse.data.attributes.x_coordinate);
-                result.Y_coordinates = Double.Parse(locationsResponse.data.attributes.y_coordinate);
+
+                IFormatProvider formatter = new NumberFormatInfo { NumberDecimalSeparator = "." };
+                result.X_coordinates = Double.Parse(locationsResponse.data.attributes.x_coordinate, formatter);
+                result.Y_coordinates = Double.Parse(locationsResponse.data.attributes.y_coordinate, formatter);
                 result.AvailableToUse = true;
             }
             catch(Exception ex)
@@ -153,12 +165,14 @@ namespace DateTimeService.Data
         public async Task<string> GetGeoZoneID(AdressCoords coords)
         {
             string connString = _configuration.GetConnectionString("BTS_zones");
+            string login = _configuration.GetValue<string>("BTS_login");
+            string pass = _configuration.GetValue<string>("BTS_pass");
 
             var request = new HttpRequestMessage(HttpMethod.Post,
             connString);
-            request.Headers.Add("Content-Type", "text/xml");
+            //request.Headers.Add("Content-Type", "text/xml");
             request.Headers.Add("User-Agent", "HttpClientFactory-Sample");
-
+            IFormatProvider formatter = new NumberFormatInfo { NumberDecimalSeparator = "." };
             string content = @"
 <soap:Envelope xmlns:soap=""http://schemas.xmlsoap.org/soap/envelope/"">
     <soap:Body>
@@ -173,21 +187,25 @@ namespace DateTimeService.Data
     </soap:Body>
 </soap:Envelope>";
 
-            content = string.Format(content, coords.X_coordinates, coords.Y_coordinates);
+            content = string.Format(content, coords.X_coordinates.ToString(formatter), coords.Y_coordinates.ToString(formatter));
 
             request.Content = new StringContent(content, Encoding.UTF8, "text/xml");
 
+            var authenticationString = login + ":" + pass; 
+            var base64EncodedAuthenticationString = Convert.ToBase64String(Encoding.ASCII.GetBytes(authenticationString));
+
             var client = new HttpClient();
+            request.Headers.Authorization = new AuthenticationHeaderValue("Basic", base64EncodedAuthenticationString);
+
 
             var response = await client.SendAsync(request);
-
             string result = "";
             if (response.IsSuccessStatusCode)
             {
                 using var responseStream = await response.Content.ReadAsStreamAsync();
-                var xml = new XmlSerializer(typeof(getZoneByCoordsResponse));
-                var responseData = (getZoneByCoordsResponse)xml.Deserialize(responseStream);
-                result = responseData.zone.id;
+                var xml = new XmlSerializer(typeof(Envelope));
+                var responseData = (Envelope)xml.Deserialize(responseStream);
+                result = responseData.Items[0].getZoneByCoordsResponse.zone.id;
             }
             else
             {
