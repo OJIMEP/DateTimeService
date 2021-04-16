@@ -1161,6 +1161,7 @@ where Геозона._IDRRef IN (
 	ГеоАдрес._Fld2785RRef 
 	From dbo._Reference112 ГеоАдрес With (NOLOCK)
 	Where ГеоАдрес._Fld25552 = @P4)
+OPTION (KEEP PLAN, KEEPFIXED PLAN)
 
 CREATE CLUSTERED INDEX ix_tempCIndexAft ON #Temp_GeoData(СкладСсылка,ЗонаДоставкиРодительСсылка,Геозона asc);
 
@@ -1196,6 +1197,7 @@ From
 		AND ГруппыПланирования._Marked = 0x00
 Where
 	Номенклатура._Fld3480 IN ({0})
+OPTION (KEEP PLAN, KEEPFIXED PLAN)
 
 CREATE CLUSTERED INDEX ix_tempCIndexAft1 ON #Temp_Goods (НоменклатураСсылка,УпаковкаСсылка,ГруппаПланирования);
 
@@ -1259,7 +1261,7 @@ HAVING
     (SUM(T2._Fld21412) <> 0.0
     OR SUM(T2._Fld21411) <> 0.0)
 	AND SUM(T2._Fld21412) - SUM(T2._Fld21411) <> 0.0
-OPTION (OPTIMIZE FOR (@P_DateTimeNow='{1}'));
+OPTION (OPTIMIZE FOR (@P_DateTimeNow='{1}'),KEEP PLAN, KEEPFIXED PLAN);
 ;
 
 CREATE CLUSTERED INDEX ix_tempCIndexAft2 ON #Temp_Remains (НоменклатураСсылка,СкладИсточника,ДатаСобытия);
@@ -1276,6 +1278,7 @@ FROM
 	ON T1._Fld23831RRef = #Temp_Remains.СкладИсточника
 	AND T1._Fld23832 = #Temp_Remains.ДатаСобытия
 	AND T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData)   
+OPTION (KEEP PLAN, KEEPFIXED PLAN)
 ;
 
 SELECT
@@ -1296,7 +1299,7 @@ WHERE
 		AND T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData)
 GROUP BY T1._Fld23831RRef,
 T1._Fld23833RRef
-OPTION (OPTIMIZE FOR (@P_DateTimeNow='{1}'));
+OPTION (OPTIMIZE FOR (@P_DateTimeNow='{1}'),KEEP PLAN, KEEPFIXED PLAN);
 
 ;
 
@@ -1365,6 +1368,7 @@ FROM
 WHERE
     NOT T6.Регистратор_RRRef IS NULL
 	And T6.Источник_RTRef = 0x00000153
+OPTION (KEEP PLAN, KEEPFIXED PLAN)
 ;
 
 With Temp_ExchangeRates AS (
@@ -1403,6 +1407,7 @@ FROM
         AND T1.Источник_RTRef = Резервирование._RecorderTRef
         AND T1.Источник_RRRef = Резервирование._RecorderRRef
     )
+OPTION (KEEP PLAN, KEEPFIXED PLAN)
 ;
 With Temp_SupplyDocs AS
 (
@@ -1449,6 +1454,7 @@ GROUP BY
     T2.ЦенаИсточника,
     T2.ЦенаИсточникаМинус,
     T2.ДатаДоступности
+OPTION (KEEP PLAN, KEEPFIXED PLAN)
 
 SELECT
     T1.НоменклатураСсылка,
@@ -1468,6 +1474,7 @@ FROM
     AND (T1.ДатаДоступности = T2.ДатаДоступности)
     AND (T1.СкладНазначения = T2.СкладНазначения)
     AND (T1.ТипИсточника = 3)
+OPTION (KEEP PLAN, KEEPFIXED PLAN)
 ;
 
 With Temp_ClosestDate AS
@@ -1492,7 +1499,7 @@ SELECT
             AND (T4.СкладНазначения = T5.СкладНазначения)
             AND (T4.ТипИсточника = 1)
 			AND T4.ДатаДоступности <= DATEADD(DAY, 4, T5.ДатаДоступности)
-
+OPTION (KEEP PLAN, KEEPFIXED PLAN)
 
 SELECT
     T1.НоменклатураСсылка,
@@ -1523,6 +1530,7 @@ GROUP BY
     T1.Количество,
     T1.ГруппаПланирования,
 	T1.ГруппаПланированияДобавляемоеВремя
+OPTION (KEEP PLAN, KEEPFIXED PLAN)
 
 SELECT
     T1.НоменклатураСсылка,
@@ -1557,6 +1565,7 @@ GROUP BY
     T1.Объем,
     T1.ВремяНаОбслуживание,
     T1.ГруппаПланирования
+OPTION (KEEP PLAN, KEEPFIXED PLAN)
 
 
 
@@ -1580,6 +1589,7 @@ GROUP BY
     T1.Объем,
     T1.ВремяНаОбслуживание,
     T1.ГруппаПланирования
+OPTION (KEEP PLAN, KEEPFIXED PLAN)
 
 ;
 SELECT 
@@ -1616,7 +1626,7 @@ HAVING
             ) AS NUMERIC(16, 0)
         ) > 0.0
     )
-OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}'));
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}'),KEEP PLAN, KEEPFIXED PLAN);
 --option (recompile)
 --UNION
 --ALL
@@ -1656,7 +1666,7 @@ HAVING
             ) AS NUMERIC(16, 0)
         ) > 0.0
     )
-OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}'));
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}'),KEEP PLAN, KEEPFIXED PLAN);
 --option (recompile)
 --UNION
 --ALL
@@ -1692,7 +1702,7 @@ HAVING
             ) AS NUMERIC(16, 0)
         ) > 0.0
     )
-OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}'));
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}'),KEEP PLAN, KEEPFIXED PLAN);
 --option (recompile)
 ;
 
@@ -1771,7 +1781,7 @@ FROM
     AND (T4.СкладНазначения IN (NULL)) --склады ПВЗ
 GROUP BY
     T1.article
-OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'));
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'),KEEP PLAN, KEEPFIXED PLAN);
 --option (recompile)
 
 DROP TABLE #Temp_GeoData
