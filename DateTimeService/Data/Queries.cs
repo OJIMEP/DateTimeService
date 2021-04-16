@@ -1163,7 +1163,7 @@ where Геозона._IDRRef IN (
 	Where ГеоАдрес._Fld25552 = @P4)
 OPTION (KEEP PLAN, KEEPFIXED PLAN)
 
-CREATE CLUSTERED INDEX ix_tempCIndexAft ON #Temp_GeoData(СкладСсылка,ЗонаДоставкиРодительСсылка,Геозона asc);
+--CREATE CLUSTERED INDEX ix_tempCIndexAft ON #Temp_GeoData(СкладСсылка,ЗонаДоставкиРодительСсылка,Геозона asc);
 
 Select 
 	Номенклатура._IDRRef AS НоменклатураСсылка,
@@ -1198,8 +1198,8 @@ From
 Where
 	Номенклатура._Fld3480 IN ({0})
 OPTION (KEEP PLAN, KEEPFIXED PLAN)
-
-CREATE CLUSTERED INDEX ix_tempCIndexAft1 ON #Temp_Goods (НоменклатураСсылка,УпаковкаСсылка,ГруппаПланирования);
+;
+--CREATE CLUSTERED INDEX ix_tempCIndexAft1 ON #Temp_Goods (НоменклатураСсылка,УпаковкаСсылка,ГруппаПланирования);
 
 
 With Temp_ExchangeRates AS (
@@ -1264,7 +1264,7 @@ HAVING
 OPTION (OPTIMIZE FOR (@P_DateTimeNow='{1}'),KEEP PLAN, KEEPFIXED PLAN);
 ;
 
-CREATE CLUSTERED INDEX ix_tempCIndexAft2 ON #Temp_Remains (НоменклатураСсылка,СкладИсточника,ДатаСобытия);
+--CREATE CLUSTERED INDEX ix_tempCIndexAft2 ON #Temp_Remains (НоменклатураСсылка,СкладИсточника,ДатаСобытия);
 
 SELECT Distinct
     T1._Fld23831RRef AS СкладИсточника,
