@@ -250,11 +250,26 @@ namespace DateTimeService.Controllers
                 cmd.Parameters["@P_MaxDate"].Value = MaxDate;
 
 
-                var parameters = new string[data.codes.Length];
-                for (int i = 0; i < data.codes.Length; i++)
+                
+                var count = data.codes.Length > 60 ? data.codes.Length : 60;
+                var parameters = new string[count];
+
+                for (int i = 0; i < count; i++)
                 {
                     parameters[i] = string.Format("@Article{0}", i);
-                    cmd.Parameters.AddWithValue(parameters[i], data.codes[i]);
+                    cmd.Parameters.Add(parameters[i], SqlDbType.NVarChar,10);
+
+                    if (i >= data.codes.Length)
+                    {
+                        cmd.Parameters[parameters[i]].Value = data.codes[0];
+                    }
+                    else
+                    {
+                        cmd.Parameters[parameters[i]].Value = data.codes[i];
+                    }
+
+                    
+                    //cmd.Parameters.AddWithValue(parameters[i], data.codes[i]);
                 }
 
                 cmd.CommandText = string.Format(query, string.Join(", ", parameters),

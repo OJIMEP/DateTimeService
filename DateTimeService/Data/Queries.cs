@@ -1706,7 +1706,7 @@ OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}'),KEEP PLAN, KEEPFIXED PLAN);
 --option (recompile)
 ;
 
-CREATE CLUSTERED INDEX ix_tempCIndexIntervals ON #Temp_Intervals(Период,ГруппаПланирования,ВремяНачала asc);
+--CREATE CLUSTERED INDEX ix_tempCIndexIntervals ON #Temp_Intervals(Период,ГруппаПланирования,ВремяНачала asc);
 
 With Temp_DeliveryPower AS
 (
@@ -1784,20 +1784,20 @@ GROUP BY
 OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'),KEEP PLAN, KEEPFIXED PLAN);
 --option (recompile)
 
-DROP TABLE #Temp_GeoData
-DROP TABLE #Temp_WarehouseDates
-DROP TABLE #Temp_MinimumWarehouseDates
-DROP TABLE #Temp_Goods
-DROP TABLE #Temp_Remains
-DROP TABLE #Temp_Sources
-DROP TABLE #Temp_SourcesWithPrices
-DROP TABLE #Temp_BestPriceAfterClosestDate
-DROP TABLE #Temp_SourcesCorrectedDate
-DROP TABLE #Temp_ClosestDatesByGoods
-DROP TABLE #Temp_ShipmentDates
-DROP TABLE #Temp_ShipmentDatesDeliveryCourier
-DROP TABLE #Temp_Intervals
-Drop Table #Temp_T3
+--DROP TABLE #Temp_GeoData
+--DROP TABLE #Temp_WarehouseDates
+--DROP TABLE #Temp_MinimumWarehouseDates
+--DROP TABLE #Temp_Goods
+--DROP TABLE #Temp_Remains
+--DROP TABLE #Temp_Sources
+--DROP TABLE #Temp_SourcesWithPrices
+--DROP TABLE #Temp_BestPriceAfterClosestDate
+--DROP TABLE #Temp_SourcesCorrectedDate
+--DROP TABLE #Temp_ClosestDatesByGoods
+--DROP TABLE #Temp_ShipmentDates
+--DROP TABLE #Temp_ShipmentDatesDeliveryCourier
+--DROP TABLE #Temp_Intervals
+--Drop Table #Temp_T3
 ";
 
         public const string DatebaseBalancingReplicaFull = @"select datediff(ms, last_commit_time, getdate())
