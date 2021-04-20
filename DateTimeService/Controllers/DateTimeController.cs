@@ -166,12 +166,15 @@ namespace DateTimeService.Controllers
         public async Task<IActionResult> AvailableDateAsync(RequestDataAvailableDate data)
         {
 
-            var executionStart = DateTime.Now;
+            Stopwatch stopwatchExecution = new();
+            stopwatchExecution.Start();
+
 
             //string connString = _configuration.GetConnectionString("1CDataSqlConnection");
-
+            Stopwatch watch = new();
+            watch.Start();
             string connString = await _loadBalacing.GetDatabaseConnectionAsync();
-
+            watch.Stop();
             //string connString = @"Server=localhost;Database=DevBase_cut_v3;Uid=sa;Pwd=; Trusted_Connection = False;";
 
             ResponseAvailableDate result = new();
@@ -184,8 +187,11 @@ namespace DateTimeService.Controllers
                 RequestContent = JsonSerializer.Serialize(data),
                 Id = Guid.NewGuid().ToString(),
                 DatabaseConnection = LoadBalancing.RemoveCredentialsFromConnectionString(connString),
-                AuthenticatedUser = User.Identity.Name
+                AuthenticatedUser = User.Identity.Name,
+                LoadBalancingExecution = watch.ElapsedMilliseconds
             };
+
+            watch.Reset();
 
             var Parameters1C = new List<GlobalParam1C>
             {
@@ -205,11 +211,14 @@ namespace DateTimeService.Controllers
                     DefaultDouble = 3
                 }
             };
-
+            watch.Start();
             GlobalParam1C.FillValues(connString, Parameters1C, _logger);
+            watch.Stop();
+            logElement.GlobalParametersExecution = watch.ElapsedMilliseconds;
+            watch.Reset();
 
             long sqlCommandExecutionTime = 0;
-
+            watch.Start();
             try
             {
                 //sql connection object
@@ -326,15 +335,17 @@ namespace DateTimeService.Controllers
                 var resEl = new ResponseAvailableDateDictElement
                 {
                     code = result.code[i],
-                    courier = data.delivery_types.Contains("courier") ? result.courier[i].ToString("yyyy-MM-ddTHH:mm:ss") : null,
-                    self = data.delivery_types.Contains("self") ? result.self[i].ToString("yyyy-MM-ddTHH:mm:ss") : null
+                    courier = data.delivery_types.Contains("courier") ? result.courier[i].Date.ToString("yyyy-MM-ddTHH:mm:ss") : null,
+                    self = data.delivery_types.Contains("self") ? result.self[i].Date.ToString("yyyy-MM-ddTHH:mm:ss") : null
                 };
 
                 resultDict.data.Add(result.code[i], resEl);
             }
+            watch.Stop();
+            logElement.TimeSQLExecutionFact = watch.ElapsedMilliseconds;
 
-
-            logElement.TimeFullExecution = (long)(DateTime.Now - executionStart).TotalMilliseconds;
+            stopwatchExecution.Stop();
+            logElement.TimeFullExecution = stopwatchExecution.ElapsedMilliseconds;
 
             var logstringElement = JsonSerializer.Serialize(logElement);
 
@@ -350,9 +361,13 @@ namespace DateTimeService.Controllers
         public async Task<IActionResult> IntervalListAsync(RequestIntervalList data)
         {
 
-            var executionStart = DateTime.Now;
+            Stopwatch stopwatchExecution = new();
+            stopwatchExecution.Start();
 
+            Stopwatch watch = new();
+            watch.Start();
             string connString = await _loadBalacing.GetDatabaseConnectionAsync();
+            watch.Stop();
 
             //string connString = _configuration.GetConnectionString("1CDataSqlConnection");
 
@@ -368,8 +383,11 @@ namespace DateTimeService.Controllers
                 RequestContent = JsonSerializer.Serialize(data),
                 Id = Guid.NewGuid().ToString(),
                 DatabaseConnection = LoadBalancing.RemoveCredentialsFromConnectionString(connString),
-                AuthenticatedUser = User.Identity.Name
+                AuthenticatedUser = User.Identity.Name,
+                LoadBalancingExecution = watch.ElapsedMilliseconds
             };
+
+            watch.Reset();
 
             var Parameters1C = new List<GlobalParam1C>
             {
@@ -395,9 +413,15 @@ namespace DateTimeService.Controllers
                 }
             };
 
+            watch.Start();
             GlobalParam1C.FillValues(connString, Parameters1C, _logger);
+            watch.Stop();
+            logElement.GlobalParametersExecution = watch.ElapsedMilliseconds;
+            watch.Reset();
 
             long sqlCommandExecutionTime = 0;
+            watch.Start();
+
             string zoneId = "";
 
             bool alwaysCheckGeozone = _configuration.GetValue<bool>("alwaysCheckGeozone");
@@ -541,7 +565,11 @@ namespace DateTimeService.Controllers
                 }
 
 
-            logElement.TimeFullExecution = (long)(DateTime.Now - executionStart).TotalMilliseconds;
+            watch.Stop();
+            logElement.TimeSQLExecutionFact = watch.ElapsedMilliseconds;
+
+            stopwatchExecution.Stop();
+            logElement.TimeFullExecution = stopwatchExecution.ElapsedMilliseconds;
 
             var logstringElement = JsonSerializer.Serialize(logElement);
 
