@@ -1163,7 +1163,6 @@ where Геозона._IDRRef IN (
 	Where ГеоАдрес._Fld25552 = @P4)
 OPTION (KEEP PLAN, KEEPFIXED PLAN)
 
---CREATE CLUSTERED INDEX ix_tempCIndexAft ON #Temp_GeoData(СкладСсылка,ЗонаДоставкиРодительСсылка,Геозона asc);
 
 Select 
 	Номенклатура._IDRRef AS НоменклатураСсылка,
@@ -1199,8 +1198,6 @@ Where
 	Номенклатура._Fld3480 IN ({0})
 OPTION (KEEP PLAN, KEEPFIXED PLAN)
 ;
---CREATE CLUSTERED INDEX ix_tempCIndexAft1 ON #Temp_Goods (НоменклатураСсылка,УпаковкаСсылка,ГруппаПланирования);
-
 
 With Temp_ExchangeRates AS (
 SELECT
@@ -1228,7 +1225,7 @@ FROM
 		Inner Join Temp_ExchangeRates With (NOLOCK)
 			On Цены._Fld21443RRef = Temp_ExchangeRates.Валюта 
 		On T2._Fld21408RRef = Цены._Fld21408RRef
-		AND T2._Fld21410_RTRef = Цены._Fld21410_RTRef
+		AND T2._Fld21410_RTRef = 0x00000153
 		AND Цены._Fld21410_RTRef = 0x00000153 --Цены.Регистратор ССЫЛКА Документ.мегапрайсРегистрацияПрайса
 		And Цены._Fld21442<>0 AND (Цены._Fld21442 * Temp_ExchangeRates.Курс / Temp_ExchangeRates.Кратность >= Цены._Fld21982 OR Цены._Fld21411 >= Цены._Fld21616)
 		And Цены._Fld21408RRef IN(SELECT
@@ -1263,8 +1260,6 @@ HAVING
 	AND SUM(T2._Fld21412) - SUM(T2._Fld21411) <> 0.0
 OPTION (OPTIMIZE FOR (@P_DateTimeNow='{1}'),KEEP PLAN, KEEPFIXED PLAN);
 ;
-
---CREATE CLUSTERED INDEX ix_tempCIndexAft2 ON #Temp_Remains (НоменклатураСсылка,СкладИсточника,ДатаСобытия);
 
 SELECT Distinct
     T1._Fld23831RRef AS СкладИсточника,
@@ -1627,9 +1622,8 @@ HAVING
         ) > 0.0
     )
 OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}'),KEEP PLAN, KEEPFIXED PLAN);
---option (recompile)
---UNION
---ALL
+
+
 INsert into #Temp_Intervals
 SELECT
     T3._Period,
@@ -1667,9 +1661,7 @@ HAVING
         ) > 0.0
     )
 OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}'),KEEP PLAN, KEEPFIXED PLAN);
---option (recompile)
---UNION
---ALL
+
 INsert into #Temp_Intervals
 SELECT
     T5._Period,
@@ -1703,10 +1695,7 @@ HAVING
         ) > 0.0
     )
 OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}'),KEEP PLAN, KEEPFIXED PLAN);
---option (recompile)
 ;
-
---CREATE CLUSTERED INDEX ix_tempCIndexIntervals ON #Temp_Intervals(Период,ГруппаПланирования,ВремяНачала asc);
 
 With Temp_DeliveryPower AS
 (
@@ -1782,22 +1771,6 @@ FROM
 GROUP BY
     T1.article
 OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'),KEEP PLAN, KEEPFIXED PLAN);
---option (recompile)
-
---DROP TABLE #Temp_GeoData
---DROP TABLE #Temp_WarehouseDates
---DROP TABLE #Temp_MinimumWarehouseDates
---DROP TABLE #Temp_Goods
---DROP TABLE #Temp_Remains
---DROP TABLE #Temp_Sources
---DROP TABLE #Temp_SourcesWithPrices
---DROP TABLE #Temp_BestPriceAfterClosestDate
---DROP TABLE #Temp_SourcesCorrectedDate
---DROP TABLE #Temp_ClosestDatesByGoods
---DROP TABLE #Temp_ShipmentDates
---DROP TABLE #Temp_ShipmentDatesDeliveryCourier
---DROP TABLE #Temp_Intervals
---Drop Table #Temp_T3
 ";
 
         public const string DatebaseBalancingReplicaFull = @"select datediff(ms, last_commit_time, getdate())
