@@ -237,7 +237,7 @@ namespace DateTimeService.Controllers
                 //define the SqlCommand object
                 SqlCommand cmd = new(query, conn);
 
-                cmd.Parameters.Add("@P4", SqlDbType.NVarChar);
+                cmd.Parameters.Add("@P4", SqlDbType.NVarChar, 10);
                 cmd.Parameters["@P4"].Value = data.city_id;
 
                 cmd.Parameters.Add("@P_DateTimeNow", SqlDbType.DateTime);
