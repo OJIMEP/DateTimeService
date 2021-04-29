@@ -21,14 +21,12 @@ namespace DateTimeService.Controllers
     {
         private readonly UserManager<DateTimeServiceUser> userManager;
         private readonly RoleManager<IdentityRole> roleManager;
-        private readonly IConfiguration _configuration;
-        private IUserService _userService;
+        private readonly IUserService _userService;
 
-        public AuthenticateController(UserManager<DateTimeServiceUser> userManager, RoleManager<IdentityRole> roleManager, IConfiguration configuration, IUserService userService)
+        public AuthenticateController(UserManager<DateTimeServiceUser> userManager, RoleManager<IdentityRole> roleManager, IUserService userService)
         {
             this.userManager = userManager;
             this.roleManager = roleManager;
-            this._configuration = configuration;
             this._userService = userService;
         }
         

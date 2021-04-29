@@ -34,6 +34,8 @@ namespace DateTimeService.Data
   where [_Fld22354] IN({0})";
 
                 SqlCommand cmd = new(queryParametrs, conn);
+                
+                cmd.CommandTimeout = 1;
 
                 var parameters = new string[names.Count];
                 for (int i = 0; i < names.Count; i++)

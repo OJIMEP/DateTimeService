@@ -159,20 +159,18 @@ namespace DateTimeService.Areas.Identity.Data
             return token;//new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        private RefreshToken generateRefreshToken(string ipAddress)
+        private static RefreshToken generateRefreshToken(string ipAddress)
         {
-            using (var rngCryptoServiceProvider = new RNGCryptoServiceProvider())
+            using var rngCryptoServiceProvider = new RNGCryptoServiceProvider();
+            var randomBytes = new byte[64];
+            rngCryptoServiceProvider.GetBytes(randomBytes);
+            return new RefreshToken
             {
-                var randomBytes = new byte[64];
-                rngCryptoServiceProvider.GetBytes(randomBytes);
-                return new RefreshToken
-                {
-                    Token = Convert.ToBase64String(randomBytes),
-                    Expires = DateTime.UtcNow.AddDays(1),
-                    Created = DateTime.UtcNow,
-                    CreatedByIp = ipAddress
-                };
-            }
+                Token = Convert.ToBase64String(randomBytes),
+                Expires = DateTime.UtcNow.AddDays(1),
+                Created = DateTime.UtcNow,
+                CreatedByIp = ipAddress
+            };
         }
     }
 }

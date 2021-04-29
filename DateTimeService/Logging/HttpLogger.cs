@@ -46,6 +46,12 @@ namespace DateTimeService
                         Status = "Info"
                     };
 
+                    if (exception != null)
+                    {
+                        logElement.ErrorDescription += ";" + exception.Message;
+                        logElement.Status = "Error";
+                    }
+
                     var logstringElement = JsonSerializer.Serialize(logElement);
                     logMessage.message.Add(logstringElement);
                 }

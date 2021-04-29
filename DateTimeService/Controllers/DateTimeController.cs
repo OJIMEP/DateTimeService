@@ -101,6 +101,7 @@ namespace DateTimeService.Controllers
                 cmd.Parameters.Add("@P1", SqlDbType.DateTime);
                 cmd.Parameters["@P1"].Value = DateMove;
 
+                cmd.CommandTimeout = 1;
 
                 var parameters = new string[nomenclatures.Count()];
                 for (int i = 0; i < nomenclatures.Count(); i++)
@@ -169,16 +170,35 @@ namespace DateTimeService.Controllers
             Stopwatch stopwatchExecution = new();
             stopwatchExecution.Start();
 
+            var logElementLoadBal = new ElasticLogElement
+            {
+                Path = HttpContext.Request.Path,
+                Host = HttpContext.Request.Host.ToString(),
+                RequestContent = JsonSerializer.Serialize(data),
+                Id = Guid.NewGuid().ToString(),
+                AuthenticatedUser = User.Identity.Name
+            };
 
-            //string connString = _configuration.GetConnectionString("1CDataSqlConnection");
+            string connString;
             Stopwatch watch = new();
             watch.Start();
-            string connString = await _loadBalacing.GetDatabaseConnectionAsync();
+            try
+            {
+                connString = await _loadBalacing.GetDatabaseConnectionAsync();
+            }
+            catch(Exception ex)
+            {
+                connString = "";
+                logElementLoadBal.TimeSQLExecution = 0;
+                logElementLoadBal.ErrorDescription = ex.Message;
+                logElementLoadBal.Status = "Error";
+                var logstringElement1 = JsonSerializer.Serialize(logElementLoadBal);
+                _logger.LogInformation(logstringElement1);
+            }
             watch.Stop();
             //string connString = @"Server=localhost;Database=DevBase_cut_v3;Uid=sa;Pwd=; Trusted_Connection = False;";
 
             ResponseAvailableDate result = new();
-
 
             var logElement = new ElasticLogElement
             {
@@ -190,6 +210,7 @@ namespace DateTimeService.Controllers
                 AuthenticatedUser = User.Identity.Name,
                 LoadBalancingExecution = watch.ElapsedMilliseconds
             };
+
 
             watch.Reset();
 
@@ -221,13 +242,17 @@ namespace DateTimeService.Controllers
             watch.Start();
             try
             {
+                if(data.codes.Length==0 || (data.codes.Length == 1 && data.codes[0] == null))
+                {
+                    throw new Exception("Пустой массив кодов");
+                }
+
                 //sql connection object
                 using SqlConnection conn = new(connString);
 
                 conn.StatisticsEnabled = true;
 
                 string query = Queries.AvailableDate;
-
 
                 var DateMove = DateTime.Now.AddMonths(24000);
                 var TimeNow = new DateTime(2001, 1, 1, DateMove.Hour, DateMove.Minute, DateMove.Second);
@@ -258,8 +283,8 @@ namespace DateTimeService.Controllers
                 cmd.Parameters.Add("@P_MaxDate", SqlDbType.DateTime);
                 cmd.Parameters["@P_MaxDate"].Value = MaxDate;
 
+                cmd.CommandTimeout = 1;
 
-                
                 var count = data.codes.Length > 60 ? data.codes.Length : 60;
                 var parameters = new string[count];
 
@@ -270,11 +295,22 @@ namespace DateTimeService.Controllers
 
                     if (i >= data.codes.Length)
                     {
-                        cmd.Parameters[parameters[i]].Value = data.codes[0];
+
+                        if (data.codes[0] == null)
+                        {
+                            cmd.Parameters[parameters[i]].Value = "";
+                        }
+                        else
+                            cmd.Parameters[parameters[i]].Value = data.codes[0];
                     }
                     else
                     {
-                        cmd.Parameters[parameters[i]].Value = data.codes[i];
+                        if (data.codes[i]==null)
+                        {
+                            cmd.Parameters[parameters[i]].Value = "";
+                        }
+                        else
+                            cmd.Parameters[parameters[i]].Value = data.codes[i];
                     }
 
                     
@@ -504,7 +540,7 @@ namespace DateTimeService.Controllers
                     cmd.Parameters.Add("@P_GeoCode", SqlDbType.NVarChar);
                     cmd.Parameters["@P_GeoCode"].Value = zoneId;
 
-
+                    cmd.CommandTimeout = 1;
 
                     var parameters = new string[data.orderItems.Count];
                     for (int i = 0; i < data.orderItems.Count; i++)
