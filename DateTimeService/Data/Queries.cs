@@ -33,13 +33,14 @@ OR Геозона._Fld21249 = @P_GeoCode
 /*Создание таблицы товаров и ее наполнение данными из БД*/
 Create Table #Temp_GoodsBegin 
 (	
+	PartNumber nvarchar(20), 
 	code nvarchar(20), 
     quantity int
 )
 
 INSERT INTO 
 	#Temp_GoodsBegin ( 
-		code, quantity
+		PartNumber, code, quantity
 	)
 VALUES
 	{0}
@@ -52,7 +53,27 @@ Select
 INTO #Temp_Goods
 From 
 	#Temp_GoodsBegin 
-	Inner Join 	dbo._Reference149 Номенклатура With (NOLOCK) ON #Temp_GoodsBegin.code = Номенклатура._Fld3480
+	Inner Join 	dbo._Reference149 Номенклатура With (NOLOCK) 
+		ON #Temp_GoodsBegin.code is NULL and #Temp_GoodsBegin.PartNumber = Номенклатура._Fld3480
+	Inner Join dbo._Reference256 Упаковки With (NOLOCK)
+		On 
+		Упаковки._OwnerID_TYPE = 0x08  
+		AND Упаковки.[_OwnerID_RTRef] = 0x00000095
+		AND Номенклатура._IDRRef = Упаковки._OwnerID_RRRef		
+		And Упаковки._Fld6003RRef = Номенклатура._Fld3489RRef
+		AND Упаковки._Marked = 0x00
+Group By 
+	Номенклатура._IDRRef,
+	Упаковки._IDRRef
+union
+Select 
+	Номенклатура._IDRRef,
+	Упаковки._IDRRef,
+	Sum(#Temp_GoodsBegin.quantity)	
+From 
+	#Temp_GoodsBegin 
+	Inner Join 	dbo._Reference149 Номенклатура With (NOLOCK) 
+		ON #Temp_GoodsBegin.code is not NULL and #Temp_GoodsBegin.code = Номенклатура._Code
 	Inner Join dbo._Reference256 Упаковки With (NOLOCK)
 		On 
 		Упаковки._OwnerID_TYPE = 0x08  

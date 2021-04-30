@@ -18,6 +18,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using AutoMapper;
 
 namespace DateTimeService.Controllers
 {
@@ -30,13 +31,16 @@ namespace DateTimeService.Controllers
         private readonly IConfiguration _configuration;
         private readonly ILoadBalancing _loadBalacing;
         private readonly IGeoZones _geoZones;
+        private readonly IMapper _mapper;
 
-        public DateTimeController(ILogger<DateTimeController> logger, IConfiguration configuration, ILoadBalancing loadBalancing, IGeoZones geoZones)
+        public DateTimeController(ILogger<DateTimeController> logger, IConfiguration configuration, ILoadBalancing loadBalancing,
+                                    IGeoZones geoZones, IMapper mapper)
         {
             _logger = logger;
             _configuration = configuration;
             _loadBalacing = loadBalancing;
             _geoZones = geoZones;
+            _mapper = mapper;
         }
 
         [Authorize(Roles = UserRoles.MaxAvailableCount + "," + UserRoles.Admin)]
@@ -355,11 +359,12 @@ namespace DateTimeService.Controllers
         }
 
 
-        [Authorize(Roles = UserRoles.IntervalList + "," + UserRoles.Admin)]
+        //[Authorize(Roles = UserRoles.IntervalList + "," + UserRoles.Admin)]
         [Route("IntervalList")]
         [HttpPost]
-        public async Task<IActionResult> IntervalListAsync(RequestIntervalList data)
+        public async Task<IActionResult> IntervalListAsync(RequestIntervalListDTO inputData)
         {
+            var data = _mapper.Map<RequestIntervalList>(inputData);
 
             Stopwatch stopwatchExecution = new();
             stopwatchExecution.Start();
@@ -509,9 +514,13 @@ namespace DateTimeService.Controllers
                     var parameters = new string[data.orderItems.Count];
                     for (int i = 0; i < data.orderItems.Count; i++)
                     {
-                        parameters[i] = string.Format("(@Article{0},@Quantity{0})", i);
+                        parameters[i] = string.Format("(@PartNumber{0}, @Code{0}, @Quantity{0})", i);
 
-                        cmd.Parameters.AddWithValue(string.Format("@Article{0}", i), data.orderItems[i].code);
+                        cmd.Parameters.AddWithValue(string.Format("@PartNumber{0}", i), data.orderItems[i].partNumber);
+                        if (String.IsNullOrEmpty(data.orderItems[i].code))
+                            cmd.Parameters.AddWithValue(string.Format("@Code{0}", i), DBNull.Value);
+                        else
+                            cmd.Parameters.AddWithValue(string.Format("@Code{0}", i), data.orderItems[i].code);
                         cmd.Parameters.AddWithValue(string.Format("@Quantity{0}", i), data.orderItems[i].quantity);
                     }
 
