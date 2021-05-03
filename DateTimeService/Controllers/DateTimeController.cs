@@ -189,7 +189,7 @@ namespace DateTimeService.Controllers
             {
                 Path = HttpContext.Request.Path,
                 Host = HttpContext.Request.Host.ToString(),
-                RequestContent = JsonSerializer.Serialize(data),
+                RequestContent = inputDataJson.ToString(), //JsonSerializer.Serialize(data),
                 Id = Guid.NewGuid().ToString(),
                 AuthenticatedUser = User.Identity.Name
             };
@@ -313,12 +313,15 @@ namespace DateTimeService.Controllers
 
                     if (i >= data.codes.Length)
                     {
-                        cmd.Parameters[articleParameters[i]].Value = data.codes[0].article;
+                        cmd.Parameters[articleParameters[i]].Value = DBNull.Value;
                         cmd.Parameters[codeParameters[i]].Value = DBNull.Value;
                     }
                     else
                     {
-                        cmd.Parameters[articleParameters[i]].Value = data.codes[i].article;
+                        if (String.IsNullOrEmpty(data.codes[i].article))
+                            cmd.Parameters[articleParameters[i]].Value = DBNull.Value;
+                        else
+                            cmd.Parameters[articleParameters[i]].Value = data.codes[i].article;
                         if (String.IsNullOrEmpty(data.codes[i].code))
                             cmd.Parameters[codeParameters[i]].Value = DBNull.Value;
                         else
