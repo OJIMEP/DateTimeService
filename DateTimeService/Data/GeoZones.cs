@@ -66,6 +66,7 @@ namespace DateTimeService.Data
 
                 cmd.Parameters.AddWithValue("@P4", _addressId);
 
+                cmd.CommandTimeout = 1;
 
                 cmd.CommandText = queryParametrs;
 

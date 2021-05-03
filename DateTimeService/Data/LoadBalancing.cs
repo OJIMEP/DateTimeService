@@ -28,7 +28,7 @@ namespace DateTimeService.Data
 
         public async Task<string> GetDatabaseConnectionAsync()
         {
-            string connString = _configuration.GetConnectionString("1CDataSqlConnection");
+            //string connString = _configuration.GetConnectionString("1CDataSqlConnection");
             
             var connectionParameters = _configuration.GetSection("OneSDatabases").Get<List<DatabaseConnectionParameter>>();
 
@@ -64,6 +64,8 @@ namespace DateTimeService.Data
                             conn.Open();
 
                             SqlCommand cmd = new(queryStringCheck, conn);
+
+                            cmd.CommandTimeout = 1;
 
                             SqlDataReader dr = await cmd.ExecuteReaderAsync();
                             

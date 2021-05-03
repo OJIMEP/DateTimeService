@@ -12,7 +12,7 @@ namespace DateTimeService.Models
         public string city_id { get; set; }
         [Required]
         public string[] delivery_types { get; set; }
-        [Required, MinLength(1)]
+        [Required]
         public string[] codes { get; set; }
 
     }
