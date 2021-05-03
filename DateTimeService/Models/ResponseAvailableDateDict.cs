@@ -19,6 +19,10 @@ namespace DateTimeService.Models
     public class ResponseAvailableDateDictElement
     {
         public string code { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string sales_code { get; set; }
+
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string courier { get; set; }
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]

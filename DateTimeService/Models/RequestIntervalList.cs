@@ -13,14 +13,7 @@ namespace DateTimeService.Models
         public double? floor { get; set; }
         public string payment { get; set; }
         [JsonPropertyName("order_items")]
-        public List<RequestOrderItemsDTO> orderItems { get; set; }
-    }
-
-    public class RequestOrderItemsDTO
-    {
-        public string code { get; set; }
-        public string sale_code { get; set; }
-        public int quantity { get; set; }
+        public List<RequestDataCodeItemDTO> orderItems { get; set; }
     }
 
     public class RequestIntervalList
@@ -29,13 +22,6 @@ namespace DateTimeService.Models
         public string delivery_type { get; set; }
         public double? floor { get; set; }
         public string payment { get; set; }
-        public List<RequestOrderItems> orderItems { get; set; }
-    }
-
-    public class RequestOrderItems
-    {
-        public string article { get; set; }
-        public string code { get; set; }
-        public int quantity { get; set; }
+        public List<RequestDataCodeItem> orderItems { get; set; }
     }
 }

@@ -11,7 +11,10 @@ namespace DateTimeService.Models
         public MapperProfile()
         {
             CreateMap<RequestIntervalListDTO, RequestIntervalList>();
-            CreateMap<RequestDataAvailableDateDTO, RequestDataAvailableDate>();
+            CreateMap<RequestDataAvailableDateByCodeItemsDTO, RequestDataAvailableDate>();
+            CreateMap<RequestDataAvailableDateByCodesDTO, RequestDataAvailableDate>()
+                .ForMember(dest => dest.codes,
+                opt => { opt.MapFrom<CodesToCodeItemsResolver>(); });
 
             CreateMap<RequestDataCodeItemDTO, RequestDataCodeItem>()
                 .ForMember(dest => dest.code,

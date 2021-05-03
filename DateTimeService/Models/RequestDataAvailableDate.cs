@@ -6,7 +6,18 @@ using System.Threading.Tasks;
 
 namespace DateTimeService.Models
 {
-    public class RequestDataAvailableDateDTO
+    public class RequestDataAvailableDateByCodesDTO
+    {
+        [Required]
+        public string city_id { get; set; }
+        [Required]
+        public string[] delivery_types { get; set; }
+        [Required, MinLength(1)]
+        public string[] codes { get; set; }
+
+    }
+
+    public class RequestDataAvailableDateByCodeItemsDTO
     {
         [Required]
         public string city_id { get; set; }

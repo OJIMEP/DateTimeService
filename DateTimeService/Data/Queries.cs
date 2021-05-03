@@ -1197,7 +1197,7 @@ Select
 From 
 	dbo._Reference149 Номенклатура With (NOLOCK)
 Where
-	Номенклатура._Fld3480 IN ({6})
+	Номенклатура._Code IN ({6})
 OPTION (KEEP PLAN, KEEPFIXED PLAN)
 ;
 
@@ -1205,6 +1205,7 @@ OPTION (KEEP PLAN, KEEPFIXED PLAN)
 Select 
 	Номенклатура._IDRRef AS НоменклатураСсылка,
     Номенклатура._Fld3480 AS article,
+    Номенклатура._Code AS code,
 	Упаковки._IDRRef AS УпаковкаСсылка,
 	1 As Количество,
 	Упаковки._Fld6000 AS Вес,
@@ -1540,6 +1541,7 @@ OPTION (KEEP PLAN, KEEPFIXED PLAN)
 SELECT
     T1.НоменклатураСсылка,
     T1.article,
+    T1.code,
     ISNULL(T3.СкладНазначения, T2.СкладНазначения) AS СкладНазначения,
     MIN(ISNULL(T3.ДатаДоступности, T2.ДатаДоступности)) AS БлижайшаяДата,
     1 AS Количество,
@@ -1559,6 +1561,7 @@ FROM
 GROUP BY
     T1.НоменклатураСсылка,
     T1.article,
+    T1.code,
     ISNULL(T3.СкладНазначения, T2.СкладНазначения),
     T1.Вес,
     T1.Объем,
@@ -1571,6 +1574,7 @@ OPTION (KEEP PLAN, KEEPFIXED PLAN)
 SELECT
     T1.НоменклатураСсылка,
     T1.article,
+    T1.code,
     T1.СкладНазначения,
     T1.Вес,
     T1.Объем,
@@ -1596,6 +1600,7 @@ Where
 GROUP BY
     T1.НоменклатураСсылка,
     T1.article,
+    T1.code,
     T1.СкладНазначения,
     T1.Вес,
     T1.Объем,
@@ -1608,6 +1613,7 @@ OPTION (KEEP PLAN, KEEPFIXED PLAN)
 SELECT
     T1.НоменклатураСсылка,
     T1.article,
+    T1.code,
     MIN(T1.ДатаДоступности) AS ДатаСоСклада,
     T1.Вес,
     T1.Объем,
@@ -1621,6 +1627,7 @@ FROM
 GROUP BY
     T1.НоменклатураСсылка,
     T1.article,
+    T1.code,
     T1.Вес,
     T1.Объем,
     T1.ВремяНаОбслуживание,
@@ -1777,7 +1784,8 @@ GROUP BY
     CAST(CAST(МощностиДоставки._Period  AS DATE) AS DATETIME)
 )
 SELECT
-    T1.article AS nomenclature_id,
+    T1.article,
+    T1.code,
     MIN(
         ISNULL(
             T3.ВремяНачала,
@@ -1810,7 +1818,8 @@ FROM
     ON (T1.НоменклатураСсылка = T4.НоменклатураСсылка)
     AND (T4.СкладНазначения IN (NULL)) --склады ПВЗ
 GROUP BY
-    T1.article
+    T1.article,
+    T1.code
 OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'),KEEP PLAN, KEEPFIXED PLAN);
 ";
 
