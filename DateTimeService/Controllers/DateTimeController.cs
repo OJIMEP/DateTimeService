@@ -167,8 +167,9 @@ namespace DateTimeService.Controllers
         [Authorize(Roles = UserRoles.AvailableDate + "," + UserRoles.Admin)]
         [Route("AvailableDate")]
         [HttpPost]
-        public async Task<IActionResult> AvailableDateAsync(RequestDataAvailableDate data)
+        public async Task<IActionResult> AvailableDateAsync(RequestDataAvailableDateDTO inputData)
         {
+            var data = _mapper.Map<RequestDataAvailableDate>(inputData);
 
             Stopwatch stopwatchExecution = new();
             stopwatchExecution.Start();
@@ -188,7 +189,7 @@ namespace DateTimeService.Controllers
             {
                 Path = HttpContext.Request.Path,
                 Host = HttpContext.Request.Host.ToString(),
-                RequestContent = JsonSerializer.Serialize(data),
+                RequestContent = JsonSerializer.Serialize(inputData),
                 Id = Guid.NewGuid().ToString(),
                 DatabaseConnection = LoadBalancing.RemoveCredentialsFromConnectionString(connString),
                 AuthenticatedUser = User.Identity.Name,
@@ -241,8 +242,8 @@ namespace DateTimeService.Controllers
                 //define the SqlCommand object
                 SqlCommand cmd = new(query, conn);
 
-                cmd.Parameters.Add("@P4", SqlDbType.NVarChar, 10);
-                cmd.Parameters["@P4"].Value = data.city_id;
+                cmd.Parameters.Add("@P_AdressCode", SqlDbType.NVarChar, 10);
+                cmd.Parameters["@P_AdressCode"].Value = data.city_id;
 
                 cmd.Parameters.Add("@P_DateTimeNow", SqlDbType.DateTime);
                 cmd.Parameters["@P_DateTimeNow"].Value = DateMove;
@@ -385,7 +386,7 @@ namespace DateTimeService.Controllers
             {
                 Path = HttpContext.Request.Path,
                 Host = HttpContext.Request.Host.ToString(),
-                RequestContent = JsonSerializer.Serialize(data),
+                RequestContent = JsonSerializer.Serialize(inputData),
                 Id = Guid.NewGuid().ToString(),
                 DatabaseConnection = LoadBalancing.RemoveCredentialsFromConnectionString(connString),
                 AuthenticatedUser = User.Identity.Name,
@@ -476,8 +477,8 @@ namespace DateTimeService.Controllers
                     //define the SqlCommand object
                     SqlCommand cmd = new(query, conn);
 
-                    cmd.Parameters.Add("@P4", SqlDbType.NVarChar);
-                    cmd.Parameters["@P4"].Value = data.address_id;
+                    cmd.Parameters.Add("@P_AdressCode", SqlDbType.NVarChar);
+                    cmd.Parameters["@P_AdressCode"].Value = data.address_id;
 
                     cmd.Parameters.Add("@P_Credit", SqlDbType.Int);
                     cmd.Parameters["@P_Credit"].Value = data.payment == "partly_pay" ? 1 : 0;
@@ -514,9 +515,9 @@ namespace DateTimeService.Controllers
                     var parameters = new string[data.orderItems.Count];
                     for (int i = 0; i < data.orderItems.Count; i++)
                     {
-                        parameters[i] = string.Format("(@PartNumber{0}, @Code{0}, @Quantity{0})", i);
+                        parameters[i] = string.Format("(@Article{0}, @Code{0}, @Quantity{0})", i);
 
-                        cmd.Parameters.AddWithValue(string.Format("@PartNumber{0}", i), data.orderItems[i].partNumber);
+                        cmd.Parameters.AddWithValue(string.Format("@Article{0}", i), data.orderItems[i].article);
                         if (String.IsNullOrEmpty(data.orderItems[i].code))
                             cmd.Parameters.AddWithValue(string.Format("@Code{0}", i), DBNull.Value);
                         else

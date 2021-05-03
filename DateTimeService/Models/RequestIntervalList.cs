@@ -34,7 +34,7 @@ namespace DateTimeService.Models
 
     public class RequestOrderItems
     {
-        public string partNumber { get; set; }
+        public string article { get; set; }
         public string code { get; set; }
         public int quantity { get; set; }
     }

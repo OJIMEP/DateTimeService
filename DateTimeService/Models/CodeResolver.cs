@@ -6,9 +6,9 @@ using AutoMapper;
 
 namespace DateTimeService.Models
 {
-    public class CodeResolver: IValueResolver<RequestOrderItemsDTO, RequestOrderItems, string>
+    public class CodeResolver: IValueResolver<RequestDataCodeItemDTO, RequestDataCodeItem, string>
     {
-        public string Resolve(RequestOrderItemsDTO source, RequestOrderItems destination, String destMember, ResolutionContext context)
+        public string Resolve(RequestDataCodeItemDTO source, RequestDataCodeItem destination, String destMember, ResolutionContext context)
         {
             if (source.sale_code == null)
                 return null;

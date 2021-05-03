@@ -26,7 +26,7 @@ where
 	Select Top 1 --по адресу находим геозону
 	ГеоАдрес._Fld2785RRef 
 	From dbo._Reference112 ГеоАдрес With (NOLOCK)
-	Where ГеоАдрес._Fld25155 = @P4))
+	Where ГеоАдрес._Fld25155 = @P_AdressCode))
 OR Геозона._Fld21249 = @P_GeoCode
 
 
@@ -1181,8 +1181,25 @@ where Геозона._IDRRef IN (
 	Select Top 1 --по городу в геоадресе находим геозону
 	ГеоАдрес._Fld2785RRef 
 	From dbo._Reference112 ГеоАдрес With (NOLOCK)
-	Where ГеоАдрес._Fld25552 = @P4)
+	Where ГеоАдрес._Fld25552 = @P_AdressCode)
 OPTION (KEEP PLAN, KEEPFIXED PLAN)
+
+Select 
+	Номенклатура._IDRRef
+INTO #Temp_GoodsBegin
+From 
+	dbo._Reference149 Номенклатура With (NOLOCK)
+Where
+	Номенклатура._Fld3480 IN ({0})
+union
+Select 
+	Номенклатура._IDRRef
+From 
+	dbo._Reference149 Номенклатура With (NOLOCK)
+Where
+	Номенклатура._Fld3480 IN ({6})
+OPTION (KEEP PLAN, KEEPFIXED PLAN)
+;
 
 
 Select 
@@ -1199,6 +1216,7 @@ Select
 INTO #Temp_Goods
 From 
 	dbo._Reference149 Номенклатура With (NOLOCK)
+    inner join #Temp_GoodsBegin on Номенклатура._IDRRef = #Temp_GoodsBegin._IDRRef
 	Inner Join dbo._Reference256 Упаковки With (NOLOCK)
 		On 
 		Упаковки._OwnerID_TYPE = 0x08  
@@ -1215,8 +1233,6 @@ From
 		AND ГруппыПланирования._Fld25141 = 0x01--участвует в расчете мощности
 		AND (ГруппыПланирования._Fld23301RRef = Номенклатура._Fld3526RRef OR (Номенклатура._Fld3526RRef = 0xAC2CBF86E693F63444670FFEB70264EE AND ГруппыПланирования._Fld23301RRef= 0xAD3F7F5FC4F15DAD4F693CAF8365EC0D) ) --габариты
 		AND ГруппыПланирования._Marked = 0x00
-Where
-	Номенклатура._Fld3480 IN ({0})
 OPTION (KEEP PLAN, KEEPFIXED PLAN)
 ;
 
