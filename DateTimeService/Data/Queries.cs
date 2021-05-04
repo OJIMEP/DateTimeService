@@ -1181,7 +1181,7 @@ where Геозона._IDRRef IN (
 	Select Top 1 --по городу в геоадресе находим геозону
 	ГеоАдрес._Fld2785RRef 
 	From dbo._Reference112 ГеоАдрес With (NOLOCK)
-	Where ГеоАдрес._Fld25552 = @P_AdressCode)
+	Where ГеоАдрес._Fld25552 = @P_CityCode)
 OPTION (KEEP PLAN, KEEPFIXED PLAN)
 
 Select 

@@ -10,11 +10,11 @@ namespace DateTimeService.Models
     {
         public string Resolve(RequestDataCodeItemDTO source, RequestDataCodeItem destination, String destMember, ResolutionContext context)
         {
-            if (source.sale_code == null)
+            if (source.sales_code == null)
                 return null;
             else
             {
-                return GetCodeFromSaleCode(source.sale_code);
+                return GetCodeFromSaleCode(source.sales_code);
             }
         }
 

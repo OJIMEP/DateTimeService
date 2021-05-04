@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace DateTimeService.Models
@@ -23,8 +24,8 @@ namespace DateTimeService.Models
         public string city_id { get; set; }
         [Required]
         public string[] delivery_types { get; set; }
-        [Required, MinLength(1)]
-        public RequestDataCodeItemDTO[] codes { get; set; }
+        [Required, MinLength(1),JsonPropertyName("codes")]
+        public RequestDataCodeItemDTO[] codeItems { get; set; }
 
     }
 
@@ -34,7 +35,7 @@ namespace DateTimeService.Models
         public string city_id { get; set; }
         [Required]
         public string[] delivery_types { get; set; }
-        [Required, MinLength(1)]
+        [Required, MinLength(1), JsonPropertyName("codeItems")]
         public RequestDataCodeItem[] codes { get; set; }
 
     }

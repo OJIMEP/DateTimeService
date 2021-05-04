@@ -189,7 +189,7 @@ namespace DateTimeService.Controllers
             {
                 Path = HttpContext.Request.Path,
                 Host = HttpContext.Request.Host.ToString(),
-                RequestContent = inputDataJson.ToString(), //JsonSerializer.Serialize(data),
+                RequestContent = JsonSerializer.Serialize(data),
                 Id = Guid.NewGuid().ToString(),
                 AuthenticatedUser = User.Identity.Name
             };
@@ -219,7 +219,7 @@ namespace DateTimeService.Controllers
             {
                 Path = HttpContext.Request.Path,
                 Host = HttpContext.Request.Host.ToString(),
-                RequestContent = inputDataJson.ToString(), //JsonSerializer.Serialize(inputData),
+                RequestContent = JsonSerializer.Serialize(data),
                 Id = Guid.NewGuid().ToString(),
                 DatabaseConnection = LoadBalancing.RemoveCredentialsFromConnectionString(connString),
                 AuthenticatedUser = User.Identity.Name,
@@ -277,8 +277,8 @@ namespace DateTimeService.Controllers
                 //define the SqlCommand object
                 SqlCommand cmd = new(query, conn);
 
-                cmd.Parameters.Add("@P_AdressCode", SqlDbType.NVarChar, 10);
-                cmd.Parameters["@P_AdressCode"].Value = data.city_id;
+                cmd.Parameters.Add("@P_CityCode", SqlDbType.NVarChar, 10);
+                cmd.Parameters["@P_CityCode"].Value = data.city_id;
 
                 cmd.Parameters.Add("@P_DateTimeNow", SqlDbType.DateTime);
                 cmd.Parameters["@P_DateTimeNow"].Value = DateMove;
@@ -386,7 +386,7 @@ namespace DateTimeService.Controllers
                 var resultElement = new ResponseAvailableDateDictElement
                 {
                     code = codeItem.article,
-                    sales_code = codeItem.code,
+                    sales_code = codeItem.sales_code,
                     courier = null,
                     self = null
                 };
@@ -417,7 +417,7 @@ namespace DateTimeService.Controllers
                 }
                 else
                 {
-                    resultDict.data.Add(String.Concat(codeItem.article,"_",codeItem.sale_code),resultElement);
+                    resultDict.data.Add(String.Concat(codeItem.article,"_",codeItem.sales_code),resultElement);
                 }
             }
             watch.Stop();
