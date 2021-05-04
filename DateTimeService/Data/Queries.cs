@@ -33,14 +33,14 @@ OR Геозона._Fld21249 = @P_GeoCode
 /*Создание таблицы товаров и ее наполнение данными из БД*/
 Create Table #Temp_GoodsBegin 
 (	
-	PartNumber nvarchar(20), 
+	article nvarchar(20), 
 	code nvarchar(20), 
     quantity int
 )
 
 INSERT INTO 
 	#Temp_GoodsBegin ( 
-		PartNumber, code, quantity
+		article, code, quantity
 	)
 VALUES
 	{0}
@@ -54,7 +54,7 @@ INTO #Temp_Goods
 From 
 	#Temp_GoodsBegin 
 	Inner Join 	dbo._Reference149 Номенклатура With (NOLOCK) 
-		ON #Temp_GoodsBegin.code is NULL and #Temp_GoodsBegin.PartNumber = Номенклатура._Fld3480
+		ON #Temp_GoodsBegin.code is NULL and #Temp_GoodsBegin.article = Номенклатура._Fld3480
 	Inner Join dbo._Reference256 Упаковки With (NOLOCK)
 		On 
 		Упаковки._OwnerID_TYPE = 0x08  
