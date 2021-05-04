@@ -18,6 +18,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using AutoMapper;
 
 namespace DateTimeService.Controllers
 {
@@ -30,13 +31,16 @@ namespace DateTimeService.Controllers
         private readonly IConfiguration _configuration;
         private readonly ILoadBalancing _loadBalacing;
         private readonly IGeoZones _geoZones;
+        private readonly IMapper _mapper;
 
-        public DateTimeController(ILogger<DateTimeController> logger, IConfiguration configuration, ILoadBalancing loadBalancing, IGeoZones geoZones)
+        public DateTimeController(ILogger<DateTimeController> logger, IConfiguration configuration, ILoadBalancing loadBalancing,
+                                    IGeoZones geoZones, IMapper mapper)
         {
             _logger = logger;
             _configuration = configuration;
             _loadBalacing = loadBalancing;
             _geoZones = geoZones;
+            _mapper = mapper;
         }
 
         [Authorize(Roles = UserRoles.MaxAvailableCount + "," + UserRoles.Admin)]
@@ -164,8 +168,19 @@ namespace DateTimeService.Controllers
         [Authorize(Roles = UserRoles.AvailableDate + "," + UserRoles.Admin)]
         [Route("AvailableDate")]
         [HttpPost]
-        public async Task<IActionResult> AvailableDateAsync(RequestDataAvailableDate data)
+        public async Task<IActionResult> AvailableDateAsync([FromBody]JsonElement inputDataJson)
         {
+            RequestDataAvailableDate data = new RequestDataAvailableDate();
+            try //здесь по хорошему нужно проверить на схему, но т.к. решение временное применим просто трай кэтч
+            {
+                var inputDataByCodeItems = JsonSerializer.Deserialize<RequestDataAvailableDateByCodeItemsDTO>(inputDataJson.ToString());
+                data = _mapper.Map<RequestDataAvailableDate>(inputDataByCodeItems);
+            }
+            catch 
+            {
+                var inputDataByCodes = JsonSerializer.Deserialize<RequestDataAvailableDateByCodesDTO>(inputDataJson.ToString());
+                data = _mapper.Map<RequestDataAvailableDate>(inputDataByCodes);
+            }
 
             Stopwatch stopwatchExecution = new();
             stopwatchExecution.Start();
@@ -174,7 +189,7 @@ namespace DateTimeService.Controllers
             {
                 Path = HttpContext.Request.Path,
                 Host = HttpContext.Request.Host.ToString(),
-                RequestContent = JsonSerializer.Serialize(data),
+                RequestContent = inputDataJson.ToString(), //JsonSerializer.Serialize(data),
                 Id = Guid.NewGuid().ToString(),
                 AuthenticatedUser = User.Identity.Name
             };
@@ -198,13 +213,13 @@ namespace DateTimeService.Controllers
             watch.Stop();
             //string connString = @"Server=localhost;Database=DevBase_cut_v3;Uid=sa;Pwd=; Trusted_Connection = False;";
 
-            ResponseAvailableDate result = new();
+            ResponseAvailableDate dbResult = new();
 
             var logElement = new ElasticLogElement
             {
                 Path = HttpContext.Request.Path,
                 Host = HttpContext.Request.Host.ToString(),
-                RequestContent = JsonSerializer.Serialize(data),
+                RequestContent = inputDataJson.ToString(), //JsonSerializer.Serialize(inputData),
                 Id = Guid.NewGuid().ToString(),
                 DatabaseConnection = LoadBalancing.RemoveCredentialsFromConnectionString(connString),
                 AuthenticatedUser = User.Identity.Name,
@@ -262,8 +277,8 @@ namespace DateTimeService.Controllers
                 //define the SqlCommand object
                 SqlCommand cmd = new(query, conn);
 
-                cmd.Parameters.Add("@P4", SqlDbType.NVarChar, 10);
-                cmd.Parameters["@P4"].Value = data.city_id;
+                cmd.Parameters.Add("@P_AdressCode", SqlDbType.NVarChar, 10);
+                cmd.Parameters["@P_AdressCode"].Value = data.city_id;
 
                 cmd.Parameters.Add("@P_DateTimeNow", SqlDbType.DateTime);
                 cmd.Parameters["@P_DateTimeNow"].Value = DateMove;
@@ -286,43 +301,41 @@ namespace DateTimeService.Controllers
                 cmd.CommandTimeout = 1;
 
                 var count = data.codes.Length > 60 ? data.codes.Length : 60;
-                var parameters = new string[count];
+                var articleParameters = new string[count];
+                var codeParameters = new string[count];
 
                 for (int i = 0; i < count; i++)
                 {
-                    parameters[i] = string.Format("@Article{0}", i);
-                    cmd.Parameters.Add(parameters[i], SqlDbType.NVarChar,10);
+                    articleParameters[i] = string.Format("@Article{0}", i);
+                    codeParameters[i]    = string.Format("@Code{0}", i);
+                    cmd.Parameters.Add(articleParameters[i], SqlDbType.NVarChar,10);
+                    cmd.Parameters.Add(codeParameters[i], SqlDbType.NVarChar, 11);
 
                     if (i >= data.codes.Length)
                     {
-
-                        if (data.codes[0] == null)
-                        {
-                            cmd.Parameters[parameters[i]].Value = "";
-                        }
-                        else
-                            cmd.Parameters[parameters[i]].Value = data.codes[0];
+                        cmd.Parameters[articleParameters[i]].Value = DBNull.Value;
+                        cmd.Parameters[codeParameters[i]].Value = DBNull.Value;
                     }
                     else
                     {
-                        if (data.codes[i]==null)
-                        {
-                            cmd.Parameters[parameters[i]].Value = "";
-                        }
+                        if (String.IsNullOrEmpty(data.codes[i].article))
+                            cmd.Parameters[articleParameters[i]].Value = DBNull.Value;
                         else
-                            cmd.Parameters[parameters[i]].Value = data.codes[i];
+                            cmd.Parameters[articleParameters[i]].Value = data.codes[i].article;
+                        if (String.IsNullOrEmpty(data.codes[i].code))
+                            cmd.Parameters[codeParameters[i]].Value = DBNull.Value;
+                        else
+                            cmd.Parameters[codeParameters[i]].Value = data.codes[i].code;
                     }
-
-                    
-                    //cmd.Parameters.AddWithValue(parameters[i], data.codes[i]);
                 }
 
-                cmd.CommandText = string.Format(query, string.Join(", ", parameters),
+                cmd.CommandText = string.Format(query, string.Join(", ", articleParameters),
                     DateMove.Date.ToString("yyyy-MM-ddTHH:mm:ss"),
                     DateMove.Date.ToString("yyyy-MM-ddTHH:mm:ss"),
                     DateMove.Date.AddDays(Parameters1C.First(x => x.Name.Contains("rsp_КоличествоДнейЗаполненияГрафика")).ValueDouble - 1).ToString("yyyy-MM-ddTHH:mm:ss"),
                     Parameters1C.First(x => x.Name.Contains("КоличествоДнейАнализаЛучшейЦеныПриОтсрочкеЗаказа")).ValueDouble,
-                    Parameters1C.First(x => x.Name.Contains("ПроцентДнейАнализаЛучшейЦеныПриОтсрочкеЗаказа")).ValueDouble);
+                    Parameters1C.First(x => x.Name.Contains("ПроцентДнейАнализаЛучшейЦеныПриОтсрочкеЗаказа")).ValueDouble,
+                    string.Join(", ", codeParameters));
 
                 //open connection
                 conn.Open();
@@ -336,12 +349,14 @@ namespace DateTimeService.Controllers
                     while (dr.Read())
                     {
                         var article = dr.GetString(0);
-                        var availableDateCourier = dr.GetDateTime(1).AddMonths(-24000);
-                        var availableDateSelf = dr.GetDateTime(2).AddMonths(-24000);
+                        var code = dr.GetString(1);
+                        var availableDateCourier = dr.GetDateTime(2).AddMonths(-24000);
+                        var availableDateSelf = dr.GetDateTime(3).AddMonths(-24000);
 
-                        result.code.Add(article);
-                        result.courier.Add(availableDateCourier);
-                        result.self.Add(availableDateSelf);
+                        dbResult.article.Add(article);
+                        dbResult.code.Add(code);
+                        dbResult.courier.Add(availableDateCourier);
+                        dbResult.self.Add(availableDateSelf);
                     }
                 }
 
@@ -355,7 +370,7 @@ namespace DateTimeService.Controllers
                 conn.Close();
 
                 logElement.TimeSQLExecution = sqlCommandExecutionTime;
-                logElement.ResponseContent = JsonSerializer.Serialize(result);
+                logElement.ResponseContent = JsonSerializer.Serialize(dbResult);
                 logElement.Status = "Ok";
             }
             catch (Exception ex)
@@ -366,16 +381,44 @@ namespace DateTimeService.Controllers
             }
 
             var resultDict = new ResponseAvailableDateDict();
-            for (int i = 0; i < result.code.Count; i++)
+            foreach (var codeItem in data.codes)
             {
-                var resEl = new ResponseAvailableDateDictElement
+                var resultElement = new ResponseAvailableDateDictElement
                 {
-                    code = result.code[i],
-                    courier = data.delivery_types.Contains("courier") ? result.courier[i].Date.ToString("yyyy-MM-ddTHH:mm:ss") : null,
-                    self = data.delivery_types.Contains("self") ? result.self[i].Date.ToString("yyyy-MM-ddTHH:mm:ss") : null
+                    code = codeItem.article,
+                    sales_code = codeItem.code,
+                    courier = null,
+                    self = null
                 };
 
-                resultDict.data.Add(result.code[i], resEl);
+                int dbResultIndex = -1;
+                if (String.IsNullOrEmpty(codeItem.code))
+                {
+                    dbResultIndex = dbResult.article.FindIndex(s => s == codeItem.article);
+                }
+                else
+                {
+                    dbResultIndex = dbResult.code.FindIndex(s => s == codeItem.code);
+                }
+
+                if (dbResultIndex == -1)
+                    continue;
+
+                resultElement.courier = data.delivery_types.Contains("courier")
+                    ? dbResult.courier[dbResultIndex].Date.ToString("yyyy-MM-ddTHH:mm:ss")
+                    : null;
+                resultElement.self = data.delivery_types.Contains("self")
+                    ? dbResult.self[dbResultIndex].Date.ToString("yyyy-MM-ddTHH:mm:ss")
+                    : null;
+
+                if (String.IsNullOrEmpty(codeItem.code))
+                {
+                    resultDict.data.Add(codeItem.article, resultElement);
+                }
+                else
+                {
+                    resultDict.data.Add(String.Concat(codeItem.article,"_",codeItem.sale_code),resultElement);
+                }
             }
             watch.Stop();
             logElement.TimeSQLExecutionFact = watch.ElapsedMilliseconds;
@@ -394,8 +437,9 @@ namespace DateTimeService.Controllers
         [Authorize(Roles = UserRoles.IntervalList + "," + UserRoles.Admin)]
         [Route("IntervalList")]
         [HttpPost]
-        public async Task<IActionResult> IntervalListAsync(RequestIntervalList data)
+        public async Task<IActionResult> IntervalListAsync(RequestIntervalListDTO inputData)
         {
+            var data = _mapper.Map<RequestIntervalList>(inputData);
 
             Stopwatch stopwatchExecution = new();
             stopwatchExecution.Start();
@@ -416,7 +460,7 @@ namespace DateTimeService.Controllers
             {
                 Path = HttpContext.Request.Path,
                 Host = HttpContext.Request.Host.ToString(),
-                RequestContent = JsonSerializer.Serialize(data),
+                RequestContent = JsonSerializer.Serialize(inputData),
                 Id = Guid.NewGuid().ToString(),
                 DatabaseConnection = LoadBalancing.RemoveCredentialsFromConnectionString(connString),
                 AuthenticatedUser = User.Identity.Name,
@@ -507,8 +551,8 @@ namespace DateTimeService.Controllers
                     //define the SqlCommand object
                     SqlCommand cmd = new(query, conn);
 
-                    cmd.Parameters.Add("@P4", SqlDbType.NVarChar);
-                    cmd.Parameters["@P4"].Value = data.address_id;
+                    cmd.Parameters.Add("@P_AdressCode", SqlDbType.NVarChar);
+                    cmd.Parameters["@P_AdressCode"].Value = data.address_id;
 
                     cmd.Parameters.Add("@P_Credit", SqlDbType.Int);
                     cmd.Parameters["@P_Credit"].Value = data.payment == "partly_pay" ? 1 : 0;
@@ -545,9 +589,13 @@ namespace DateTimeService.Controllers
                     var parameters = new string[data.orderItems.Count];
                     for (int i = 0; i < data.orderItems.Count; i++)
                     {
-                        parameters[i] = string.Format("(@Article{0},@Quantity{0})", i);
+                        parameters[i] = string.Format("(@Article{0}, @Code{0}, @Quantity{0})", i);
 
-                        cmd.Parameters.AddWithValue(string.Format("@Article{0}", i), data.orderItems[i].code);
+                        cmd.Parameters.AddWithValue(string.Format("@Article{0}", i), data.orderItems[i].article);
+                        if (String.IsNullOrEmpty(data.orderItems[i].code))
+                            cmd.Parameters.AddWithValue(string.Format("@Code{0}", i), DBNull.Value);
+                        else
+                            cmd.Parameters.AddWithValue(string.Format("@Code{0}", i), data.orderItems[i].code);
                         cmd.Parameters.AddWithValue(string.Format("@Quantity{0}", i), data.orderItems[i].quantity);
                     }
 

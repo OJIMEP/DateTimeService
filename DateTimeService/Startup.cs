@@ -35,6 +35,8 @@ namespace DateTimeService
 
             services.AddCors();
 
+            services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
             services.AddControllers();
 
             // For Entity Framework  

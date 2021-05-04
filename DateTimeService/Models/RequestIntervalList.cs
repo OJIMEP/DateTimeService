@@ -6,19 +6,22 @@ using System.Threading.Tasks;
 
 namespace DateTimeService.Models
 {
-    public class RequestIntervalList
+    public class RequestIntervalListDTO
     {
         public string address_id { get; set; }
         public string delivery_type { get; set; }
         public double? floor { get; set; }
         public string payment { get; set; }
         [JsonPropertyName("order_items")]
-        public List<RequestOrderItems> orderItems { get; set; }
+        public List<RequestDataCodeItemDTO> orderItems { get; set; }
     }
 
-    public class RequestOrderItems
+    public class RequestIntervalList
     {
-        public string code { get; set; }
-        public int quantity { get; set; }
+        public string address_id { get; set; }
+        public string delivery_type { get; set; }
+        public double? floor { get; set; }
+        public string payment { get; set; }
+        public List<RequestDataCodeItem> orderItems { get; set; }
     }
 }
