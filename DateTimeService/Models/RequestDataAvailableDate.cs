@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace DateTimeService.Models
 {
-    public class RequestDataAvailableDateByCodesDTO
+    public class RequestDataAvailableDate
     {
         [Required]
         public string city_id { get; set; }
@@ -14,28 +14,6 @@ namespace DateTimeService.Models
         public string[] delivery_types { get; set; }
         [Required]
         public string[] codes { get; set; }
-
-    }
-
-    public class RequestDataAvailableDateByCodeItemsDTO
-    {
-        [Required]
-        public string city_id { get; set; }
-        [Required]
-        public string[] delivery_types { get; set; }
-        [Required, MinLength(1)]
-        public RequestDataCodeItemDTO[] codes { get; set; }
-
-    }
-
-    public class RequestDataAvailableDate
-    {
-        [Required]
-        public string city_id { get; set; }
-        [Required]
-        public string[] delivery_types { get; set; }
-        [Required, MinLength(1)]
-        public RequestDataCodeItem[] codes { get; set; }
 
     }
 }

@@ -26,21 +26,20 @@ where
 	Select Top 1 --по адресу находим геозону
 	ГеоАдрес._Fld2785RRef 
 	From dbo._Reference112 ГеоАдрес With (NOLOCK)
-	Where ГеоАдрес._Fld25155 = @P_AdressCode))
+	Where ГеоАдрес._Fld25155 = @P4))
 OR Геозона._Fld21249 = @P_GeoCode
 
 
 /*Создание таблицы товаров и ее наполнение данными из БД*/
 Create Table #Temp_GoodsBegin 
 (	
-	PartNumber nvarchar(20), 
 	code nvarchar(20), 
     quantity int
 )
 
 INSERT INTO 
 	#Temp_GoodsBegin ( 
-		PartNumber, code, quantity
+		code, quantity
 	)
 VALUES
 	{0}
@@ -53,27 +52,7 @@ Select
 INTO #Temp_Goods
 From 
 	#Temp_GoodsBegin 
-	Inner Join 	dbo._Reference149 Номенклатура With (NOLOCK) 
-		ON #Temp_GoodsBegin.code is NULL and #Temp_GoodsBegin.PartNumber = Номенклатура._Fld3480
-	Inner Join dbo._Reference256 Упаковки With (NOLOCK)
-		On 
-		Упаковки._OwnerID_TYPE = 0x08  
-		AND Упаковки.[_OwnerID_RTRef] = 0x00000095
-		AND Номенклатура._IDRRef = Упаковки._OwnerID_RRRef		
-		And Упаковки._Fld6003RRef = Номенклатура._Fld3489RRef
-		AND Упаковки._Marked = 0x00
-Group By 
-	Номенклатура._IDRRef,
-	Упаковки._IDRRef
-union
-Select 
-	Номенклатура._IDRRef,
-	Упаковки._IDRRef,
-	Sum(#Temp_GoodsBegin.quantity)	
-From 
-	#Temp_GoodsBegin 
-	Inner Join 	dbo._Reference149 Номенклатура With (NOLOCK) 
-		ON #Temp_GoodsBegin.code is not NULL and #Temp_GoodsBegin.code = Номенклатура._Code
+	Inner Join 	dbo._Reference149 Номенклатура With (NOLOCK) ON #Temp_GoodsBegin.code = Номенклатура._Fld3480
 	Inner Join dbo._Reference256 Упаковки With (NOLOCK)
 		On 
 		Упаковки._OwnerID_TYPE = 0x08  
@@ -1181,31 +1160,13 @@ where Геозона._IDRRef IN (
 	Select Top 1 --по городу в геоадресе находим геозону
 	ГеоАдрес._Fld2785RRef 
 	From dbo._Reference112 ГеоАдрес With (NOLOCK)
-	Where ГеоАдрес._Fld25552 = @P_AdressCode)
+	Where ГеоАдрес._Fld25552 = @P4)
 OPTION (KEEP PLAN, KEEPFIXED PLAN)
-
-Select 
-	Номенклатура._IDRRef
-INTO #Temp_GoodsBegin
-From 
-	dbo._Reference149 Номенклатура With (NOLOCK)
-Where
-	Номенклатура._Fld3480 IN ({0})
-union
-Select 
-	Номенклатура._IDRRef
-From 
-	dbo._Reference149 Номенклатура With (NOLOCK)
-Where
-	Номенклатура._Code IN ({6})
-OPTION (KEEP PLAN, KEEPFIXED PLAN)
-;
 
 
 Select 
 	Номенклатура._IDRRef AS НоменклатураСсылка,
     Номенклатура._Fld3480 AS article,
-    Номенклатура._Code AS code,
 	Упаковки._IDRRef AS УпаковкаСсылка,
 	1 As Количество,
 	Упаковки._Fld6000 AS Вес,
@@ -1217,7 +1178,6 @@ Select
 INTO #Temp_Goods
 From 
 	dbo._Reference149 Номенклатура With (NOLOCK)
-    inner join #Temp_GoodsBegin on Номенклатура._IDRRef = #Temp_GoodsBegin._IDRRef
 	Inner Join dbo._Reference256 Упаковки With (NOLOCK)
 		On 
 		Упаковки._OwnerID_TYPE = 0x08  
@@ -1234,6 +1194,8 @@ From
 		AND ГруппыПланирования._Fld25141 = 0x01--участвует в расчете мощности
 		AND (ГруппыПланирования._Fld23301RRef = Номенклатура._Fld3526RRef OR (Номенклатура._Fld3526RRef = 0xAC2CBF86E693F63444670FFEB70264EE AND ГруппыПланирования._Fld23301RRef= 0xAD3F7F5FC4F15DAD4F693CAF8365EC0D) ) --габариты
 		AND ГруппыПланирования._Marked = 0x00
+Where
+	Номенклатура._Fld3480 IN ({0})
 OPTION (KEEP PLAN, KEEPFIXED PLAN)
 ;
 
@@ -1541,7 +1503,6 @@ OPTION (KEEP PLAN, KEEPFIXED PLAN)
 SELECT
     T1.НоменклатураСсылка,
     T1.article,
-    T1.code,
     ISNULL(T3.СкладНазначения, T2.СкладНазначения) AS СкладНазначения,
     MIN(ISNULL(T3.ДатаДоступности, T2.ДатаДоступности)) AS БлижайшаяДата,
     1 AS Количество,
@@ -1561,7 +1522,6 @@ FROM
 GROUP BY
     T1.НоменклатураСсылка,
     T1.article,
-    T1.code,
     ISNULL(T3.СкладНазначения, T2.СкладНазначения),
     T1.Вес,
     T1.Объем,
@@ -1574,7 +1534,6 @@ OPTION (KEEP PLAN, KEEPFIXED PLAN)
 SELECT
     T1.НоменклатураСсылка,
     T1.article,
-    T1.code,
     T1.СкладНазначения,
     T1.Вес,
     T1.Объем,
@@ -1600,7 +1559,6 @@ Where
 GROUP BY
     T1.НоменклатураСсылка,
     T1.article,
-    T1.code,
     T1.СкладНазначения,
     T1.Вес,
     T1.Объем,
@@ -1613,7 +1571,6 @@ OPTION (KEEP PLAN, KEEPFIXED PLAN)
 SELECT
     T1.НоменклатураСсылка,
     T1.article,
-    T1.code,
     MIN(T1.ДатаДоступности) AS ДатаСоСклада,
     T1.Вес,
     T1.Объем,
@@ -1627,7 +1584,6 @@ FROM
 GROUP BY
     T1.НоменклатураСсылка,
     T1.article,
-    T1.code,
     T1.Вес,
     T1.Объем,
     T1.ВремяНаОбслуживание,
@@ -1784,8 +1740,7 @@ GROUP BY
     CAST(CAST(МощностиДоставки._Period  AS DATE) AS DATETIME)
 )
 SELECT
-    T1.article,
-    T1.code,
+    T1.article AS nomenclature_id,
     MIN(
         ISNULL(
             T3.ВремяНачала,
@@ -1818,8 +1773,7 @@ FROM
     ON (T1.НоменклатураСсылка = T4.НоменклатураСсылка)
     AND (T4.СкладНазначения IN (NULL)) --склады ПВЗ
 GROUP BY
-    T1.article,
-    T1.code
+    T1.article
 OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'),KEEP PLAN, KEEPFIXED PLAN);
 ";
 
