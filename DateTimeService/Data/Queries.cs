@@ -26,7 +26,7 @@ where
 	Select Top 1 --по адресу находим геозону
 	ГеоАдрес._Fld2785RRef 
 	From dbo._Reference112 ГеоАдрес With (NOLOCK)
-	Where ГеоАдрес._Fld25155 = @P_AdressCode))
+	Where ГеоАдрес._Fld25155 = @P_CityCode))
 OR Геозона._Fld21249 = @P_GeoCode
 
 
