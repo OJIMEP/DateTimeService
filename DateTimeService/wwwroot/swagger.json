@@ -147,6 +147,10 @@
                             "type": "string",
                             "description": "Артикул"
                           },
+                          "sales_code": {
+                            "type": "string",
+                            "description": "Код уценки"
+                          },
                           "courier": {
                             "type": "string",
                             "format": "date-time",
@@ -172,6 +176,12 @@
                     "1020938": {
                       "code": "1020938",
                       "courier": "2021-03-24T19:00:00",
+                      "self": "3999-11-11T00:00:00"
+                    },
+                    "789734_2242670": {
+                      "code": "789734",
+                      "sales_code": "2242670",
+                      "courier": "2021-05-05T00:00:00",
                       "self": "3999-11-11T00:00:00"
                     }
                   }
@@ -861,11 +871,12 @@
             "description": "Список товаров",
             "example": [
               {
-                "code": "631176",
+                "code": "454100",
+                "sales_code": "2770262",
                 "quantity": 1
               },
               {
-                "code": "467878",
+                "code": "424941",
                 "quantity": 2
               },
               {
@@ -899,19 +910,25 @@
             ]
           },
           "codes": {
-            "type": "array",
-            "items": {
-              "type": "string"
+            "properties": {
+              "code": {
+                "type": "string",
+                "description": "Артикул номенклатуры"
+              },
+              "sales_code": {
+                "type": "string",
+                "description": "Код номенклатуры для уценки (goods_id). Если не уценка, то не отправляется в принципе, либо null"
+              }
             },
-            "description": "Список артикулов",
+            "description": "Список артикулов с кодами уценки",
             "example": [
-              "358649",
-              "424941",
-              "1020938",
-              "5962720",
-              "6167903",
-              "380386",
-              "101937"
+              {
+                "code": "789734",
+                "sales_code": "2242670"
+              },
+              {
+                "code": "69516"
+              }
             ]
           }
         }
@@ -921,6 +938,10 @@
           "code": {
             "type": "string",
             "description": "Артикул номенклатуры"
+          },
+          "sales_code": {
+            "type": "string",
+            "description": "Код номенклатуры для уценки (goods_id). Если не уценка, то не отправляется в принципе, либо null"
           },
           "quantity": {
             "type": "number",
