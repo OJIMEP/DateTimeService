@@ -551,8 +551,8 @@ namespace DateTimeService.Controllers
                     //define the SqlCommand object
                     SqlCommand cmd = new(query, conn);
 
-                    cmd.Parameters.Add("@P_CityCode", SqlDbType.NVarChar);
-                    cmd.Parameters["@P_CityCode"].Value = data.address_id;
+                    cmd.Parameters.Add("@P_AddressCode", SqlDbType.NVarChar);
+                    cmd.Parameters["@P_AddressCode"].Value = data.address_id;
 
                     cmd.Parameters.Add("@P_Credit", SqlDbType.Int);
                     cmd.Parameters["@P_Credit"].Value = data.payment == "partly_pay" ? 1 : 0;
