@@ -500,7 +500,7 @@ namespace DateTimeService.Controllers
             watch.Reset();
 
             long sqlCommandExecutionTime = 0;
-            watch.Start();
+            
 
             string zoneId = "";
 
@@ -525,6 +525,8 @@ namespace DateTimeService.Controllers
                 stopwatch.Stop();
                 logElement.TimeBtsExecution = stopwatch.ElapsedMilliseconds;
             }
+
+            watch.Start();
 
             if (!adressExists && zoneId == "")
             {
