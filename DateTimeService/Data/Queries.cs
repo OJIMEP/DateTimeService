@@ -506,8 +506,8 @@ WHERE
             T2.СкладИсточника AS СкладИсточника
         FROM
             #Temp_Remains T2 WITH(NOLOCK)) 
-		AND T1._Fld23832 > @P_DateTimeNow
-		AND T1._Fld23832 <= DateAdd(DAY,2,@P_DateTimeNow)
+		AND T1._Fld23832 >= @P_DateTimeNow
+		AND T1._Fld23832 <= DateAdd(DAY,6,@P_DateTimeNow)
 		AND 
 		T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData)
 GROUP BY T1._Fld23831RRef,
@@ -1315,7 +1315,7 @@ WHERE
         FROM
             #Temp_Remains T2 WITH(NOLOCK)) 
 		AND T1._Fld23832 >= @P_DateTimeNow
-		AND T1._Fld23832 <= DateAdd(DAY,2,@P_DateTimeNow)
+		AND T1._Fld23832 <= DateAdd(DAY,6,@P_DateTimeNow)
 		AND T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData)
 GROUP BY T1._Fld23831RRef,
 T1._Fld23833RRef
