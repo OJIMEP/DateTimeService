@@ -363,3 +363,5 @@ MigrationBackup/
 FodyWeavers.xsd
 
 logger.txt
+/.vscode/launch.json
+/.vscode/tasks.json
