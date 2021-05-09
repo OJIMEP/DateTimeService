@@ -105,7 +105,7 @@ namespace DateTimeService.Controllers
                 cmd.Parameters.Add("@P1", SqlDbType.DateTime);
                 cmd.Parameters["@P1"].Value = DateMove;
 
-                cmd.CommandTimeout = 1;
+                cmd.CommandTimeout = 5;
 
                 var parameters = new string[nomenclatures.Count()];
                 for (int i = 0; i < nomenclatures.Count(); i++)
@@ -298,7 +298,7 @@ namespace DateTimeService.Controllers
                 cmd.Parameters.Add("@P_MaxDate", SqlDbType.DateTime);
                 cmd.Parameters["@P_MaxDate"].Value = MaxDate;
 
-                cmd.CommandTimeout = 1;
+                cmd.CommandTimeout = 5;
 
                 var count = data.codes.Length > 60 ? data.codes.Length : 60;
                 var articleParameters = new string[count];
@@ -586,7 +586,7 @@ namespace DateTimeService.Controllers
                     cmd.Parameters.Add("@P_GeoCode", SqlDbType.NVarChar);
                     cmd.Parameters["@P_GeoCode"].Value = zoneId;
 
-                    cmd.CommandTimeout = 1;
+                    cmd.CommandTimeout = 5;
 
                     var parameters = new string[data.orderItems.Count];
                     for (int i = 0; i < data.orderItems.Count; i++)
