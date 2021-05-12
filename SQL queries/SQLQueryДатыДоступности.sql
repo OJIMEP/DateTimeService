@@ -572,6 +572,7 @@ Group By
 	#Temp_IntervalsAll.ГруппаПланирования,
 	#Temp_IntervalsAll.Геозона,
 	T2._Fld25137
+OPTION (KEEP PLAN, KEEPFIXED PLAN)
 ;
 
 INsert into #Temp_Intervals
@@ -604,7 +605,8 @@ Group By
 	ГеоЗонаВременныеИнтервалы._Fld25129,
 	#Temp_IntervalsAll.Период,
 	#Temp_IntervalsAll.ГруппаПланирования,
-	#Temp_IntervalsAll.Геозона 
+	#Temp_IntervalsAll.Геозона
+OPTION (KEEP PLAN, KEEPFIXED PLAN) 
 ;
 
 INsert into #Temp_Intervals
@@ -634,6 +636,7 @@ Group By
 	#Temp_IntervalsAll.Период,
 	#Temp_IntervalsAll.ГруппаПланирования,
 	#Temp_IntervalsAll.Геозона 
+OPTION (KEEP PLAN, KEEPFIXED PLAN)
 ;
 
 With Temp_DeliveryPower AS
