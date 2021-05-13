@@ -46,16 +46,16 @@ DECLARE @P_MaxDate datetime2(3);
   
  Set @P_AdressCode = '47175'--'47175000000'--'3298156' --код адреса
  
- Set @P_DateTimeNow = '4021-04-30 10:11:00'
- Set @P_DateTimePeriodBegin = '4021-04-30 00:00:00'
- Set @P_DateTimePeriodEnd = '4021-05-05 00:00:00'
- Set @P_TimeNow = '2001-01-01 10:11:00'
+ Set @P_DateTimeNow = '4021-05-13 10:30:00'
+ Set @P_DateTimePeriodBegin = '4021-05-13 00:00:00'
+ Set @P_DateTimePeriodEnd = '4021-05-18 00:00:00'
+ Set @P_TimeNow = '2001-01-01 10:30:00'
  Set @P_EmptyDate = '2001-01-01 00:00:00'
  Set @P_MaxDate = '5999-11-11 00:00:00'
 
 
  DECLARE @P_Credit numeric(2);
- Set @P_Credit = 1;
+ Set @P_Credit = 0;
 
  DECLARE @P_Floor numeric(2);
  Set @P_Floor = 4;
@@ -1161,7 +1161,8 @@ Inner Join _Reference114_VT25126 √ео«она¬ременные»нтервалы With (NOLOCK)
     On #Temp_Intervals.√еозона = √ео«она¬ременные»нтервалы._Reference114_IDRRef
 	And #Temp_Intervals.¬рем€ЌачалаЌачальное >= √ео«она¬ременные»нтервалы._Fld25128
 	And #Temp_Intervals.¬рем€ЌачалаЌачальное < √ео«она¬ременные»нтервалы._Fld25129
-Inner Join #Temp_TimeService With (NOLOCK) On 1=1 
+Inner Join #Temp_TimeService With (NOLOCK) On 1=1
+Where #Temp_Intervals.ѕериод >= DATEADD(DAY, @P_Credit, @P_DateTimePeriodBegin) -- дл€ кредита возвращаем даты начина€ со следующего дн€ 
 Group By 
 	√ео«она¬ременные»нтервалы._Fld25128,
 	√ео«она¬ременные»нтервалы._Fld25129,
