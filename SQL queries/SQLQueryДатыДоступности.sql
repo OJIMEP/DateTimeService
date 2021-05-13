@@ -156,10 +156,8 @@ From
 		AND ”паковки._Marked = 0x00
 	Left Join dbo._Reference23294 √руппыѕланировани€ With (NOLOCK)
 		Inner Join dbo._Reference23294_VT23309 With (NOLOCK)
-			--Inner Join #Temp_GeoData ON _Reference23294_VT23309._Fld23311RRef = #Temp_GeoData.«онаƒоставки–одитель—сылка
 			on √руппыѕланировани€._IDRRef = _Reference23294_VT23309._Reference23294_IDRRef
 			and _Reference23294_VT23309._Fld23311RRef in (Select «онаƒоставки–одитель—сылка From #Temp_GeoData)
-		--Inner Join #Temp_GeoData T1 ON √руппыѕланировани€._Fld23302RRef = T1.—клад—сылка
 		On 
 		√руппыѕланировани€._Fld23302RRef IN (Select —клад—сылка From #Temp_GeoData) --склад
 		AND √руппыѕланировани€._Fld25141 = 0x01--участвует в расчете мощности
@@ -167,8 +165,6 @@ From
 		AND √руппыѕланировани€._Marked = 0x00
 OPTION (KEEP PLAN, KEEPFIXED PLAN)
 ;
-
---SELECT * FROM #Temp_Goods;
 
 With Temp_ExchangeRates AS (
 SELECT
@@ -261,7 +257,7 @@ WHERE
         FROM
             #Temp_Remains T2 WITH(NOLOCK)) 
 		AND T1._Fld23832 >= @P_DateTimeNow
-		AND T1._Fld23832 <= DateAdd(DAY,2,@P_DateTimeNow)
+		AND T1._Fld23832 <= DateAdd(DAY,6,@P_DateTimeNow)
 		AND T1._Fld23833RRef IN (Select —клад—сылка From #Temp_GeoData UNION ALL Select —клад—сылка From #Temp_Goods)
 GROUP BY T1._Fld23831RRef,
 T1._Fld23833RRef
@@ -463,7 +459,6 @@ SELECT
 			AND T4.ƒатаƒоступности <= DATEADD(DAY, 4, T5.ƒатаƒоступности)
 Group by T4.Ќоменклатура—сылка, T4.—кладЌазначени€
 OPTION (KEEP PLAN, KEEPFIXED PLAN)
-
 
 SELECT
     T1.Ќоменклатура—сылка,
@@ -783,6 +778,7 @@ Group By
 	#Temp_IntervalsAll.√руппаѕланировани€,
 	#Temp_IntervalsAll.√еозона,
 	T2._Fld25137
+OPTION (KEEP PLAN, KEEPFIXED PLAN)
 ;
 
 INsert into #Temp_Intervals
@@ -815,7 +811,8 @@ Group By
 	√ео«она¬ременные»нтервалы._Fld25129,
 	#Temp_IntervalsAll.ѕериод,
 	#Temp_IntervalsAll.√руппаѕланировани€,
-	#Temp_IntervalsAll.√еозона 
+	#Temp_IntervalsAll.√еозона
+OPTION (KEEP PLAN, KEEPFIXED PLAN) 
 ;
 
 INsert into #Temp_Intervals
@@ -836,11 +833,6 @@ from #Temp_IntervalsAll
 		On #Temp_IntervalsAll.√еозона = √ео«она¬ременные»нтервалы._Reference114_IDRRef
 		And #Temp_IntervalsAll.¬рем€ЌачалаЌачальное >= √ео«она¬ременные»нтервалы._Fld25128
 		And #Temp_IntervalsAll.¬рем€ЌачалаЌачальное < √ео«она¬ременные»нтервалы._Fld25129
-  INNER JOIN dbo._Reference23294 T4 With (NOLOCK) ON (#Temp_IntervalsAll.√руппаѕланировани€ = T4._IDRRef)
-    AND (
-        (@P_TimeNow < T4._Fld25140)
-        OR (√ео«она¬ременные»нтервалы._Fld25128 >= T4._Fld25139)
-    )
 WHERE
 	#Temp_IntervalsAll.ѕериод >= DATEADD(DAY, 2, @P_DateTimePeriodBegin) --begin +2
     AND #Temp_IntervalsAll.ѕериод <= @P_DateTimePeriodEnd --end
@@ -850,6 +842,7 @@ Group By
 	#Temp_IntervalsAll.ѕериод,
 	#Temp_IntervalsAll.√руппаѕланировани€,
 	#Temp_IntervalsAll.√еозона 
+OPTION (KEEP PLAN, KEEPFIXED PLAN)
 ;
 
 With Temp_DeliveryPower AS
