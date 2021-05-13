@@ -59,10 +59,10 @@ SET @PickupPoint6 = '2';
 
  Set @P_CityCode = '17600'--'17030' --код адреса
 
- Set @P_DateTimeNow = '4021-05-12T17:40:00' 
- Set @P_DateTimePeriodBegin = '4021-05-12T00:00:00'
- Set @P_DateTimePeriodEnd = '4021-05-16T00:00:00'
- Set @P_TimeNow = '2001-01-01T17:40:00'
+ Set @P_DateTimeNow = '4021-05-13T12:28:00' 
+ Set @P_DateTimePeriodBegin = '4021-05-13T00:00:00'
+ Set @P_DateTimePeriodEnd = '4021-05-17T00:00:00'
+ Set @P_TimeNow = '2001-01-01T12:28:00'
  Set @P_EmptyDate = '2001-01-01T00:00:00'
  Set @P_MaxDate = '5999-11-11T00:00:00'
 
@@ -95,10 +95,10 @@ INSERT INTO
 		Article, code, PickupPoint
 	)
 VALUES
-	--(@P_Article1,@P_Code1,@PickupPoint3),
-	--(@P_Article2,@P_Code2,@PickupPoint2),
-	--(@P_Article1,@P_Code1,NULL),
-	--(@P_Article3,@P_Code3,@PickupPoint3),
+	(@P_Article1,@P_Code1,@PickupPoint3),
+	(@P_Article2,@P_Code2,@PickupPoint2),
+	(@P_Article1,@P_Code1,NULL),
+	(@P_Article3,@P_Code3,@PickupPoint3),
 	('843414',NULL,NULL)
 	--(@P3,3),
 	--(@P5,4),
@@ -225,7 +225,7 @@ HAVING
     (SUM(T2._Fld21412) <> 0.0
     OR SUM(T2._Fld21411) <> 0.0)
 	AND SUM(T2._Fld21412) - SUM(T2._Fld21411) <> 0.0
-OPTION (OPTIMIZE FOR (@P_DateTimeNow='4021-05-07T00:00:00'),KEEP PLAN, KEEPFIXED PLAN)
+OPTION (OPTIMIZE FOR (@P_DateTimeNow='4021-05-13T00:00:00'),KEEP PLAN, KEEPFIXED PLAN)
 ;
 
 SELECT Distinct
@@ -261,7 +261,7 @@ WHERE
 		AND T1._Fld23833RRef IN (Select —клад—сылка From #Temp_GeoData UNION ALL Select —клад—сылка From #Temp_Goods)
 GROUP BY T1._Fld23831RRef,
 T1._Fld23833RRef
-OPTION (OPTIMIZE FOR (@P_DateTimeNow='4021-05-07T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
+OPTION (OPTIMIZE FOR (@P_DateTimeNow='4021-05-13T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
 
 ;
 
@@ -613,98 +613,100 @@ GROUP BY
 	T1.—кладЌазначени€
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
---Select * from #Temp_ShipmentDatesDeliveryCourier;
-
---Select * From _Reference23612_VT23613
---Inner Join _Reference23612 On _IDRRef = _Reference23612_IDRRef
---Left Join dbo._Reference226 —клады ON —клады._Fld23620RRef = _Reference23612._IDRRef
---Where —клады._IDRRef IN (Select —кладЌазначени€ From #Temp_ShipmentDatesPickUp)
-
---WITH Tdate(date1) AS (
---    /*Ёто получение списка дат интервалов после даты окончани€ расчета*/
---    SELECT 
---        Case When @P_DateTimePeriodEnd > CAST(CAST(#Temp_ShipmentDatesPickUp.ƒата—о—клада  AS DATE) AS DATETIME) Then
---		DateAdd(day, 1,
---		@P_DateTimePeriodEnd
---		)
---		else 
---		CAST(CAST(#Temp_ShipmentDatesPickUp.ƒата—о—клада  AS DATE) AS DATETIME) 
---		End
---	From #Temp_ShipmentDatesPickUp
---    UNION
---    ALL
---    SELECT 
---        DateAdd(day, 1, Tdate.date1)
---    FROM
---        Tdate
---		Inner Join #Temp_ShipmentDatesPickUp 
---		ON Tdate.date1 < DateAdd(DAY, 10, CAST(CAST(#Temp_ShipmentDatesPickUp.ƒата—о—клада  AS DATE) AS DATETIME))
-	
---)
---Select * From Tdate
-
---WITH Tdate(date1) AS (
---    /*Ёто получение списка дат интервалов после даты окончани€ расчета*/
---    SELECT
---        Case When @P_DateTimePeriodEnd > CAST(CAST(#Temp_ShipmentDatesPickUp.ƒата—о—клада  AS DATE) AS DATETIME) Then
---		DateAdd(day, 1,
---		@P_DateTimePeriodEnd
---		)
---		else 
---		CAST(CAST(#Temp_ShipmentDatesPickUp.ƒата—о—клада  AS DATE) AS DATETIME) 
---		End
---	From #Temp_ShipmentDatesPickUp
---    UNION
---    ALL
---    SELECT
---        DateAdd(day, 1, Tdate.date1)
---    FROM
---        Tdate
---		Inner Join #Temp_ShipmentDatesPickUp 
---		ON Tdate.date1 < DateAdd(DAY, 10, CAST(CAST(#Temp_ShipmentDatesPickUp.ƒата—о—клада  AS DATE) AS DATETIME)) 
---)
---SELECT
---	#Temp_ShipmentDatesPickUp.Ќоменклатура—сылка,
---	#Temp_ShipmentDatesPickUp.article,
---	#Temp_ShipmentDatesPickUp.code,
---	#Temp_ShipmentDatesPickUp.ƒата—о—клада,
---	#Temp_ShipmentDatesPickUp.—кладЌазначени€,
---	DATEADD(
---        SECOND,
---        CAST(
---            DATEDIFF(SECOND, @P_EmptyDate, ѕ¬«√рафик–аботы._Fld23617) AS NUMERIC(12)
---        ),
---        date1
---    ) As ¬рем€Ќачала,
---	DATEADD(
---        SECOND,
---        CAST(
---            DATEDIFF(SECOND, @P_EmptyDate, ѕ¬«√рафик–аботы._Fld23618) AS NUMERIC(12)
---        ),
---        date1
---    ) As ¬рем€ќкончани€
---FROM
---    #Temp_ShipmentDatesPickUp 
---		Inner Join Tdate
---			Inner Join _Reference23612_VT23613 As ѕ¬«√рафик–аботы 
---			ON (case when DATEPART ( dw , Tdate.date1 ) = 1 then 7 else DATEPART ( dw , Tdate.date1 ) -1 END) = ѕ¬«√рафик–аботы._Fld23615
---				AND ѕ¬«√рафик–аботы._Fld25265 = 0x00 --не выходной
---			Inner Join _Reference23612 On _IDRRef = _Reference23612_IDRRef
---			Left Join dbo._Reference226 —клады ON —клады._Fld23620RRef = _Reference23612._IDRRef
---		On DATEADD(
+WITH Tdate(date, Ќоменклатура—сылка, —кладЌазначени€) AS (
+    /*Ёто получение списка дат интервалов после даты окончани€ расчета*/
+    SELECT         
+		CAST(CAST(#Temp_ShipmentDatesPickUp.ƒата—о—клада  AS DATE) AS DATETIME), 		
+		#Temp_ShipmentDatesPickUp.Ќоменклатура—сылка,
+		#Temp_ShipmentDatesPickUp.—кладЌазначени€
+	From #Temp_ShipmentDatesPickUp
+    UNION
+    ALL
+    SELECT 
+        DateAdd(day, 1, Tdate.date),
+		#Temp_ShipmentDatesPickUp.Ќоменклатура—сылка,
+		#Temp_ShipmentDatesPickUp.—кладЌазначени€
+    FROM
+        Tdate
+		Inner Join #Temp_ShipmentDatesPickUp 
+		ON Tdate.date < DateAdd(DAY, 8, CAST(CAST(#Temp_ShipmentDatesPickUp.ƒата—о—клада  AS DATE) AS DATETIME))
+		AND Tdate.Ќоменклатура—сылка = #Temp_ShipmentDatesPickUp.Ќоменклатура—сылка
+		AND Tdate.—кладЌазначени€ = #Temp_ShipmentDatesPickUp.—кладЌазначени€
+)
+SELECT
+	#Temp_ShipmentDatesPickUp.Ќоменклатура—сылка,
+	#Temp_ShipmentDatesPickUp.article,
+	#Temp_ShipmentDatesPickUp.code,
+	--#Temp_ShipmentDatesPickUp.ƒата—о—клада,
+	--#Temp_ShipmentDatesPickUp.—кладЌазначени€,
+	Min(CASE 
+	WHEN 
+		DATEADD(
+			SECOND,
+			CAST(
+				DATEDIFF(SECOND, @P_EmptyDate, ѕ¬«√рафик–аботы._Fld23617) AS NUMERIC(12)
+			),
+			date
+		) < #Temp_ShipmentDatesPickUp.ƒата—о—клада 
+		then #Temp_ShipmentDatesPickUp.ƒата—о—клада
+	Else
+		DATEADD(
+			SECOND,
+			CAST(
+				DATEDIFF(SECOND, @P_EmptyDate, ѕ¬«√рафик–аботы._Fld23617) AS NUMERIC(12)
+			),
+			date
+		)
+	End) As ¬рем€Ќачала--,
+	--DATEADD(
+ --       SECOND,
+ --       CAST(
+ --           DATEDIFF(SECOND, @P_EmptyDate, ѕ¬«√рафик–аботы._Fld23618) AS NUMERIC(12)
+ --       ),
+ --       date
+ --   ) As ¬рем€ќкончани€
+Into #Temp_AvailablePickUp
+FROM
+    #Temp_ShipmentDatesPickUp
+		Inner Join Tdate On 
+			#Temp_ShipmentDatesPickUp.Ќоменклатура—сылка = Tdate.Ќоменклатура—сылка
+			And #Temp_ShipmentDatesPickUp.—кладЌазначени€ = Tdate.—кладЌазначени€
+		Inner Join dbo._Reference226 —клады ON —клады._IDRRef = #Temp_ShipmentDatesPickUp.—кладЌазначени€
+			Inner Join _Reference23612 On —клады._Fld23620RRef = _Reference23612._IDRRef
+				Inner Join _Reference23612_VT23613 As ѕ¬«√рафик–аботы 
+				On _Reference23612._IDRRef = _Reference23612_IDRRef
+				AND (case when DATEPART ( dw , Tdate.date ) = 1 then 7 else DATEPART ( dw , Tdate.date ) -1 END) = ѕ¬«√рафик–аботы._Fld23615
+					AND ѕ¬«√рафик–аботы._Fld25265 = 0x00 --не выходной				
+		WHERE DATEADD(
+			SECOND,
+			CAST(
+            DATEDIFF(SECOND, @P_EmptyDate, ѕ¬«√рафик–аботы._Fld23618) AS NUMERIC(12)
+			),
+			Tdate.date) > #Temp_ShipmentDatesPickUp.ƒата—о—клада 	 
+Group by
+	#Temp_ShipmentDatesPickUp.Ќоменклатура—сылка,
+	#Temp_ShipmentDatesPickUp.article,
+	#Temp_ShipmentDatesPickUp.code
+--Order by 		
+--	CASE 
+--	WHEN 
+--		DATEADD(
 --			SECOND,
 --			CAST(
---            DATEDIFF(SECOND, @P_EmptyDate, ѕ¬«√рафик–аботы._Fld23618) AS NUMERIC(12)
+--				DATEDIFF(SECOND, @P_EmptyDate, ѕ¬«√рафик–аботы._Fld23617) AS NUMERIC(12)
 --			),
---			Tdate.date1) > #Temp_ShipmentDatesPickUp.ƒата—о—клада 
---			AND —клады._IDRRef = #Temp_ShipmentDatesPickUp.—кладЌазначени€
-
-
-
-
---select * from #Temp_ShipmentDatesPickUp
-
-
+--			date
+--		) < #Temp_ShipmentDatesPickUp.ƒата—о—клада 
+--		then #Temp_ShipmentDatesPickUp.ƒата—о—клада
+--	Else
+--		DATEADD(
+--			SECOND,
+--			CAST(
+--				DATEDIFF(SECOND, @P_EmptyDate, ѕ¬«√рафик–аботы._Fld23617) AS NUMERIC(12)
+--			),
+--			date
+--		)
+--	End
 ;
 
 
@@ -884,6 +886,7 @@ GROUP BY
     CAST(CAST(ћощностиƒоставки._Period  AS DATE) AS DATETIME)
 )
 SELECT
+	T1.Ќоменклатура—сылка,
     T1.article,
 	T1.code,
     MIN(
@@ -898,8 +901,8 @@ CASE
                 ELSE DATEADD(DAY,1,@P_DateTimePeriodEnd)
             END
         )
-    ) AS available_date_courier,
-    MIN(ISNULL(T4.ƒатаƒоступности,@P_MaxDate)) AS available_date_self
+    ) AS ƒата урьерскойƒоставки
+Into #Temp_AvailableCourier
 FROM
     #Temp_ShipmentDatesDeliveryCourier T1 WITH(NOLOCK)
     Left JOIN Temp_DeliveryPower T2 WITH(NOLOCK)
@@ -915,13 +918,22 @@ FROM
     AND (T3.√руппаѕланировани€ = T1.√руппаѕланировани€)
     AND (T3.¬рем€Ќачала >= T1.ƒата—о—клада)
 	AND T1.PickUp = 0
-    Left JOIN #Temp_ShipmentDates T4 WITH(NOLOCK)
-    ON (T1.Ќоменклатура—сылка = T4.Ќоменклатура—сылка)
-    AND (T4.—кладЌазначени€ IN (NULL)) --склады ѕ¬«
 GROUP BY
+	T1.Ќоменклатура—сылка,
     T1.article,
 	T1.code
 OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-05-12T00:00:00',@P_DateTimePeriodEnd='4021-05-16T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
+
+
+Select 
+	IsNull(#Temp_AvailableCourier.article,#Temp_AvailablePickUp.article) AS article,
+	IsNull(#Temp_AvailableCourier.code,#Temp_AvailablePickUp.code) AS code,
+	IsNull(#Temp_AvailableCourier.ƒата урьерскойƒоставки,@P_MaxDate) AS available_date_courier,
+	IsNull(#Temp_AvailablePickUp.¬рем€Ќачала,@P_MaxDate) AS available_date_self
+From
+	#Temp_AvailableCourier 
+	FULL Join #Temp_AvailablePickUp 
+		On #Temp_AvailableCourier.Ќоменклатура—сылка = #Temp_AvailablePickUp.Ќоменклатура—сылка 
 
 
 DROP TABLE #Temp_GeoData
@@ -941,3 +953,5 @@ DROP TABLE #Temp_Intervals
 DROP TABLE #Temp_IntervalsAll
 Drop Table #Temp_T3
 DROP TABLE #Temp_ShipmentDatesPickUp
+DROP TABLE #Temp_AvailableCourier
+DROP TABLE #Temp_AvailablePickUp
