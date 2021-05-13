@@ -32,7 +32,7 @@ DECLARE @P_TimeNow datetime;
 DECLARE @P_EmptyDate datetime;
 DECLARE @P_MaxDate datetime;
 
- SET @P_Article1 = '358649'; --артикулы
+ SET @P_Article1 = '358649'; --Р°СЂС‚РёРєСѓР»С‹
  SET @P_Article2 = '424941';
  SET @P_Article3 = '6445627';
  SET @P_Article4 = '5962720';
@@ -41,7 +41,7 @@ DECLARE @P_MaxDate datetime;
  SET @P_Article7 = '380386';
  SET @P_Article8 = '358619';
 
- SET @P_Code1 = '00-00444697'; --коды для уценки
+ SET @P_Code1 = '00-00444697'; --РєРѕРґС‹ РґР»СЏ СѓС†РµРЅРєРё
  SET @P_Code2 = '00-00527933';
  SET @P_Code3 = NULL;
  SET @P_Code4 = NULL;
@@ -57,7 +57,7 @@ SET @PickupPoint4 = '417';
 SET @PickupPoint5 = '234';
 SET @PickupPoint6 = '2';
 
- Set @P_CityCode = '17600'--'17030' --код адреса
+ Set @P_CityCode = '17600'--'17030' --РєРѕРґ Р°РґСЂРµСЃР°
 
  Set @P_DateTimeNow = '4021-05-13T12:28:00' 
  Set @P_DateTimePeriodBegin = '4021-05-13T00:00:00'
@@ -67,20 +67,20 @@ SET @PickupPoint6 = '2';
  Set @P_MaxDate = '5999-11-11T00:00:00'
 
 Select
-	IsNull(_Reference114_VT23370._Fld23372RRef,Геозона._Fld23104RRef) As СкладСсылка,
-	ЗоныДоставки._ParentIDRRef As ЗонаДоставкиРодительСсылка,
-	Геозона._IDRRef As Геозона
+	IsNull(_Reference114_VT23370._Fld23372RRef,Р“РµРѕР·РѕРЅР°._Fld23104RRef) As РЎРєР»Р°РґРЎСЃС‹Р»РєР°,
+	Р—РѕРЅС‹Р”РѕСЃС‚Р°РІРєРё._ParentIDRRef As Р—РѕРЅР°Р”РѕСЃС‚Р°РІРєРёР РѕРґРёС‚РµР»СЊРЎСЃС‹Р»РєР°,
+	Р“РµРѕР·РѕРЅР°._IDRRef As Р“РµРѕР·РѕРЅР°
 Into #Temp_GeoData
-From dbo._Reference114 Геозона With (NOLOCK)
+From dbo._Reference114 Р“РµРѕР·РѕРЅР° With (NOLOCK)
 	Inner Join _Reference114_VT23370 With (NOLOCK)
-	on _Reference114_VT23370._Reference114_IDRRef = Геозона._IDRRef
-	Inner Join _Reference99 ЗоныДоставки With (NOLOCK)
-	on Геозона._Fld2847RRef = ЗоныДоставки._IDRRef
-where Геозона._IDRRef IN (
-	Select Top 1 --по городу в геоадресе находим геозону
-	ГеоАдрес._Fld2785RRef 
-	From dbo._Reference112 ГеоАдрес With (NOLOCK)
-	Where ГеоАдрес._Fld25552 = @P_CityCode)
+	on _Reference114_VT23370._Reference114_IDRRef = Р“РµРѕР·РѕРЅР°._IDRRef
+	Inner Join _Reference99 Р—РѕРЅС‹Р”РѕСЃС‚Р°РІРєРё With (NOLOCK)
+	on Р“РµРѕР·РѕРЅР°._Fld2847RRef = Р—РѕРЅС‹Р”РѕСЃС‚Р°РІРєРё._IDRRef
+where Р“РµРѕР·РѕРЅР°._IDRRef IN (
+	Select Top 1 --РїРѕ РіРѕСЂРѕРґСѓ РІ РіРµРѕР°РґСЂРµСЃРµ РЅР°С…РѕРґРёРј РіРµРѕР·РѕРЅСѓ
+	Р“РµРѕРђРґСЂРµСЃ._Fld2785RRef 
+	From dbo._Reference112 Р“РµРѕРђРґСЂРµСЃ With (NOLOCK)
+	Where Р“РµРѕРђРґСЂРµСЃ._Fld25552 = @P_CityCode)
 OPTION (KEEP PLAN, KEEPFIXED PLAN)
 
 DECLARE @Temp_GoodsRaw Table  
@@ -108,95 +108,95 @@ VALUES
 	;
 
 Select 
-	Номенклатура._IDRRef AS НоменклатураСсылка,
-	Склады._IDRRef AS СкладПВЗСсылка
+	РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°._IDRRef AS РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР°,
+	РЎРєР»Р°РґС‹._IDRRef AS РЎРєР»Р°РґРџР’Р—РЎСЃС‹Р»РєР°
 INTO #Temp_GoodsBegin
 From
 	@Temp_GoodsRaw T1
-	Inner Join 	dbo._Reference149 Номенклатура With (NOLOCK) 
-		ON T1.code is NULL and T1.Article = Номенклатура._Fld3480
-	Left Join dbo._Reference226 Склады 
-		ON T1.PickupPoint = Склады._Fld19544
+	Inner Join 	dbo._Reference149 РќРѕРјРµРЅРєР»Р°С‚СѓСЂР° With (NOLOCK) 
+		ON T1.code is NULL and T1.Article = РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°._Fld3480
+	Left Join dbo._Reference226 РЎРєР»Р°РґС‹ 
+		ON T1.PickupPoint = РЎРєР»Р°РґС‹._Fld19544
 union
 Select 
-	Номенклатура._IDRRef,
-	Склады._IDRRef
+	РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°._IDRRef,
+	РЎРєР»Р°РґС‹._IDRRef
 From 
 	@Temp_GoodsRaw T1
-	Inner Join 	dbo._Reference149 Номенклатура With (NOLOCK) 
-		ON T1.code is not NULL and T1.code = Номенклатура._Code
-	Left Join dbo._Reference226 Склады 
-		ON T1.PickupPoint = Склады._Fld19544
+	Inner Join 	dbo._Reference149 РќРѕРјРµРЅРєР»Р°С‚СѓСЂР° With (NOLOCK) 
+		ON T1.code is not NULL and T1.code = РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°._Code
+	Left Join dbo._Reference226 РЎРєР»Р°РґС‹ 
+		ON T1.PickupPoint = РЎРєР»Р°РґС‹._Fld19544
 OPTION (KEEP PLAN, KEEPFIXED PLAN)
 ;
 
 Select 
-	Номенклатура._IDRRef AS НоменклатураСсылка,
-	Номенклатура._Fld3480 AS article,
-	Номенклатура._Code AS code,
-	#Temp_GoodsBegin.СкладПВЗСсылка AS СкладСсылка,
-	Упаковки._IDRRef AS УпаковкаСсылка,
-	1 As Количество,
-	Упаковки._Fld6000 AS Вес,
-	Упаковки._Fld6006 AS Объем,
-	10 AS ВремяНаОбслуживание,
-	IsNull(ГруппыПланирования._IDRRef, 0x00000000000000000000000000000000) AS ГруппаПланирования,
-	IsNull(ГруппыПланирования._Description, '') AS ГруппаПланированияНаименование,
-	IsNull(ГруппыПланирования._Fld25519, @P_EmptyDate) AS ГруппаПланированияДобавляемоеВремя
+	РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°._IDRRef AS РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР°,
+	РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°._Fld3480 AS article,
+	РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°._Code AS code,
+	#Temp_GoodsBegin.РЎРєР»Р°РґРџР’Р—РЎСЃС‹Р»РєР° AS РЎРєР»Р°РґРЎСЃС‹Р»РєР°,
+	РЈРїР°РєРѕРІРєРё._IDRRef AS РЈРїР°РєРѕРІРєР°РЎСЃС‹Р»РєР°,
+	1 As РљРѕР»РёС‡РµСЃС‚РІРѕ,
+	РЈРїР°РєРѕРІРєРё._Fld6000 AS Р’РµСЃ,
+	РЈРїР°РєРѕРІРєРё._Fld6006 AS РћР±СЉРµРј,
+	10 AS Р’СЂРµРјСЏРќР°РћР±СЃР»СѓР¶РёРІР°РЅРёРµ,
+	IsNull(Р“СЂСѓРїРїС‹РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏ._IDRRef, 0x00000000000000000000000000000000) AS Р“СЂСѓРїРїР°РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏ,
+	IsNull(Р“СЂСѓРїРїС‹РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏ._Description, '') AS Р“СЂСѓРїРїР°РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏРќР°РёРјРµРЅРѕРІР°РЅРёРµ,
+	IsNull(Р“СЂСѓРїРїС‹РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏ._Fld25519, @P_EmptyDate) AS Р“СЂСѓРїРїР°РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏР”РѕР±Р°РІР»СЏРµРјРѕРµР’СЂРµРјСЏ
 INTO #Temp_Goods
 From 
-	dbo._Reference149 Номенклатура With (NOLOCK)
-	inner join #Temp_GoodsBegin on Номенклатура._IDRRef = #Temp_GoodsBegin.НоменклатураСсылка
-	Inner Join dbo._Reference256 Упаковки With (NOLOCK)
+	dbo._Reference149 РќРѕРјРµРЅРєР»Р°С‚СѓСЂР° With (NOLOCK)
+	inner join #Temp_GoodsBegin on РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°._IDRRef = #Temp_GoodsBegin.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР°
+	Inner Join dbo._Reference256 РЈРїР°РєРѕРІРєРё With (NOLOCK)
 		On 
-		Упаковки._OwnerID_TYPE = 0x08  
-		AND Упаковки.[_OwnerID_RTRef] = 0x00000095
-		AND Номенклатура._IDRRef = Упаковки._OwnerID_RRRef		
-		And Упаковки._Fld6003RRef = Номенклатура._Fld3489RRef
-		AND Упаковки._Marked = 0x00
-	Left Join dbo._Reference23294 ГруппыПланирования With (NOLOCK)
+		РЈРїР°РєРѕРІРєРё._OwnerID_TYPE = 0x08  
+		AND РЈРїР°РєРѕРІРєРё.[_OwnerID_RTRef] = 0x00000095
+		AND РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°._IDRRef = РЈРїР°РєРѕРІРєРё._OwnerID_RRRef		
+		And РЈРїР°РєРѕРІРєРё._Fld6003RRef = РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°._Fld3489RRef
+		AND РЈРїР°РєРѕРІРєРё._Marked = 0x00
+	Left Join dbo._Reference23294 Р“СЂСѓРїРїС‹РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏ With (NOLOCK)
 		Inner Join dbo._Reference23294_VT23309 With (NOLOCK)
-			on ГруппыПланирования._IDRRef = _Reference23294_VT23309._Reference23294_IDRRef
-			and _Reference23294_VT23309._Fld23311RRef in (Select ЗонаДоставкиРодительСсылка From #Temp_GeoData)
+			on Р“СЂСѓРїРїС‹РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏ._IDRRef = _Reference23294_VT23309._Reference23294_IDRRef
+			and _Reference23294_VT23309._Fld23311RRef in (Select Р—РѕРЅР°Р”РѕСЃС‚Р°РІРєРёР РѕРґРёС‚РµР»СЊРЎСЃС‹Р»РєР° From #Temp_GeoData)
 		On 
-		ГруппыПланирования._Fld23302RRef IN (Select СкладСсылка From #Temp_GeoData) --склад
-		AND ГруппыПланирования._Fld25141 = 0x01--участвует в расчете мощности
-		AND (ГруппыПланирования._Fld23301RRef = Номенклатура._Fld3526RRef OR (Номенклатура._Fld3526RRef = 0xAC2CBF86E693F63444670FFEB70264EE AND ГруппыПланирования._Fld23301RRef= 0xAD3F7F5FC4F15DAD4F693CAF8365EC0D) ) --габариты
-		AND ГруппыПланирования._Marked = 0x00
+		Р“СЂСѓРїРїС‹РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏ._Fld23302RRef IN (Select РЎРєР»Р°РґРЎСЃС‹Р»РєР° From #Temp_GeoData) --СЃРєР»Р°Рґ
+		AND Р“СЂСѓРїРїС‹РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏ._Fld25141 = 0x01--СѓС‡Р°СЃС‚РІСѓРµС‚ РІ СЂР°СЃС‡РµС‚Рµ РјРѕС‰РЅРѕСЃС‚Рё
+		AND (Р“СЂСѓРїРїС‹РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏ._Fld23301RRef = РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°._Fld3526RRef OR (РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°._Fld3526RRef = 0xAC2CBF86E693F63444670FFEB70264EE AND Р“СЂСѓРїРїС‹РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏ._Fld23301RRef= 0xAD3F7F5FC4F15DAD4F693CAF8365EC0D) ) --РіР°Р±Р°СЂРёС‚С‹
+		AND Р“СЂСѓРїРїС‹РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏ._Marked = 0x00
 OPTION (KEEP PLAN, KEEPFIXED PLAN)
 ;
 
 With Temp_ExchangeRates AS (
 SELECT
-	T1._Period AS Период,
-	T1._Fld14558RRef AS Валюта,
-	T1._Fld14559 AS Курс,
-	T1._Fld14560 AS Кратность
+	T1._Period AS РџРµСЂРёРѕРґ,
+	T1._Fld14558RRef AS Р’Р°Р»СЋС‚Р°,
+	T1._Fld14559 AS РљСѓСЂСЃ,
+	T1._Fld14560 AS РљСЂР°С‚РЅРѕСЃС‚СЊ
 FROM _InfoRgSL26678 T1 With (NOLOCK)
 	)
 SELECT
-    T2._Fld21408RRef AS НоменклатураСсылка,
-    T2._Fld21410_TYPE AS Источник_TYPE,
-	T2._Fld21410_RTRef AS Источник_RTRef,
-	T2._Fld21410_RRRef AS Источник_RRRef,
-	Цены._Fld21410_TYPE AS Регистратор_TYPE,
-    Цены._Fld21410_RTRef AS Регистратор_RTRef,
-    Цены._Fld21410_RRRef AS Регистратор_RRRef,
-    T2._Fld23568RRef AS СкладИсточника,
-    T2._Fld21424 AS ДатаСобытия,
-    SUM(T2._Fld21411) - SUM(T2._Fld21412) AS Количество
+    T2._Fld21408RRef AS РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР°,
+    T2._Fld21410_TYPE AS РСЃС‚РѕС‡РЅРёРє_TYPE,
+	T2._Fld21410_RTRef AS РСЃС‚РѕС‡РЅРёРє_RTRef,
+	T2._Fld21410_RRRef AS РСЃС‚РѕС‡РЅРёРє_RRRef,
+	Р¦РµРЅС‹._Fld21410_TYPE AS Р РµРіРёСЃС‚СЂР°С‚РѕСЂ_TYPE,
+    Р¦РµРЅС‹._Fld21410_RTRef AS Р РµРіРёСЃС‚СЂР°С‚РѕСЂ_RTRef,
+    Р¦РµРЅС‹._Fld21410_RRRef AS Р РµРіРёСЃС‚СЂР°С‚РѕСЂ_RRRef,
+    T2._Fld23568RRef AS РЎРєР»Р°РґРСЃС‚РѕС‡РЅРёРєР°,
+    T2._Fld21424 AS Р”Р°С‚Р°РЎРѕР±С‹С‚РёСЏ,
+    SUM(T2._Fld21411) - SUM(T2._Fld21412) AS РљРѕР»РёС‡РµСЃС‚РІРѕ
 Into #Temp_Remains
 FROM
     dbo._AccumRgT21444 T2 With (NOLOCK)
-	Left Join _AccumRg21407 Цены With (NOLOCK)
+	Left Join _AccumRg21407 Р¦РµРЅС‹ With (NOLOCK)
 		Inner Join Temp_ExchangeRates With (NOLOCK)
-			On Цены._Fld21443RRef = Temp_ExchangeRates.Валюта 
-		On T2._Fld21408RRef = Цены._Fld21408RRef
+			On Р¦РµРЅС‹._Fld21443RRef = Temp_ExchangeRates.Р’Р°Р»СЋС‚Р° 
+		On T2._Fld21408RRef = Р¦РµРЅС‹._Fld21408RRef
 		AND T2._Fld21410_RTRef = 0x00000153
-		AND Цены._Fld21410_RTRef = 0x00000153 --Цены.Регистратор ССЫЛКА Документ.мегапрайсРегистрацияПрайса
-		And Цены._Fld21442<>0 AND (Цены._Fld21442 * Temp_ExchangeRates.Курс / Temp_ExchangeRates.Кратность >= Цены._Fld21982 OR Цены._Fld21411 >= Цены._Fld21616)
-		And Цены._Fld21408RRef IN(SELECT
-                НоменклатураСсылка
+		AND Р¦РµРЅС‹._Fld21410_RTRef = 0x00000153 --Р¦РµРЅС‹.Р РµРіРёСЃС‚СЂР°С‚РѕСЂ РЎРЎР«Р›РљРђ Р”РѕРєСѓРјРµРЅС‚.РјРµРіР°РїСЂР°Р№СЃР РµРіРёСЃС‚СЂР°С†РёСЏРџСЂР°Р№СЃР°
+		And Р¦РµРЅС‹._Fld21442<>0 AND (Р¦РµРЅС‹._Fld21442 * Temp_ExchangeRates.РљСѓСЂСЃ / Temp_ExchangeRates.РљСЂР°С‚РЅРѕСЃС‚СЊ >= Р¦РµРЅС‹._Fld21982 OR Р¦РµРЅС‹._Fld21411 >= Р¦РµРЅС‹._Fld21616)
+		And Р¦РµРЅС‹._Fld21408RRef IN(SELECT
+                РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР°
             FROM
                 #Temp_Goods)
 WHERE
@@ -208,7 +208,7 @@ WHERE
         )
         AND T2._Fld21408RRef IN (
             SELECT
-                TNomen.НоменклатураСсылка
+                TNomen.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР°
             FROM
                 #Temp_Goods TNomen WITH(NOLOCK))) AND (T2._Fld21412 <> 0 OR T2._Fld21411 <> 0)
 GROUP BY
@@ -216,9 +216,9 @@ GROUP BY
     T2._Fld21410_TYPE,
     T2._Fld21410_RTRef,
     T2._Fld21410_RRRef,
-	Цены._Fld21410_TYPE,
-	Цены._Fld21410_RTRef,
-	Цены._Fld21410_RRRef,
+	Р¦РµРЅС‹._Fld21410_TYPE,
+	Р¦РµРЅС‹._Fld21410_RTRef,
+	Р¦РµРЅС‹._Fld21410_RRRef,
     T2._Fld23568RRef,
     T2._Fld21424
 HAVING
@@ -229,36 +229,36 @@ OPTION (OPTIMIZE FOR (@P_DateTimeNow='4021-05-13T00:00:00'),KEEP PLAN, KEEPFIXED
 ;
 
 SELECT Distinct
-    T1._Fld23831RRef AS СкладИсточника,
-    T1._Fld23832 AS ДатаСобытия,
-    T1._Fld23834 AS ДатаПрибытия,
-    T1._Fld23833RRef AS СкладНазначения
+    T1._Fld23831RRef AS РЎРєР»Р°РґРСЃС‚РѕС‡РЅРёРєР°,
+    T1._Fld23832 AS Р”Р°С‚Р°РЎРѕР±С‹С‚РёСЏ,
+    T1._Fld23834 AS Р”Р°С‚Р°РџСЂРёР±С‹С‚РёСЏ,
+    T1._Fld23833RRef AS РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ
 Into #Temp_WarehouseDates
 FROM
     dbo._InfoRg23830 T1 With (NOLOCK)
 	Inner Join #Temp_Remains With (NOLOCK)
-	ON T1._Fld23831RRef = #Temp_Remains.СкладИсточника
-	AND T1._Fld23832 = #Temp_Remains.ДатаСобытия
-	AND T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData UNION ALL Select СкладСсылка From #Temp_Goods) 
+	ON T1._Fld23831RRef = #Temp_Remains.РЎРєР»Р°РґРСЃС‚РѕС‡РЅРёРєР°
+	AND T1._Fld23832 = #Temp_Remains.Р”Р°С‚Р°РЎРѕР±С‹С‚РёСЏ
+	AND T1._Fld23833RRef IN (Select РЎРєР»Р°РґРЎСЃС‹Р»РєР° From #Temp_GeoData UNION ALL Select РЎРєР»Р°РґРЎСЃС‹Р»РєР° From #Temp_Goods) 
 OPTION (KEEP PLAN, KEEPFIXED PLAN)
 ;
 
 SELECT
-	T1._Fld23831RRef AS СкладИсточника,
-	T1._Fld23833RRef AS СкладНазначения,
-	MIN(T1._Fld23834) AS ДатаПрибытия 
+	T1._Fld23831RRef AS РЎРєР»Р°РґРСЃС‚РѕС‡РЅРёРєР°,
+	T1._Fld23833RRef AS РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ,
+	MIN(T1._Fld23834) AS Р”Р°С‚Р°РџСЂРёР±С‹С‚РёСЏ 
 Into #Temp_MinimumWarehouseDates
 FROM
     dbo._InfoRg23830 T1 With (NOLOCK)
 WHERE
     T1._Fld23831RRef IN (
         SELECT
-            T2.СкладИсточника AS СкладИсточника
+            T2.РЎРєР»Р°РґРСЃС‚РѕС‡РЅРёРєР° AS РЎРєР»Р°РґРСЃС‚РѕС‡РЅРёРєР°
         FROM
             #Temp_Remains T2 WITH(NOLOCK)) 
 		AND T1._Fld23832 >= @P_DateTimeNow
 		AND T1._Fld23832 <= DateAdd(DAY,6,@P_DateTimeNow)
-		AND T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData UNION ALL Select СкладСсылка From #Temp_Goods)
+		AND T1._Fld23833RRef IN (Select РЎРєР»Р°РґРЎСЃС‹Р»РєР° From #Temp_GeoData UNION ALL Select РЎРєР»Р°РґРЎСЃС‹Р»РєР° From #Temp_Goods)
 GROUP BY T1._Fld23831RRef,
 T1._Fld23833RRef
 OPTION (OPTIMIZE FOR (@P_DateTimeNow='4021-05-13T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
@@ -266,425 +266,425 @@ OPTION (OPTIMIZE FOR (@P_DateTimeNow='4021-05-13T00:00:00'),KEEP PLAN, KEEPFIXED
 ;
 
 SELECT
-    T1.НоменклатураСсылка,
-    T1.Количество,
-    T1.Источник_TYPE,
-    T1.Источник_RTRef,
-    T1.Источник_RRRef,
-    T1.СкладИсточника,
-    T1.ДатаСобытия,
-    ISNULL(T3.ДатаПрибытия, T2.ДатаПрибытия) AS ДатаДоступности,
-    1 AS ТипИсточника,
-    ISNULL(T3.СкладНазначения, T2.СкладНазначения) AS СкладНазначения
+    T1.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР°,
+    T1.РљРѕР»РёС‡РµСЃС‚РІРѕ,
+    T1.РСЃС‚РѕС‡РЅРёРє_TYPE,
+    T1.РСЃС‚РѕС‡РЅРёРє_RTRef,
+    T1.РСЃС‚РѕС‡РЅРёРє_RRRef,
+    T1.РЎРєР»Р°РґРСЃС‚РѕС‡РЅРёРєР°,
+    T1.Р”Р°С‚Р°РЎРѕР±С‹С‚РёСЏ,
+    ISNULL(T3.Р”Р°С‚Р°РџСЂРёР±С‹С‚РёСЏ, T2.Р”Р°С‚Р°РџСЂРёР±С‹С‚РёСЏ) AS Р”Р°С‚Р°Р”РѕСЃС‚СѓРїРЅРѕСЃС‚Рё,
+    1 AS РўРёРїРСЃС‚РѕС‡РЅРёРєР°,
+    ISNULL(T3.РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ, T2.РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ) AS РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ
 INTO #Temp_Sources
 FROM
     #Temp_Remains T1 WITH(NOLOCK)
     LEFT OUTER JOIN #Temp_WarehouseDates T2 WITH(NOLOCK)
-    ON (T1.СкладИсточника = T2.СкладИсточника)
-    AND (T1.ДатаСобытия = T2.ДатаСобытия)
+    ON (T1.РЎРєР»Р°РґРСЃС‚РѕС‡РЅРёРєР° = T2.РЎРєР»Р°РґРСЃС‚РѕС‡РЅРёРєР°)
+    AND (T1.Р”Р°С‚Р°РЎРѕР±С‹С‚РёСЏ = T2.Р”Р°С‚Р°РЎРѕР±С‹С‚РёСЏ)
     LEFT OUTER JOIN #Temp_MinimumWarehouseDates T3 WITH(NOLOCK)
-    ON (T1.СкладИсточника = T3.СкладИсточника)
-    AND (T1.ДатаСобытия = '2001-01-01 00:00:00')
+    ON (T1.РЎРєР»Р°РґРСЃС‚РѕС‡РЅРёРєР° = T3.РЎРєР»Р°РґРСЃС‚РѕС‡РЅРёРєР°)
+    AND (T1.Р”Р°С‚Р°РЎРѕР±С‹С‚РёСЏ = '2001-01-01 00:00:00')
 WHERE
-    T1.Источник_RTRef = 0x000000E2 OR T1.Источник_RTRef = 0x00000150
+    T1.РСЃС‚РѕС‡РЅРёРє_RTRef = 0x000000E2 OR T1.РСЃС‚РѕС‡РЅРёРє_RTRef = 0x00000150
 
 UNION
 ALL
 SELECT
-    T4.НоменклатураСсылка,
-    T4.Количество,
-    T4.Источник_TYPE,
-    T4.Источник_RTRef,
-    T4.Источник_RRRef,
-    T4.СкладИсточника,
-    T4.ДатаСобытия,
-    T5.ДатаПрибытия,
+    T4.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР°,
+    T4.РљРѕР»РёС‡РµСЃС‚РІРѕ,
+    T4.РСЃС‚РѕС‡РЅРёРє_TYPE,
+    T4.РСЃС‚РѕС‡РЅРёРє_RTRef,
+    T4.РСЃС‚РѕС‡РЅРёРє_RRRef,
+    T4.РЎРєР»Р°РґРСЃС‚РѕС‡РЅРёРєР°,
+    T4.Р”Р°С‚Р°РЎРѕР±С‹С‚РёСЏ,
+    T5.Р”Р°С‚Р°РџСЂРёР±С‹С‚РёСЏ,
     2,
-    T5.СкладНазначения
+    T5.РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ
 FROM
     #Temp_Remains T4 WITH(NOLOCK)
     INNER JOIN #Temp_WarehouseDates T5 WITH(NOLOCK)
-    ON (T4.СкладИсточника = T5.СкладИсточника)
-    AND (T4.ДатаСобытия = T5.ДатаСобытия)
+    ON (T4.РЎРєР»Р°РґРСЃС‚РѕС‡РЅРёРєР° = T5.РЎРєР»Р°РґРСЃС‚РѕС‡РЅРёРєР°)
+    AND (T4.Р”Р°С‚Р°РЎРѕР±С‹С‚РёСЏ = T5.Р”Р°С‚Р°РЎРѕР±С‹С‚РёСЏ)
 WHERE
-    T4.Источник_RTRef = 0x00000141
+    T4.РСЃС‚РѕС‡РЅРёРє_RTRef = 0x00000141
 
 UNION
 ALL
 SELECT
-    T6.НоменклатураСсылка,
-    T6.Количество,
-    T6.Источник_TYPE,
-    T6.Источник_RTRef,
-    T6.Источник_RRRef,
-    T6.СкладИсточника,
-    T6.ДатаСобытия,
-    T7.ДатаПрибытия,
+    T6.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР°,
+    T6.РљРѕР»РёС‡РµСЃС‚РІРѕ,
+    T6.РСЃС‚РѕС‡РЅРёРє_TYPE,
+    T6.РСЃС‚РѕС‡РЅРёРє_RTRef,
+    T6.РСЃС‚РѕС‡РЅРёРє_RRRef,
+    T6.РЎРєР»Р°РґРСЃС‚РѕС‡РЅРёРєР°,
+    T6.Р”Р°С‚Р°РЎРѕР±С‹С‚РёСЏ,
+    T7.Р”Р°С‚Р°РџСЂРёР±С‹С‚РёСЏ,
     3,
-    T7.СкладНазначения
+    T7.РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ
 FROM
     #Temp_Remains T6 WITH(NOLOCK)
     INNER JOIN #Temp_WarehouseDates T7 WITH(NOLOCK)
-    ON (T6.СкладИсточника = T7.СкладИсточника)
-    AND (T6.ДатаСобытия = T7.ДатаСобытия)
+    ON (T6.РЎРєР»Р°РґРСЃС‚РѕС‡РЅРёРєР° = T7.РЎРєР»Р°РґРСЃС‚РѕС‡РЅРёРєР°)
+    AND (T6.Р”Р°С‚Р°РЎРѕР±С‹С‚РёСЏ = T7.Р”Р°С‚Р°РЎРѕР±С‹С‚РёСЏ)
 WHERE
-    NOT T6.Регистратор_RRRef IS NULL
-	And T6.Источник_RTRef = 0x00000153
+    NOT T6.Р РµРіРёСЃС‚СЂР°С‚РѕСЂ_RRRef IS NULL
+	And T6.РСЃС‚РѕС‡РЅРёРє_RTRef = 0x00000153
 OPTION (KEEP PLAN, KEEPFIXED PLAN)
 ;
 
 With Temp_ExchangeRates AS (
 SELECT
-	T1._Period AS Период,
-	T1._Fld14558RRef AS Валюта,
-	T1._Fld14559 AS Курс,
-	T1._Fld14560 AS Кратность
+	T1._Period AS РџРµСЂРёРѕРґ,
+	T1._Fld14558RRef AS Р’Р°Р»СЋС‚Р°,
+	T1._Fld14559 AS РљСѓСЂСЃ,
+	T1._Fld14560 AS РљСЂР°С‚РЅРѕСЃС‚СЊ
 FROM _InfoRgSL26678 T1 With (NOLOCK)
 	)
 SELECT
-    T1.НоменклатураСсылка,
-    T1.Источник_TYPE,
-    T1.Источник_RTRef,
-    T1.Источник_RRRef,
-    T1.СкладИсточника,
-    T1.СкладНазначения,
-    T1.ДатаСобытия,
-    T1.ДатаДоступности,
+    T1.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР°,
+    T1.РСЃС‚РѕС‡РЅРёРє_TYPE,
+    T1.РСЃС‚РѕС‡РЅРёРє_RTRef,
+    T1.РСЃС‚РѕС‡РЅРёРє_RRRef,
+    T1.РЎРєР»Р°РґРСЃС‚РѕС‡РЅРёРєР°,
+    T1.РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ,
+    T1.Р”Р°С‚Р°РЎРѕР±С‹С‚РёСЏ,
+    T1.Р”Р°С‚Р°Р”РѕСЃС‚СѓРїРЅРѕСЃС‚Рё,
     CAST(
         (
             CAST(
-                (Резервирование._Fld21442 * T3.Курс) AS NUMERIC(27, 8)
-            ) / T3.Кратность
+                (Р РµР·РµСЂРІРёСЂРѕРІР°РЅРёРµ._Fld21442 * T3.РљСѓСЂСЃ) AS NUMERIC(27, 8)
+            ) / T3.РљСЂР°С‚РЅРѕСЃС‚СЊ
         ) AS NUMERIC(15, 2)
-    )  AS Цена
+    )  AS Р¦РµРЅР°
 Into #Temp_SourcesWithPrices
 FROM
     #Temp_Sources T1 WITH(NOLOCK)
-    INNER JOIN dbo._AccumRg21407 Резервирование WITH(NOLOCK)
+    INNER JOIN dbo._AccumRg21407 Р РµР·РµСЂРІРёСЂРѕРІР°РЅРёРµ WITH(NOLOCK)
     LEFT OUTER JOIN Temp_ExchangeRates T3 WITH(NOLOCK)
-		ON (Резервирование._Fld21443RRef = T3.Валюта) 
-	ON (T1.НоменклатураСсылка = Резервирование._Fld21408RRef)
+		ON (Р РµР·РµСЂРІРёСЂРѕРІР°РЅРёРµ._Fld21443RRef = T3.Р’Р°Р»СЋС‚Р°) 
+	ON (T1.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР° = Р РµР·РµСЂРІРёСЂРѕРІР°РЅРёРµ._Fld21408RRef)
     AND (
-        T1.Источник_TYPE = 0x08
-        AND T1.Источник_RTRef = Резервирование._RecorderTRef
-        AND T1.Источник_RRRef = Резервирование._RecorderRRef
+        T1.РСЃС‚РѕС‡РЅРёРє_TYPE = 0x08
+        AND T1.РСЃС‚РѕС‡РЅРёРє_RTRef = Р РµР·РµСЂРІРёСЂРѕРІР°РЅРёРµ._RecorderTRef
+        AND T1.РСЃС‚РѕС‡РЅРёРє_RRRef = Р РµР·РµСЂРІРёСЂРѕРІР°РЅРёРµ._RecorderRRef
     )
 OPTION (KEEP PLAN, KEEPFIXED PLAN)
 ;
 With Temp_SupplyDocs AS
 (
 SELECT
-    T1.НоменклатураСсылка,
-    T1.СкладНазначения,
-    T1.ДатаДоступности,
-    DATEADD(DAY, 4.0, T1.ДатаДоступности) AS ДатаДоступностиПлюс, --это параметр КоличествоДнейАнализа
-    MIN(T1.Цена) AS ЦенаИсточника,
-    MIN(T1.Цена / 100.0 * (100 - 3.0)) AS ЦенаИсточникаМинус --это параметр ПроцентДнейАнализа
+    T1.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР°,
+    T1.РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ,
+    T1.Р”Р°С‚Р°Р”РѕСЃС‚СѓРїРЅРѕСЃС‚Рё,
+    DATEADD(DAY, 4.0, T1.Р”Р°С‚Р°Р”РѕСЃС‚СѓРїРЅРѕСЃС‚Рё) AS Р”Р°С‚Р°Р”РѕСЃС‚СѓРїРЅРѕСЃС‚РёРџР»СЋСЃ, --СЌС‚Рѕ РїР°СЂР°РјРµС‚СЂ РљРѕР»РёС‡РµСЃС‚РІРѕР”РЅРµР№РђРЅР°Р»РёР·Р°
+    MIN(T1.Р¦РµРЅР°) AS Р¦РµРЅР°РСЃС‚РѕС‡РЅРёРєР°,
+    MIN(T1.Р¦РµРЅР° / 100.0 * (100 - 3.0)) AS Р¦РµРЅР°РСЃС‚РѕС‡РЅРёРєР°РњРёРЅСѓСЃ --СЌС‚Рѕ РїР°СЂР°РјРµС‚СЂ РџСЂРѕС†РµРЅС‚Р”РЅРµР№РђРЅР°Р»РёР·Р°
 FROM
     #Temp_SourcesWithPrices T1 WITH(NOLOCK)
 WHERE
-    T1.Цена <> 0
-    AND T1.Источник_RTRef = 0x00000153    
+    T1.Р¦РµРЅР° <> 0
+    AND T1.РСЃС‚РѕС‡РЅРёРє_RTRef = 0x00000153    
 GROUP BY
-    T1.НоменклатураСсылка,
-    T1.ДатаДоступности,
-    T1.СкладНазначения,
-    DATEADD(DAY, 4.0, T1.ДатаДоступности)--это параметр КоличествоДнейАнализа
+    T1.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР°,
+    T1.Р”Р°С‚Р°Р”РѕСЃС‚СѓРїРЅРѕСЃС‚Рё,
+    T1.РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ,
+    DATEADD(DAY, 4.0, T1.Р”Р°С‚Р°Р”РѕСЃС‚СѓРїРЅРѕСЃС‚Рё)--СЌС‚Рѕ РїР°СЂР°РјРµС‚СЂ РљРѕР»РёС‡РµСЃС‚РІРѕР”РЅРµР№РђРЅР°Р»РёР·Р°
 )
 SELECT
-    T2.НоменклатураСсылка,
-    T2.ДатаДоступности,
-    T2.СкладНазначения,
-    T2.ДатаДоступностиПлюс,
-    T2.ЦенаИсточника,
-    T2.ЦенаИсточникаМинус,
-    MIN(T1.ДатаДоступности) AS ДатаДоступности1,
-    MIN(T1.Цена) AS Цена1
+    T2.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР°,
+    T2.Р”Р°С‚Р°Р”РѕСЃС‚СѓРїРЅРѕСЃС‚Рё,
+    T2.РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ,
+    T2.Р”Р°С‚Р°Р”РѕСЃС‚СѓРїРЅРѕСЃС‚РёРџР»СЋСЃ,
+    T2.Р¦РµРЅР°РСЃС‚РѕС‡РЅРёРєР°,
+    T2.Р¦РµРЅР°РСЃС‚РѕС‡РЅРёРєР°РњРёРЅСѓСЃ,
+    MIN(T1.Р”Р°С‚Р°Р”РѕСЃС‚СѓРїРЅРѕСЃС‚Рё) AS Р”Р°С‚Р°Р”РѕСЃС‚СѓРїРЅРѕСЃС‚Рё1,
+    MIN(T1.Р¦РµРЅР°) AS Р¦РµРЅР°1
 Into #Temp_BestPriceAfterClosestDate
 FROM
     #Temp_SourcesWithPrices T1 WITH(NOLOCK)
     INNER JOIN Temp_SupplyDocs T2 WITH(NOLOCK)
-    ON (T1.НоменклатураСсылка = T2.НоменклатураСсылка)
-    AND (T1.ДатаДоступности >= T2.ДатаДоступности)
-    AND (T1.ДатаДоступности <= T2.ДатаДоступностиПлюс)
-    AND (T1.Цена <= T2.ЦенаИсточникаМинус)
-    AND (T1.Цена <> 0)
+    ON (T1.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР° = T2.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР°)
+    AND (T1.Р”Р°С‚Р°Р”РѕСЃС‚СѓРїРЅРѕСЃС‚Рё >= T2.Р”Р°С‚Р°Р”РѕСЃС‚СѓРїРЅРѕСЃС‚Рё)
+    AND (T1.Р”Р°С‚Р°Р”РѕСЃС‚СѓРїРЅРѕСЃС‚Рё <= T2.Р”Р°С‚Р°Р”РѕСЃС‚СѓРїРЅРѕСЃС‚РёРџР»СЋСЃ)
+    AND (T1.Р¦РµРЅР° <= T2.Р¦РµРЅР°РСЃС‚РѕС‡РЅРёРєР°РњРёРЅСѓСЃ)
+    AND (T1.Р¦РµРЅР° <> 0)
 GROUP BY
-    T2.НоменклатураСсылка,
-    T2.СкладНазначения,
-    T2.ДатаДоступностиПлюс,
-    T2.ЦенаИсточника,
-    T2.ЦенаИсточникаМинус,
-    T2.ДатаДоступности
+    T2.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР°,
+    T2.РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ,
+    T2.Р”Р°С‚Р°Р”РѕСЃС‚СѓРїРЅРѕСЃС‚РёРџР»СЋСЃ,
+    T2.Р¦РµРЅР°РСЃС‚РѕС‡РЅРёРєР°,
+    T2.Р¦РµРЅР°РСЃС‚РѕС‡РЅРёРєР°РњРёРЅСѓСЃ,
+    T2.Р”Р°С‚Р°Р”РѕСЃС‚СѓРїРЅРѕСЃС‚Рё
 OPTION (KEEP PLAN, KEEPFIXED PLAN)
 
 SELECT
-    T1.НоменклатураСсылка,
-    T1.СкладНазначения,
-    Min(ISNULL(T2.ДатаДоступности1, T1.ДатаДоступности)) AS ДатаДоступности
+    T1.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР°,
+    T1.РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ,
+    Min(ISNULL(T2.Р”Р°С‚Р°Р”РѕСЃС‚СѓРїРЅРѕСЃС‚Рё1, T1.Р”Р°С‚Р°Р”РѕСЃС‚СѓРїРЅРѕСЃС‚Рё)) AS Р”Р°С‚Р°Р”РѕСЃС‚СѓРїРЅРѕСЃС‚Рё
 Into #Temp_SourcesCorrectedDate
 FROM
     #Temp_Sources T1 WITH(NOLOCK)
     LEFT OUTER JOIN #Temp_BestPriceAfterClosestDate T2 WITH(NOLOCK)
-    ON (T1.НоменклатураСсылка = T2.НоменклатураСсылка)
-    AND (T1.ДатаДоступности = T2.ДатаДоступности)
-    AND (T1.СкладНазначения = T2.СкладНазначения)
-    AND (T1.ТипИсточника = 3)
+    ON (T1.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР° = T2.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР°)
+    AND (T1.Р”Р°С‚Р°Р”РѕСЃС‚СѓРїРЅРѕСЃС‚Рё = T2.Р”Р°С‚Р°Р”РѕСЃС‚СѓРїРЅРѕСЃС‚Рё)
+    AND (T1.РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ = T2.РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ)
+    AND (T1.РўРёРїРСЃС‚РѕС‡РЅРёРєР° = 3)
 GROUP BY
-	T1.НоменклатураСсылка,
-	T1.СкладНазначения
+	T1.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР°,
+	T1.РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ
 OPTION (KEEP PLAN, KEEPFIXED PLAN)
 ;
 
 With Temp_ClosestDate AS
 (SELECT
-T1.НоменклатураСсылка,
-T1.СкладНазначения,
-Cast(MIN(T1.ДатаДоступности)as datetime) AS ДатаДоступности
+T1.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР°,
+T1.РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ,
+Cast(MIN(T1.Р”Р°С‚Р°Р”РѕСЃС‚СѓРїРЅРѕСЃС‚Рё)as datetime) AS Р”Р°С‚Р°Р”РѕСЃС‚СѓРїРЅРѕСЃС‚Рё
 FROM #Temp_Sources T1 WITH(NOLOCK)
-GROUP BY T1.НоменклатураСсылка,
-T1.СкладНазначения
+GROUP BY T1.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР°,
+T1.РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ
 )
 SELECT
-            T4.НоменклатураСсылка,
-            Min(T4.ДатаДоступности)AS ДатаДоступности,
-            T4.СкладНазначения
+            T4.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР°,
+            Min(T4.Р”Р°С‚Р°Р”РѕСЃС‚СѓРїРЅРѕСЃС‚Рё)AS Р”Р°С‚Р°Р”РѕСЃС‚СѓРїРЅРѕСЃС‚Рё,
+            T4.РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ
 		Into #Temp_T3
         FROM
             #Temp_Sources T4 WITH(NOLOCK)
             LEFT OUTER JOIN Temp_ClosestDate T5 WITH(NOLOCK)
-            ON (T4.НоменклатураСсылка = T5.НоменклатураСсылка)
-            AND (T4.СкладНазначения = T5.СкладНазначения)
-            AND (T4.ТипИсточника = 1)
-			AND T4.ДатаДоступности <= DATEADD(DAY, 4, T5.ДатаДоступности)
-Group by T4.НоменклатураСсылка, T4.СкладНазначения
+            ON (T4.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР° = T5.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР°)
+            AND (T4.РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ = T5.РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ)
+            AND (T4.РўРёРїРСЃС‚РѕС‡РЅРёРєР° = 1)
+			AND T4.Р”Р°С‚Р°Р”РѕСЃС‚СѓРїРЅРѕСЃС‚Рё <= DATEADD(DAY, 4, T5.Р”Р°С‚Р°Р”РѕСЃС‚СѓРїРЅРѕСЃС‚Рё)
+Group by T4.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР°, T4.РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ
 OPTION (KEEP PLAN, KEEPFIXED PLAN)
 
 SELECT
-    T1.НоменклатураСсылка,
+    T1.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР°,
 	T1.article,
 	T1.code,
-    ISNULL(T3.СкладНазначения, T2.СкладНазначения) AS СкладНазначения,
-    MIN(ISNULL(T3.ДатаДоступности, T2.ДатаДоступности)) AS БлижайшаяДата,
-    1 AS Количество,
-    T1.Вес,
-    T1.Объем,
-    T1.ВремяНаОбслуживание,
-    T1.ГруппаПланирования,
-	T1.ГруппаПланированияДобавляемоеВремя,
+    ISNULL(T3.РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ, T2.РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ) AS РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ,
+    MIN(ISNULL(T3.Р”Р°С‚Р°Р”РѕСЃС‚СѓРїРЅРѕСЃС‚Рё, T2.Р”Р°С‚Р°Р”РѕСЃС‚СѓРїРЅРѕСЃС‚Рё)) AS Р‘Р»РёР¶Р°Р№С€Р°СЏР”Р°С‚Р°,
+    1 AS РљРѕР»РёС‡РµСЃС‚РІРѕ,
+    T1.Р’РµСЃ,
+    T1.РћР±СЉРµРј,
+    T1.Р’СЂРµРјСЏРќР°РћР±СЃР»СѓР¶РёРІР°РЅРёРµ,
+    T1.Р“СЂСѓРїРїР°РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏ,
+	T1.Р“СЂСѓРїРїР°РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏР”РѕР±Р°РІР»СЏРµРјРѕРµР’СЂРµРјСЏ,
 	0 AS PickUp
 into #Temp_ClosestDatesByGoods
 FROM
     #Temp_Goods T1 WITH(NOLOCK)	
     LEFT JOIN #Temp_SourcesCorrectedDate T2 WITH(NOLOCK)
-		LEFT JOIN  #Temp_T3 T3 ON (T2.НоменклатураСсылка = T3.НоменклатураСсылка) 
-			And T2.СкладНазначения = T3.СкладНазначения
-    ON (T1.НоменклатураСсылка = T2.НоменклатураСсылка) 
-		AND ISNULL(T3.СкладНазначения, T2.СкладНазначения) IN (Select СкладСсылка From #Temp_GeoData) 
+		LEFT JOIN  #Temp_T3 T3 ON (T2.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР° = T3.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР°) 
+			And T2.РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ = T3.РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ
+    ON (T1.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР° = T2.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР°) 
+		AND ISNULL(T3.РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ, T2.РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ) IN (Select РЎРєР»Р°РґРЎСЃС‹Р»РєР° From #Temp_GeoData) 
 Where 
-	T1.СкладСсылка IS NULL
+	T1.РЎРєР»Р°РґРЎСЃС‹Р»РєР° IS NULL
 GROUP BY
-    T1.НоменклатураСсылка,
+    T1.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР°,
 	T1.article,
 	T1.code,
-	ISNULL(T3.СкладНазначения, T2.СкладНазначения),
-    T1.Вес,
-    T1.Объем,
-    T1.ВремяНаОбслуживание,
-    T1.Количество,
-    T1.ГруппаПланирования,
-	T1.ГруппаПланированияДобавляемоеВремя
+	ISNULL(T3.РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ, T2.РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ),
+    T1.Р’РµСЃ,
+    T1.РћР±СЉРµРј,
+    T1.Р’СЂРµРјСЏРќР°РћР±СЃР»СѓР¶РёРІР°РЅРёРµ,
+    T1.РљРѕР»РёС‡РµСЃС‚РІРѕ,
+    T1.Р“СЂСѓРїРїР°РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏ,
+	T1.Р“СЂСѓРїРїР°РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏР”РѕР±Р°РІР»СЏРµРјРѕРµР’СЂРµРјСЏ
 UNION ALL
 SELECT
-    T1.НоменклатураСсылка,
+    T1.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР°,
 	T1.article,
 	T1.code,
-    ISNULL(T3.СкладНазначения, T2.СкладНазначения) AS СкладНазначения,
-    MIN(ISNULL(T3.ДатаДоступности, T2.ДатаДоступности)) AS БлижайшаяДата,
-    1 AS Количество,
-    T1.Вес,
-    T1.Объем,
-    T1.ВремяНаОбслуживание,
-    T1.ГруппаПланирования,
-	T1.ГруппаПланированияДобавляемоеВремя,
+    ISNULL(T3.РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ, T2.РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ) AS РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ,
+    MIN(ISNULL(T3.Р”Р°С‚Р°Р”РѕСЃС‚СѓРїРЅРѕСЃС‚Рё, T2.Р”Р°С‚Р°Р”РѕСЃС‚СѓРїРЅРѕСЃС‚Рё)) AS Р‘Р»РёР¶Р°Р№С€Р°СЏР”Р°С‚Р°,
+    1 AS РљРѕР»РёС‡РµСЃС‚РІРѕ,
+    T1.Р’РµСЃ,
+    T1.РћР±СЉРµРј,
+    T1.Р’СЂРµРјСЏРќР°РћР±СЃР»СѓР¶РёРІР°РЅРёРµ,
+    T1.Р“СЂСѓРїРїР°РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏ,
+	T1.Р“СЂСѓРїРїР°РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏР”РѕР±Р°РІР»СЏРµРјРѕРµР’СЂРµРјСЏ,
 	1 AS PickUp
 FROM
     #Temp_Goods T1 WITH(NOLOCK)	
     LEFT JOIN #Temp_SourcesCorrectedDate T2 WITH(NOLOCK)
-		LEFT JOIN  #Temp_T3 T3 ON (T2.НоменклатураСсылка = T3.НоменклатураСсылка) 
-			And T2.СкладНазначения = T3.СкладНазначения
-    ON (T1.НоменклатураСсылка = T2.НоменклатураСсылка) 
-		AND T1.СкладСсылка = ISNULL(T3.СкладНазначения, T2.СкладНазначения)
+		LEFT JOIN  #Temp_T3 T3 ON (T2.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР° = T3.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР°) 
+			And T2.РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ = T3.РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ
+    ON (T1.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР° = T2.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР°) 
+		AND T1.РЎРєР»Р°РґРЎСЃС‹Р»РєР° = ISNULL(T3.РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ, T2.РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ)
 Where 
-	NOT T1.СкладСсылка IS NULL
+	NOT T1.РЎРєР»Р°РґРЎСЃС‹Р»РєР° IS NULL
 GROUP BY
-    T1.НоменклатураСсылка,
+    T1.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР°,
 	T1.article,
 	T1.code,
-	ISNULL(T3.СкладНазначения, T2.СкладНазначения),
-    T1.Вес,
-    T1.Объем,
-    T1.ВремяНаОбслуживание,
-    T1.Количество,
-    T1.ГруппаПланирования,
-	T1.ГруппаПланированияДобавляемоеВремя
+	ISNULL(T3.РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ, T2.РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ),
+    T1.Р’РµСЃ,
+    T1.РћР±СЉРµРј,
+    T1.Р’СЂРµРјСЏРќР°РћР±СЃР»СѓР¶РёРІР°РЅРёРµ,
+    T1.РљРѕР»РёС‡РµСЃС‚РІРѕ,
+    T1.Р“СЂСѓРїРїР°РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏ,
+	T1.Р“СЂСѓРїРїР°РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏР”РѕР±Р°РІР»СЏРµРјРѕРµР’СЂРµРјСЏ
 OPTION (KEEP PLAN, KEEPFIXED PLAN)
 
 SELECT
-    T1.НоменклатураСсылка,
+    T1.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР°,
 	T1.article,
 	T1.code,
-    T1.СкладНазначения,
-    T1.Вес,
-    T1.Объем,
-    T1.ВремяНаОбслуживание,
-    T1.ГруппаПланирования,
+    T1.РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ,
+    T1.Р’РµСЃ,
+    T1.РћР±СЉРµРј,
+    T1.Р’СЂРµРјСЏРќР°РћР±СЃР»СѓР¶РёРІР°РЅРёРµ,
+    T1.Р“СЂСѓРїРїР°РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏ,
     MIN(
         CASE
-            WHEN T2.Источник_RTRef = 0x00000141
-            OR T2.Источник_RTRef = 0x00000153
-                THEN DATEADD(SECOND, DATEDIFF(SECOND, @P_EmptyDate, T1.ГруппаПланированияДобавляемоеВремя), T1.БлижайшаяДата)
-            ELSE T1.БлижайшаяДата
+            WHEN T2.РСЃС‚РѕС‡РЅРёРє_RTRef = 0x00000141
+            OR T2.РСЃС‚РѕС‡РЅРёРє_RTRef = 0x00000153
+                THEN DATEADD(SECOND, DATEDIFF(SECOND, @P_EmptyDate, T1.Р“СЂСѓРїРїР°РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏР”РѕР±Р°РІР»СЏРµРјРѕРµР’СЂРµРјСЏ), T1.Р‘Р»РёР¶Р°Р№С€Р°СЏР”Р°С‚Р°)
+            ELSE T1.Р‘Р»РёР¶Р°Р№С€Р°СЏР”Р°С‚Р°
         END        
-    ) AS ДатаДоступности,
+    ) AS Р”Р°С‚Р°Р”РѕСЃС‚СѓРїРЅРѕСЃС‚Рё,
 	T1.PickUp
 Into #Temp_ShipmentDates
 FROM
     #Temp_ClosestDatesByGoods T1 WITH(NOLOCK)
     LEFT OUTER JOIN #Temp_Sources T2 WITH(NOLOCK)
-    ON (T1.НоменклатураСсылка = T2.НоменклатураСсылка)
-    AND (T1.СкладНазначения = T2.СкладНазначения)
-    AND (T1.БлижайшаяДата = T2.ДатаДоступности)
+    ON (T1.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР° = T2.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР°)
+    AND (T1.РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ = T2.РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ)
+    AND (T1.Р‘Р»РёР¶Р°Р№С€Р°СЏР”Р°С‚Р° = T2.Р”Р°С‚Р°Р”РѕСЃС‚СѓРїРЅРѕСЃС‚Рё)
 Where 
-	NOT T1.БлижайшаяДата IS NULL
+	NOT T1.Р‘Р»РёР¶Р°Р№С€Р°СЏР”Р°С‚Р° IS NULL
 GROUP BY
-    T1.НоменклатураСсылка,
+    T1.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР°,
 	T1.article,
 	T1.code,
-    T1.СкладНазначения,
-    T1.Вес,
-    T1.Объем,
-    T1.ВремяНаОбслуживание,
-    T1.ГруппаПланирования,
+    T1.РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ,
+    T1.Р’РµСЃ,
+    T1.РћР±СЉРµРј,
+    T1.Р’СЂРµРјСЏРќР°РћР±СЃР»СѓР¶РёРІР°РЅРёРµ,
+    T1.Р“СЂСѓРїРїР°РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏ,
 	T1.PickUp
 OPTION (KEEP PLAN, KEEPFIXED PLAN)
 
 
 
 SELECT
-    T1.НоменклатураСсылка,
+    T1.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР°,
 	T1.article,
 	T1.code,
-    MIN(T1.ДатаДоступности) AS ДатаСоСклада,
-    T1.Вес,
-    T1.Объем,
-    T1.ВремяНаОбслуживание,
-    T1.ГруппаПланирования,
+    MIN(T1.Р”Р°С‚Р°Р”РѕСЃС‚СѓРїРЅРѕСЃС‚Рё) AS Р”Р°С‚Р°РЎРѕРЎРєР»Р°РґР°,
+    T1.Р’РµСЃ,
+    T1.РћР±СЉРµРј,
+    T1.Р’СЂРµРјСЏРќР°РћР±СЃР»СѓР¶РёРІР°РЅРёРµ,
+    T1.Р“СЂСѓРїРїР°РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏ,
 	T1.PickUp
 Into #Temp_ShipmentDatesDeliveryCourier
 FROM 
     #Temp_ShipmentDates T1 WITH(NOLOCK)
 Where T1.PickUp = 0
 GROUP BY
-    T1.НоменклатураСсылка,
+    T1.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР°,
 	T1.article,
 	T1.code,
-    T1.Вес,
-    T1.Объем,
-    T1.ВремяНаОбслуживание,
-    T1.ГруппаПланирования,
+    T1.Р’РµСЃ,
+    T1.РћР±СЉРµРј,
+    T1.Р’СЂРµРјСЏРќР°РћР±СЃР»СѓР¶РёРІР°РЅРёРµ,
+    T1.Р“СЂСѓРїРїР°РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏ,
 	T1.PickUp
 OPTION (KEEP PLAN, KEEPFIXED PLAN)
 
 SELECT
-    T1.НоменклатураСсылка,
+    T1.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР°,
 	T1.article,
 	T1.code,
-    MIN(T1.ДатаДоступности) AS ДатаСоСклада,
-	T1.СкладНазначения
+    MIN(T1.Р”Р°С‚Р°Р”РѕСЃС‚СѓРїРЅРѕСЃС‚Рё) AS Р”Р°С‚Р°РЎРѕРЎРєР»Р°РґР°,
+	T1.РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ
 Into #Temp_ShipmentDatesPickUp
 FROM 
     #Temp_ShipmentDates T1 WITH(NOLOCK)
 Where T1.PickUp = 1
 GROUP BY
-    T1.НоменклатураСсылка,
+    T1.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР°,
 	T1.article,
 	T1.code,
-	T1.СкладНазначения
+	T1.РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
-WITH Tdate(date, НоменклатураСсылка, СкладНазначения) AS (
-    /*Это получение списка дат интервалов после даты окончания расчета*/
+WITH Tdate(date, РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР°, РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ) AS (
+    /*Р­С‚Рѕ РїРѕР»СѓС‡РµРЅРёРµ СЃРїРёСЃРєР° РґР°С‚ РёРЅС‚РµСЂРІР°Р»РѕРІ РїРѕСЃР»Рµ РґР°С‚С‹ РѕРєРѕРЅС‡Р°РЅРёСЏ СЂР°СЃС‡РµС‚Р°*/
     SELECT         
-		CAST(CAST(#Temp_ShipmentDatesPickUp.ДатаСоСклада  AS DATE) AS DATETIME), 		
-		#Temp_ShipmentDatesPickUp.НоменклатураСсылка,
-		#Temp_ShipmentDatesPickUp.СкладНазначения
+		CAST(CAST(#Temp_ShipmentDatesPickUp.Р”Р°С‚Р°РЎРѕРЎРєР»Р°РґР°  AS DATE) AS DATETIME), 		
+		#Temp_ShipmentDatesPickUp.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР°,
+		#Temp_ShipmentDatesPickUp.РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ
 	From #Temp_ShipmentDatesPickUp
     UNION
     ALL
     SELECT 
         DateAdd(day, 1, Tdate.date),
-		#Temp_ShipmentDatesPickUp.НоменклатураСсылка,
-		#Temp_ShipmentDatesPickUp.СкладНазначения
+		#Temp_ShipmentDatesPickUp.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР°,
+		#Temp_ShipmentDatesPickUp.РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ
     FROM
         Tdate
 		Inner Join #Temp_ShipmentDatesPickUp 
-		ON Tdate.date < DateAdd(DAY, 8, CAST(CAST(#Temp_ShipmentDatesPickUp.ДатаСоСклада  AS DATE) AS DATETIME))
-		AND Tdate.НоменклатураСсылка = #Temp_ShipmentDatesPickUp.НоменклатураСсылка
-		AND Tdate.СкладНазначения = #Temp_ShipmentDatesPickUp.СкладНазначения
+		ON Tdate.date < DateAdd(DAY, 8, CAST(CAST(#Temp_ShipmentDatesPickUp.Р”Р°С‚Р°РЎРѕРЎРєР»Р°РґР°  AS DATE) AS DATETIME))
+		AND Tdate.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР° = #Temp_ShipmentDatesPickUp.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР°
+		AND Tdate.РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ = #Temp_ShipmentDatesPickUp.РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ
 )
 SELECT
-	#Temp_ShipmentDatesPickUp.НоменклатураСсылка,
+	#Temp_ShipmentDatesPickUp.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР°,
 	#Temp_ShipmentDatesPickUp.article,
 	#Temp_ShipmentDatesPickUp.code,
-	--#Temp_ShipmentDatesPickUp.ДатаСоСклада,
-	--#Temp_ShipmentDatesPickUp.СкладНазначения,
+	--#Temp_ShipmentDatesPickUp.Р”Р°С‚Р°РЎРѕРЎРєР»Р°РґР°,
+	--#Temp_ShipmentDatesPickUp.РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ,
 	Min(CASE 
 	WHEN 
 		DATEADD(
 			SECOND,
 			CAST(
-				DATEDIFF(SECOND, @P_EmptyDate, ПВЗГрафикРаботы._Fld23617) AS NUMERIC(12)
+				DATEDIFF(SECOND, @P_EmptyDate, РџР’Р—Р“СЂР°С„РёРєР Р°Р±РѕС‚С‹._Fld23617) AS NUMERIC(12)
 			),
 			date
-		) < #Temp_ShipmentDatesPickUp.ДатаСоСклада 
-		then #Temp_ShipmentDatesPickUp.ДатаСоСклада
+		) < #Temp_ShipmentDatesPickUp.Р”Р°С‚Р°РЎРѕРЎРєР»Р°РґР° 
+		then #Temp_ShipmentDatesPickUp.Р”Р°С‚Р°РЎРѕРЎРєР»Р°РґР°
 	Else
 		DATEADD(
 			SECOND,
 			CAST(
-				DATEDIFF(SECOND, @P_EmptyDate, ПВЗГрафикРаботы._Fld23617) AS NUMERIC(12)
+				DATEDIFF(SECOND, @P_EmptyDate, РџР’Р—Р“СЂР°С„РёРєР Р°Р±РѕС‚С‹._Fld23617) AS NUMERIC(12)
 			),
 			date
 		)
-	End) As ВремяНачала--,
+	End) As Р’СЂРµРјСЏРќР°С‡Р°Р»Р°--,
 	--DATEADD(
  --       SECOND,
  --       CAST(
- --           DATEDIFF(SECOND, @P_EmptyDate, ПВЗГрафикРаботы._Fld23618) AS NUMERIC(12)
+ --           DATEDIFF(SECOND, @P_EmptyDate, РџР’Р—Р“СЂР°С„РёРєР Р°Р±РѕС‚С‹._Fld23618) AS NUMERIC(12)
  --       ),
  --       date
- --   ) As ВремяОкончания
+ --   ) As Р’СЂРµРјСЏРћРєРѕРЅС‡Р°РЅРёСЏ
 Into #Temp_AvailablePickUp
 FROM
     #Temp_ShipmentDatesPickUp
 		Inner Join Tdate On 
-			#Temp_ShipmentDatesPickUp.НоменклатураСсылка = Tdate.НоменклатураСсылка
-			And #Temp_ShipmentDatesPickUp.СкладНазначения = Tdate.СкладНазначения
-		Inner Join dbo._Reference226 Склады ON Склады._IDRRef = #Temp_ShipmentDatesPickUp.СкладНазначения
-			Inner Join _Reference23612 On Склады._Fld23620RRef = _Reference23612._IDRRef
-				Inner Join _Reference23612_VT23613 As ПВЗГрафикРаботы 
+			#Temp_ShipmentDatesPickUp.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР° = Tdate.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР°
+			And #Temp_ShipmentDatesPickUp.РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ = Tdate.РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ
+		Inner Join dbo._Reference226 РЎРєР»Р°РґС‹ ON РЎРєР»Р°РґС‹._IDRRef = #Temp_ShipmentDatesPickUp.РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ
+			Inner Join _Reference23612 On РЎРєР»Р°РґС‹._Fld23620RRef = _Reference23612._IDRRef
+				Inner Join _Reference23612_VT23613 As РџР’Р—Р“СЂР°С„РёРєР Р°Р±РѕС‚С‹ 
 				On _Reference23612._IDRRef = _Reference23612_IDRRef
-				AND (case when DATEPART ( dw , Tdate.date ) = 1 then 7 else DATEPART ( dw , Tdate.date ) -1 END) = ПВЗГрафикРаботы._Fld23615
-					AND ПВЗГрафикРаботы._Fld25265 = 0x00 --не выходной				
+				AND (case when DATEPART ( dw , Tdate.date ) = 1 then 7 else DATEPART ( dw , Tdate.date ) -1 END) = РџР’Р—Р“СЂР°С„РёРєР Р°Р±РѕС‚С‹._Fld23615
+					AND РџР’Р—Р“СЂР°С„РёРєР Р°Р±РѕС‚С‹._Fld25265 = 0x00 --РЅРµ РІС‹С…РѕРґРЅРѕР№				
 		WHERE DATEADD(
 			SECOND,
 			CAST(
-            DATEDIFF(SECOND, @P_EmptyDate, ПВЗГрафикРаботы._Fld23618) AS NUMERIC(12)
+            DATEDIFF(SECOND, @P_EmptyDate, РџР’Р—Р“СЂР°С„РёРєР Р°Р±РѕС‚С‹._Fld23618) AS NUMERIC(12)
 			),
-			Tdate.date) > #Temp_ShipmentDatesPickUp.ДатаСоСклада 	 
+			Tdate.date) > #Temp_ShipmentDatesPickUp.Р”Р°С‚Р°РЎРѕРЎРєР»Р°РґР° 	 
 Group by
-	#Temp_ShipmentDatesPickUp.НоменклатураСсылка,
+	#Temp_ShipmentDatesPickUp.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР°,
 	#Temp_ShipmentDatesPickUp.article,
 	#Temp_ShipmentDatesPickUp.code
 --Order by 		
@@ -693,16 +693,16 @@ Group by
 --		DATEADD(
 --			SECOND,
 --			CAST(
---				DATEDIFF(SECOND, @P_EmptyDate, ПВЗГрафикРаботы._Fld23617) AS NUMERIC(12)
+--				DATEDIFF(SECOND, @P_EmptyDate, РџР’Р—Р“СЂР°С„РёРєР Р°Р±РѕС‚С‹._Fld23617) AS NUMERIC(12)
 --			),
 --			date
---		) < #Temp_ShipmentDatesPickUp.ДатаСоСклада 
---		then #Temp_ShipmentDatesPickUp.ДатаСоСклада
+--		) < #Temp_ShipmentDatesPickUp.Р”Р°С‚Р°РЎРѕРЎРєР»Р°РґР° 
+--		then #Temp_ShipmentDatesPickUp.Р”Р°С‚Р°РЎРѕРЎРєР»Р°РґР°
 --	Else
 --		DATEADD(
 --			SECOND,
 --			CAST(
---				DATEDIFF(SECOND, @P_EmptyDate, ПВЗГрафикРаботы._Fld23617) AS NUMERIC(12)
+--				DATEDIFF(SECOND, @P_EmptyDate, РџР’Р—Р“СЂР°С„РёРєР Р°Р±РѕС‚С‹._Fld23617) AS NUMERIC(12)
 --			),
 --			date
 --		)
@@ -711,25 +711,25 @@ Group by
 
 
 SELECT
-    T5._Period AS Период,
-    T5._Fld25112RRef As ГруппаПланирования, 
-	T5._Fld25111RRef As Геозона,
-	T5._Fld25202 As ВремяНачалаНачальное,
-	T5._Fld25203 As ВремяОкончанияНачальное,
+    T5._Period AS РџРµСЂРёРѕРґ,
+    T5._Fld25112RRef As Р“СЂСѓРїРїР°РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏ, 
+	T5._Fld25111RRef As Р“РµРѕР·РѕРЅР°,
+	T5._Fld25202 As Р’СЂРµРјСЏРќР°С‡Р°Р»Р°РќР°С‡Р°Р»СЊРЅРѕРµ,
+	T5._Fld25203 As Р’СЂРµРјСЏРћРєРѕРЅС‡Р°РЅРёСЏРќР°С‡Р°Р»СЊРЅРѕРµ,
     DATEADD(
         SECOND,
         CAST(
             DATEDIFF(SECOND, @P_EmptyDate, T5._Fld25202) AS NUMERIC(12)
         ),
         T5._Period
-    ) As ВремяНачала
+    ) As Р’СЂРµРјСЏРќР°С‡Р°Р»Р°
 into #Temp_IntervalsAll
 FROM
     dbo._AccumRg25110 T5 With (NOLOCK)
 WHERE
     T5._Period >= @P_DateTimePeriodBegin --begin +2
     AND T5._Period <= @P_DateTimePeriodEnd --end
-    AND T5._Fld25111RRef in (Select Геозона From #Temp_GeoData) 
+    AND T5._Fld25111RRef in (Select Р“РµРѕР·РѕРЅР° From #Temp_GeoData) 
 GROUP BY
     T5._Period,
     T5._Fld25112RRef,
@@ -754,31 +754,31 @@ select
 DATEADD(
         SECOND,
         CAST(
-            DATEDIFF(SECOND, @P_EmptyDate, ГеоЗонаВременныеИнтервалы._Fld25128) AS NUMERIC(12)
+            DATEDIFF(SECOND, @P_EmptyDate, Р“РµРѕР—РѕРЅР°Р’СЂРµРјРµРЅРЅС‹РµРРЅС‚РµСЂРІР°Р»С‹._Fld25128) AS NUMERIC(12)
         ),
-        #Temp_IntervalsAll.Период
-    ) As ВремяНачала,
-#Temp_IntervalsAll.Период,
-#Temp_IntervalsAll.ГруппаПланирования,
-#Temp_IntervalsAll.Геозона
+        #Temp_IntervalsAll.РџРµСЂРёРѕРґ
+    ) As Р’СЂРµРјСЏРќР°С‡Р°Р»Р°,
+#Temp_IntervalsAll.РџРµСЂРёРѕРґ,
+#Temp_IntervalsAll.Р“СЂСѓРїРїР°РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏ,
+#Temp_IntervalsAll.Р“РµРѕР·РѕРЅР°
 into #Temp_Intervals
 from #Temp_IntervalsAll
-	Inner Join _Reference114_VT25126 ГеоЗонаВременныеИнтервалы With (NOLOCK)
-		On #Temp_IntervalsAll.Геозона = ГеоЗонаВременныеИнтервалы._Reference114_IDRRef
-		And #Temp_IntervalsAll.ВремяНачалаНачальное >= ГеоЗонаВременныеИнтервалы._Fld25128
-		And #Temp_IntervalsAll.ВремяНачалаНачальное < ГеоЗонаВременныеИнтервалы._Fld25129
+	Inner Join _Reference114_VT25126 Р“РµРѕР—РѕРЅР°Р’СЂРµРјРµРЅРЅС‹РµРРЅС‚РµСЂРІР°Р»С‹ With (NOLOCK)
+		On #Temp_IntervalsAll.Р“РµРѕР·РѕРЅР° = Р“РµРѕР—РѕРЅР°Р’СЂРµРјРµРЅРЅС‹РµРРЅС‚РµСЂРІР°Р»С‹._Reference114_IDRRef
+		And #Temp_IntervalsAll.Р’СЂРµРјСЏРќР°С‡Р°Р»Р°РќР°С‡Р°Р»СЊРЅРѕРµ >= Р“РµРѕР—РѕРЅР°Р’СЂРµРјРµРЅРЅС‹РµРРЅС‚РµСЂРІР°Р»С‹._Fld25128
+		And #Temp_IntervalsAll.Р’СЂРµРјСЏРќР°С‡Р°Р»Р°РќР°С‡Р°Р»СЊРЅРѕРµ < Р“РµРѕР—РѕРЅР°Р’СЂРµРјРµРЅРЅС‹РµРРЅС‚РµСЂРІР°Р»С‹._Fld25129
    INNER JOIN dbo._Reference23294 T2 With (NOLOCK) 
-		ON (#Temp_IntervalsAll.ГруппаПланирования = T2._IDRRef)
-		AND (ГеоЗонаВременныеИнтервалы._Fld25128 >= T2._Fld25137)
+		ON (#Temp_IntervalsAll.Р“СЂСѓРїРїР°РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏ = T2._IDRRef)
+		AND (Р“РµРѕР—РѕРЅР°Р’СЂРµРјРµРЅРЅС‹РµРРЅС‚РµСЂРІР°Р»С‹._Fld25128 >= T2._Fld25137)
 		AND (NOT (((@P_TimeNow >= T2._Fld25138))))
 WHERE
-    #Temp_IntervalsAll.Период = @P_DateTimePeriodBegin
+    #Temp_IntervalsAll.РџРµСЂРёРѕРґ = @P_DateTimePeriodBegin
 Group By 
-	ГеоЗонаВременныеИнтервалы._Fld25128,
-	ГеоЗонаВременныеИнтервалы._Fld25129,
-	#Temp_IntervalsAll.Период,
-	#Temp_IntervalsAll.ГруппаПланирования,
-	#Temp_IntervalsAll.Геозона,
+	Р“РµРѕР—РѕРЅР°Р’СЂРµРјРµРЅРЅС‹РµРРЅС‚РµСЂРІР°Р»С‹._Fld25128,
+	Р“РµРѕР—РѕРЅР°Р’СЂРµРјРµРЅРЅС‹РµРРЅС‚РµСЂРІР°Р»С‹._Fld25129,
+	#Temp_IntervalsAll.РџРµСЂРёРѕРґ,
+	#Temp_IntervalsAll.Р“СЂСѓРїРїР°РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏ,
+	#Temp_IntervalsAll.Р“РµРѕР·РѕРЅР°,
 	T2._Fld25137
 OPTION (KEEP PLAN, KEEPFIXED PLAN)
 ;
@@ -788,32 +788,32 @@ select
 DATEADD(
         SECOND,
         CAST(
-            DATEDIFF(SECOND, @P_EmptyDate, ГеоЗонаВременныеИнтервалы._Fld25128) AS NUMERIC(12)
+            DATEDIFF(SECOND, @P_EmptyDate, Р“РµРѕР—РѕРЅР°Р’СЂРµРјРµРЅРЅС‹РµРРЅС‚РµСЂРІР°Р»С‹._Fld25128) AS NUMERIC(12)
         ),
-        #Temp_IntervalsAll.Период
-    ) As ВремяНачала,
-#Temp_IntervalsAll.Период,
-#Temp_IntervalsAll.ГруппаПланирования,
-#Temp_IntervalsAll.Геозона
+        #Temp_IntervalsAll.РџРµСЂРёРѕРґ
+    ) As Р’СЂРµРјСЏРќР°С‡Р°Р»Р°,
+#Temp_IntervalsAll.РџРµСЂРёРѕРґ,
+#Temp_IntervalsAll.Р“СЂСѓРїРїР°РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏ,
+#Temp_IntervalsAll.Р“РµРѕР·РѕРЅР°
 
 from #Temp_IntervalsAll
-	Inner Join _Reference114_VT25126 ГеоЗонаВременныеИнтервалы With (NOLOCK)
-		On #Temp_IntervalsAll.Геозона = ГеоЗонаВременныеИнтервалы._Reference114_IDRRef
-		And #Temp_IntervalsAll.ВремяНачалаНачальное >= ГеоЗонаВременныеИнтервалы._Fld25128
-		And #Temp_IntervalsAll.ВремяНачалаНачальное < ГеоЗонаВременныеИнтервалы._Fld25129
-  INNER JOIN dbo._Reference23294 T4 With (NOLOCK) ON (#Temp_IntervalsAll.ГруппаПланирования = T4._IDRRef)
+	Inner Join _Reference114_VT25126 Р“РµРѕР—РѕРЅР°Р’СЂРµРјРµРЅРЅС‹РµРРЅС‚РµСЂРІР°Р»С‹ With (NOLOCK)
+		On #Temp_IntervalsAll.Р“РµРѕР·РѕРЅР° = Р“РµРѕР—РѕРЅР°Р’СЂРµРјРµРЅРЅС‹РµРРЅС‚РµСЂРІР°Р»С‹._Reference114_IDRRef
+		And #Temp_IntervalsAll.Р’СЂРµРјСЏРќР°С‡Р°Р»Р°РќР°С‡Р°Р»СЊРЅРѕРµ >= Р“РµРѕР—РѕРЅР°Р’СЂРµРјРµРЅРЅС‹РµРРЅС‚РµСЂРІР°Р»С‹._Fld25128
+		And #Temp_IntervalsAll.Р’СЂРµРјСЏРќР°С‡Р°Р»Р°РќР°С‡Р°Р»СЊРЅРѕРµ < Р“РµРѕР—РѕРЅР°Р’СЂРµРјРµРЅРЅС‹РµРРЅС‚РµСЂРІР°Р»С‹._Fld25129
+  INNER JOIN dbo._Reference23294 T4 With (NOLOCK) ON (#Temp_IntervalsAll.Р“СЂСѓРїРїР°РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏ = T4._IDRRef)
     AND (
         (@P_TimeNow < T4._Fld25140)
-        OR (ГеоЗонаВременныеИнтервалы._Fld25128 >= T4._Fld25139)
+        OR (Р“РµРѕР—РѕРЅР°Р’СЂРµРјРµРЅРЅС‹РµРРЅС‚РµСЂРІР°Р»С‹._Fld25128 >= T4._Fld25139)
     )
 WHERE
-    #Temp_IntervalsAll.Период = DATEADD(DAY, 1, @P_DateTimePeriodBegin)
+    #Temp_IntervalsAll.РџРµСЂРёРѕРґ = DATEADD(DAY, 1, @P_DateTimePeriodBegin)
 Group By 
-	ГеоЗонаВременныеИнтервалы._Fld25128,
-	ГеоЗонаВременныеИнтервалы._Fld25129,
-	#Temp_IntervalsAll.Период,
-	#Temp_IntervalsAll.ГруппаПланирования,
-	#Temp_IntervalsAll.Геозона
+	Р“РµРѕР—РѕРЅР°Р’СЂРµРјРµРЅРЅС‹РµРРЅС‚РµСЂРІР°Р»С‹._Fld25128,
+	Р“РµРѕР—РѕРЅР°Р’СЂРµРјРµРЅРЅС‹РµРРЅС‚РµСЂРІР°Р»С‹._Fld25129,
+	#Temp_IntervalsAll.РџРµСЂРёРѕРґ,
+	#Temp_IntervalsAll.Р“СЂСѓРїРїР°РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏ,
+	#Temp_IntervalsAll.Р“РµРѕР·РѕРЅР°
 OPTION (KEEP PLAN, KEEPFIXED PLAN) 
 ;
 
@@ -822,28 +822,28 @@ select
 DATEADD(
         SECOND,
         CAST(
-            DATEDIFF(SECOND, @P_EmptyDate, ГеоЗонаВременныеИнтервалы._Fld25128) AS NUMERIC(12)
+            DATEDIFF(SECOND, @P_EmptyDate, Р“РµРѕР—РѕРЅР°Р’СЂРµРјРµРЅРЅС‹РµРРЅС‚РµСЂРІР°Р»С‹._Fld25128) AS NUMERIC(12)
         ),
-        #Temp_IntervalsAll.Период
-    ) As ВремяНачала,
-#Temp_IntervalsAll.Период,
-#Temp_IntervalsAll.ГруппаПланирования,
-#Temp_IntervalsAll.Геозона
+        #Temp_IntervalsAll.РџРµСЂРёРѕРґ
+    ) As Р’СЂРµРјСЏРќР°С‡Р°Р»Р°,
+#Temp_IntervalsAll.РџРµСЂРёРѕРґ,
+#Temp_IntervalsAll.Р“СЂСѓРїРїР°РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏ,
+#Temp_IntervalsAll.Р“РµРѕР·РѕРЅР°
 
 from #Temp_IntervalsAll
-	Inner Join _Reference114_VT25126 ГеоЗонаВременныеИнтервалы With (NOLOCK)
-		On #Temp_IntervalsAll.Геозона = ГеоЗонаВременныеИнтервалы._Reference114_IDRRef
-		And #Temp_IntervalsAll.ВремяНачалаНачальное >= ГеоЗонаВременныеИнтервалы._Fld25128
-		And #Temp_IntervalsAll.ВремяНачалаНачальное < ГеоЗонаВременныеИнтервалы._Fld25129
+	Inner Join _Reference114_VT25126 Р“РµРѕР—РѕРЅР°Р’СЂРµРјРµРЅРЅС‹РµРРЅС‚РµСЂРІР°Р»С‹ With (NOLOCK)
+		On #Temp_IntervalsAll.Р“РµРѕР·РѕРЅР° = Р“РµРѕР—РѕРЅР°Р’СЂРµРјРµРЅРЅС‹РµРРЅС‚РµСЂРІР°Р»С‹._Reference114_IDRRef
+		And #Temp_IntervalsAll.Р’СЂРµРјСЏРќР°С‡Р°Р»Р°РќР°С‡Р°Р»СЊРЅРѕРµ >= Р“РµРѕР—РѕРЅР°Р’СЂРµРјРµРЅРЅС‹РµРРЅС‚РµСЂРІР°Р»С‹._Fld25128
+		And #Temp_IntervalsAll.Р’СЂРµРјСЏРќР°С‡Р°Р»Р°РќР°С‡Р°Р»СЊРЅРѕРµ < Р“РµРѕР—РѕРЅР°Р’СЂРµРјРµРЅРЅС‹РµРРЅС‚РµСЂРІР°Р»С‹._Fld25129
 WHERE
-	#Temp_IntervalsAll.Период >= DATEADD(DAY, 2, @P_DateTimePeriodBegin) --begin +2
-    AND #Temp_IntervalsAll.Период <= @P_DateTimePeriodEnd --end
+	#Temp_IntervalsAll.РџРµСЂРёРѕРґ >= DATEADD(DAY, 2, @P_DateTimePeriodBegin) --begin +2
+    AND #Temp_IntervalsAll.РџРµСЂРёРѕРґ <= @P_DateTimePeriodEnd --end
 Group By 
-	ГеоЗонаВременныеИнтервалы._Fld25128,
-	ГеоЗонаВременныеИнтервалы._Fld25129,
-	#Temp_IntervalsAll.Период,
-	#Temp_IntervalsAll.ГруппаПланирования,
-	#Temp_IntervalsAll.Геозона 
+	Р“РµРѕР—РѕРЅР°Р’СЂРµРјРµРЅРЅС‹РµРРЅС‚РµСЂРІР°Р»С‹._Fld25128,
+	Р“РµРѕР—РѕРЅР°Р’СЂРµРјРµРЅРЅС‹РµРРЅС‚РµСЂРІР°Р»С‹._Fld25129,
+	#Temp_IntervalsAll.РџРµСЂРёРѕРґ,
+	#Temp_IntervalsAll.Р“СЂСѓРїРїР°РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏ,
+	#Temp_IntervalsAll.Р“РµРѕР·РѕРЅР° 
 OPTION (KEEP PLAN, KEEPFIXED PLAN)
 ;
 
@@ -853,73 +853,73 @@ SELECT
     CAST(
         SUM(
             CASE
-                WHEN (МощностиДоставки._RecordKind = 0.0) THEN МощностиДоставки._Fld25107
-                ELSE -(МощностиДоставки._Fld25107)
+                WHEN (РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё._RecordKind = 0.0) THEN РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё._Fld25107
+                ELSE -(РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё._Fld25107)
             END
         ) AS NUMERIC(16, 3)
-    ) AS МассаОборот,
+    ) AS РњР°СЃСЃР°РћР±РѕСЂРѕС‚,
     CAST(
         SUM(
             CASE
-                WHEN (МощностиДоставки._RecordKind = 0.0) THEN МощностиДоставки._Fld25108
-                ELSE -(МощностиДоставки._Fld25108)
+                WHEN (РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё._RecordKind = 0.0) THEN РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё._Fld25108
+                ELSE -(РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё._Fld25108)
             END
         ) AS NUMERIC(16, 3)
-    ) AS ОбъемОборот,
+    ) AS РћР±СЉРµРјРћР±РѕСЂРѕС‚,
     CAST(
         SUM(
             CASE
-                WHEN (МощностиДоставки._RecordKind = 0.0) THEN МощностиДоставки._Fld25201
-                ELSE -(МощностиДоставки._Fld25201)
+                WHEN (РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё._RecordKind = 0.0) THEN РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё._Fld25201
+                ELSE -(РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё._Fld25201)
             END
         ) AS NUMERIC(16, 2)
-    ) AS ВремяНаОбслуживаниеОборот,
-    CAST(CAST(МощностиДоставки._Period  AS DATE) AS DATETIME) AS Дата
+    ) AS Р’СЂРµРјСЏРќР°РћР±СЃР»СѓР¶РёРІР°РЅРёРµРћР±РѕСЂРѕС‚,
+    CAST(CAST(РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё._Period  AS DATE) AS DATETIME) AS Р”Р°С‚Р°
 FROM
-    dbo._AccumRg25104 МощностиДоставки With (NOLOCK)
-	--Inner Join #Temp_GeoData ON МощностиДоставки._Fld25105RRef = #Temp_GeoData.ЗонаДоставкиРодительСсылка
+    dbo._AccumRg25104 РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё With (NOLOCK)
+	--Inner Join #Temp_GeoData ON РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё._Fld25105RRef = #Temp_GeoData.Р—РѕРЅР°Р”РѕСЃС‚Р°РІРєРёР РѕРґРёС‚РµР»СЊРЎСЃС‹Р»РєР°
 WHERE
-    МощностиДоставки._Period >= @P_DateTimePeriodBegin
-    AND МощностиДоставки._Period <= @P_DateTimePeriodEnd
-	AND МощностиДоставки._Fld25105RRef IN (Select ЗонаДоставкиРодительСсылка From  #Temp_GeoData)
+    РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё._Period >= @P_DateTimePeriodBegin
+    AND РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё._Period <= @P_DateTimePeriodEnd
+	AND РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё._Fld25105RRef IN (Select Р—РѕРЅР°Р”РѕСЃС‚Р°РІРєРёР РѕРґРёС‚РµР»СЊРЎСЃС‹Р»РєР° From  #Temp_GeoData)
 GROUP BY
-    CAST(CAST(МощностиДоставки._Period  AS DATE) AS DATETIME)
+    CAST(CAST(РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё._Period  AS DATE) AS DATETIME)
 )
 SELECT
-	T1.НоменклатураСсылка,
+	T1.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР°,
     T1.article,
 	T1.code,
     MIN(
         ISNULL(
-            T3.ВремяНачала,
+            T3.Р’СЂРµРјСЏРќР°С‡Р°Р»Р°,
 CASE
-                WHEN (T1.ДатаСоСклада > DATEADD(SECOND,-1,@P_DateTimePeriodEnd)) THEN DATEADD(
+                WHEN (T1.Р”Р°С‚Р°РЎРѕРЎРєР»Р°РґР° > DATEADD(SECOND,-1,@P_DateTimePeriodEnd)) THEN DATEADD(
                     DAY,
                     1.0,
-                    CAST(CAST(T1.ДатаСоСклада AS DATE) AS DATETIME)
+                    CAST(CAST(T1.Р”Р°С‚Р°РЎРѕРЎРєР»Р°РґР° AS DATE) AS DATETIME)
                 )
                 ELSE DATEADD(DAY,1,@P_DateTimePeriodEnd)
             END
         )
-    ) AS ДатаКурьерскойДоставки
+    ) AS Р”Р°С‚Р°РљСѓСЂСЊРµСЂСЃРєРѕР№Р”РѕСЃС‚Р°РІРєРё
 Into #Temp_AvailableCourier
 FROM
     #Temp_ShipmentDatesDeliveryCourier T1 WITH(NOLOCK)
     Left JOIN Temp_DeliveryPower T2 WITH(NOLOCK)
     Inner JOIN #Temp_Intervals T3 WITH(NOLOCK)
-		ON (T3.Период = T2.Дата) 
-	ON (T2.МассаОборот >= T1.Вес)
-    AND (T2.ОбъемОборот >= T1.Объем)
-    AND (T2.ВремяНаОбслуживаниеОборот >= T1.ВремяНаОбслуживание)
+		ON (T3.РџРµСЂРёРѕРґ = T2.Р”Р°С‚Р°) 
+	ON (T2.РњР°СЃСЃР°РћР±РѕСЂРѕС‚ >= T1.Р’РµСЃ)
+    AND (T2.РћР±СЉРµРјРћР±РѕСЂРѕС‚ >= T1.РћР±СЉРµРј)
+    AND (T2.Р’СЂРµРјСЏРќР°РћР±СЃР»СѓР¶РёРІР°РЅРёРµРћР±РѕСЂРѕС‚ >= T1.Р’СЂРµРјСЏРќР°РћР±СЃР»СѓР¶РёРІР°РЅРёРµ)
     AND (
-        T2.Дата >= 
-		CAST(CAST(T1.ДатаСоСклада AS DATE) AS DATETIME)
+        T2.Р”Р°С‚Р° >= 
+		CAST(CAST(T1.Р”Р°С‚Р°РЎРѕРЎРєР»Р°РґР° AS DATE) AS DATETIME)
     )
-    AND (T3.ГруппаПланирования = T1.ГруппаПланирования)
-    AND (T3.ВремяНачала >= T1.ДатаСоСклада)
+    AND (T3.Р“СЂСѓРїРїР°РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏ = T1.Р“СЂСѓРїРїР°РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏ)
+    AND (T3.Р’СЂРµРјСЏРќР°С‡Р°Р»Р° >= T1.Р”Р°С‚Р°РЎРѕРЎРєР»Р°РґР°)
 	AND T1.PickUp = 0
 GROUP BY
-	T1.НоменклатураСсылка,
+	T1.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР°,
     T1.article,
 	T1.code
 OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-05-12T00:00:00',@P_DateTimePeriodEnd='4021-05-16T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
@@ -928,12 +928,12 @@ OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-05-12T00:00:00',@P_DateTimePe
 Select 
 	IsNull(#Temp_AvailableCourier.article,#Temp_AvailablePickUp.article) AS article,
 	IsNull(#Temp_AvailableCourier.code,#Temp_AvailablePickUp.code) AS code,
-	IsNull(#Temp_AvailableCourier.ДатаКурьерскойДоставки,@P_MaxDate) AS available_date_courier,
-	IsNull(#Temp_AvailablePickUp.ВремяНачала,@P_MaxDate) AS available_date_self
+	IsNull(#Temp_AvailableCourier.Р”Р°С‚Р°РљСѓСЂСЊРµСЂСЃРєРѕР№Р”РѕСЃС‚Р°РІРєРё,@P_MaxDate) AS available_date_courier,
+	IsNull(#Temp_AvailablePickUp.Р’СЂРµРјСЏРќР°С‡Р°Р»Р°,@P_MaxDate) AS available_date_self
 From
 	#Temp_AvailableCourier 
 	FULL Join #Temp_AvailablePickUp 
-		On #Temp_AvailableCourier.НоменклатураСсылка = #Temp_AvailablePickUp.НоменклатураСсылка 
+		On #Temp_AvailableCourier.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР° = #Temp_AvailablePickUp.РќРѕРјРµРЅРєР»Р°С‚СѓСЂР°РЎСЃС‹Р»РєР° 
 
 
 DROP TABLE #Temp_GeoData
