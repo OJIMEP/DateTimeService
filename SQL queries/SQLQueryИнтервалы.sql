@@ -47,12 +47,12 @@ DECLARE @P_MaxDate datetime;
 
  SET @PickupPoint1 = NULL;--'340';
 
- Set @P_AdressCode = '47175'--'47175000000'--'3298156' --код адреса
+ Set @P_AdressCode = '47175';--'4948900';--'47175'--'47175000000'--'3298156' --код адреса
  
-  Set @P_DateTimeNow = '4021-05-13T18:17:00' 
- Set @P_DateTimePeriodBegin = '4021-05-13T00:00:00'
- Set @P_DateTimePeriodEnd = '4021-05-17T00:00:00'
- Set @P_TimeNow = '2001-01-01T18:17:00'
+  Set @P_DateTimeNow = '4021-05-14T12:50:00' 
+ Set @P_DateTimePeriodBegin = '4021-05-14T00:00:00'
+ Set @P_DateTimePeriodEnd = '4021-05-18T00:00:00'
+ Set @P_TimeNow = '2001-01-01T12:50:00'
  Set @P_EmptyDate = '2001-01-01T00:00:00'
  Set @P_MaxDate = '5999-11-11T00:00:00'
 
@@ -67,7 +67,7 @@ DECLARE @P_MaxDate datetime;
  Set @P_DaysToShow = 7;
 
   DECLARE @P_GeoCode nvarchar(4);
- Set @P_GeoCode = '2';
+ Set @P_GeoCode = '';
 
 Select
 	IsNull(_Reference114_VT23370._Fld23372RRef,Геозона._Fld23104RRef) As СкладСсылка,
@@ -83,13 +83,14 @@ From dbo._Reference114 Геозона With (NOLOCK)
 	Inner Join _Reference99 ЗоныДоставкиРодитель With (NOLOCK)
 	on ЗоныДоставки._ParentIDRRef = ЗоныДоставкиРодитель._IDRRef
 where
-	(@P_GeoCode = '' AND 
+	
+	((@P_GeoCode = '' OR @P_GeoCode = NULL) AND 
 Геозона._IDRRef IN (
 	Select Top 1 --по адресу находим геозону
 	ГеоАдрес._Fld2785RRef 
 	From dbo._Reference112 ГеоАдрес With (NOLOCK)
 	Where ГеоАдрес._Fld25155 = @P_AdressCode))
-OR Геозона._Fld21249 = @P_GeoCode 
+OR (NOT(@P_GeoCode = '' OR @P_GeoCode = NULL) AND Геозона._Fld21249 = @P_GeoCode) 
 OPTION (KEEP PLAN, KEEPFIXED PLAN)
 
 Select * From #Temp_GeoData
@@ -121,6 +122,8 @@ Into #Temp_PickupPoints
 From dbo._Reference226 Склады 
 Where Склады._Fld19544 = @PickupPoint1
 OPTION (KEEP PLAN, KEEPFIXED PLAN)
+
+--select * from #Temp_PickupPoints
 
 Select 
 	Номенклатура._IDRRef AS НоменклатураСсылка,
@@ -450,7 +453,8 @@ Select ГруппыПланирования._IDRRef AS ГруппаПланир�
 	ГруппыПланирования._Fld25139 AS ВремяДоступностиНаЗавтра,
 	ГруппыПланирования._Fld25140 AS ВремяСтопаЗавтра,
 	IsNull(ГруппыПланирования._Fld25519, @P_EmptyDate)AS ГруппаПланированияДобавляемоеВремя,
-	1 AS Основная
+	1 AS Основная,
+	ГруппыПланирования._Description
 Into #Temp_PlanningGroups
 From
 dbo._Reference23294 ГруппыПланирования With (NOLOCK)
@@ -471,13 +475,14 @@ Select
 	ПодчиненнаяГП._Fld25139 AS ВремяДоступностиНаЗавтра,
 	ПодчиненнаяГП._Fld25140 AS ВремяСтопаЗавтра,
 	IsNull(ПодчиненнаяГП._Fld25519, @P_EmptyDate)AS ГруппаПланированияДобавляемоеВремя,
-	0
+	0,
+	ПодчиненнаяГП._Description
 From
 	dbo._Reference23294 ГруппыПланирования With (NOLOCK)
 	Inner Join dbo._Reference23294_VT23309	With (NOLOCK)	
 		on ГруппыПланирования._IDRRef = _Reference23294_VT23309._Reference23294_IDRRef
 		and _Reference23294_VT23309._Fld23311RRef in (Select ЗонаДоставкиРодительСсылка From #Temp_GeoData)
-	Left Join dbo._Reference23294 ПодчиненнаяГП
+	Inner Join dbo._Reference23294 ПодчиненнаяГП
 			On  ГруппыПланирования._Fld26526RRef = ПодчиненнаяГП._IDRRef
 Where 
 	--ГруппыПланирования._Fld23302RRef IN (Select СкладНазначения From #Temp_DateAvailable) --склад
@@ -485,9 +490,12 @@ Where
 	ГруппыПланирования._Fld25141 = 0x01--участвует в расчете мощности
 	--AND ГруппыПланирования._Fld23301RRef IN (Select Габарит From #Temp_Dimensions)  --габариты
 	AND ГруппыПланирования._Marked = 0x00
-	AND NOT ПодчиненнаяГП._IDRRef = NULL
+	--AND NOT ПодчиненнаяГП._IDRRef = NULL
 OPTION (KEEP PLAN, KEEPFIXED PLAN)
 ;
+
+select * from #Temp_PlanningGroups;
+
 /*Отсюда начинается процесс получения оптимальной даты отгрузки*/
 With Temp_ExchangeRates AS (
 SELECT
@@ -517,6 +525,7 @@ FROM
 		On T2._Fld21408RRef = Цены._Fld21408RRef
 		AND T2._Fld21410_RTRef = 0x00000153
 		AND Цены._Fld21410_RTRef = 0x00000153 --Цены.Регистратор ССЫЛКА Документ.мегапрайсРегистрацияПрайса
+		AND T2._Fld21410_RRRef = Цены._Fld21410_RRRef 
 		And Цены._Fld21442<>0 AND (Цены._Fld21442 * Temp_ExchangeRates.Курс / Temp_ExchangeRates.Кратность >= Цены._Fld21982 OR Цены._Fld21411 >= Цены._Fld21616)
 		And Цены._Fld21408RRef IN(SELECT
                 НоменклатураСсылка
@@ -630,7 +639,7 @@ FROM
     INNER JOIN #Temp_WarehouseDates T5 WITH(NOLOCK)
     ON (T4.СкладИсточника = T5.СкладИсточника)
     AND (T4.ДатаСобытия = T5.ДатаСобытия)
-	Left Join #Temp_PlanningGroups On T5.СкладНазначения = #Temp_PlanningGroups.Склад
+	Left Join #Temp_PlanningGroups On T5.СкладНазначения = #Temp_PlanningGroups.Склад AND #Temp_PlanningGroups.Основная = 1
 WHERE
     T4.Источник_RTRef = 0x00000141
 
@@ -653,14 +662,12 @@ FROM
     INNER JOIN #Temp_WarehouseDates T7 WITH(NOLOCK)
     ON (T6.СкладИсточника = T7.СкладИсточника)
     AND (T6.ДатаСобытия = T7.ДатаСобытия)
-	Left Join #Temp_PlanningGroups With (NOLOCK) On T7.СкладНазначения = #Temp_PlanningGroups.Склад
+	Left Join #Temp_PlanningGroups With (NOLOCK) On T7.СкладНазначения = #Temp_PlanningGroups.Склад AND #Temp_PlanningGroups.Основная = 1
 WHERE
     NOT T6.Регистратор_RRRef IS NULL
 	And T6.Источник_RTRef = 0x00000153
 OPTION (KEEP PLAN, KEEPFIXED PLAN)
 ;
-
-
 
 ;
 With TempSourcesGrouped AS
@@ -875,7 +882,7 @@ Select
 Into #Temp_DateAvailable
 from #Temp_ClosestDatesByGoods With (NOLOCK)
 Group by СкладНазначения
-Order by DateAvailable ASC
+Order by DateAvailable ASC;
 /*Тут закончился процесс оптимальной даты. Склад назначения нужен чтоб потом правильную ГП выбрать*/
 
 /*Интервалы для ПВЗ*/
@@ -885,6 +892,7 @@ WITH Tdate(date, СкладНазначения) AS (
 		CAST(CAST(#Temp_DateAvailable.DateAvailable  AS DATE) AS DATETIME), 		
 		#Temp_DateAvailable.СкладНазначения
 	From #Temp_DateAvailable
+	Where #Temp_DateAvailable.СкладНазначения in (select СкладСсылка From #Temp_PickupPoints)
     UNION
     ALL
     SELECT 
@@ -895,10 +903,11 @@ WITH Tdate(date, СкладНазначения) AS (
 		Inner Join #Temp_DateAvailable 
 		ON Tdate.date < DateAdd(DAY, @P_DaysToShow, CAST(CAST(#Temp_DateAvailable.DateAvailable  AS DATE) AS DATETIME))
 		AND Tdate.СкладНазначения = #Temp_DateAvailable.СкладНазначения
+		AND #Temp_DateAvailable.СкладНазначения in (select СкладСсылка From #Temp_PickupPoints)
 )
 SELECT
 	
-	Min(CASE 
+	CASE 
 	WHEN 
 		DATEADD(
 			SECOND,
@@ -916,7 +925,7 @@ SELECT
 			),
 			date
 		)
-	End) As ВремяНачала,
+	End As ВремяНачала,
 	DATEADD(
         SECOND,
         CAST(
@@ -943,7 +952,6 @@ FROM
 			Tdate.date) > #Temp_DateAvailable.DateAvailable
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 /*Конец интервалов для ПВЗ*/
-
 
 /*Мощности доставки*/
 SELECT
@@ -1051,7 +1059,6 @@ WHERE
     AND T5._Period <= @P_DateTimePeriodEnd --end
     AND T5._Fld25111RRef in (Select Геозона From #Temp_GeoData) 
 	AND T5._Period IN (Select Дата From #Temp_DeliveryPower)
-	AND T5._Fld25111RRef IN (Select Геозона From #Temp_GeoData)
 GROUP BY
     T5._Period,
     T5._Fld25112RRef,
@@ -1091,7 +1098,8 @@ DATEADD(
 	Sum(#Temp_IntervalsAll.КоличествоЗаказовЗаИнтервалВремени) AS КоличествоЗаказовЗаИнтервалВремени,
 #Temp_IntervalsAll.Период,
 #Temp_IntervalsAll.ГруппаПланирования,
-#Temp_IntervalsAll.Геозона
+#Temp_IntervalsAll.Геозона,
+#Temp_IntervalsAll.Приоритет
 into #Temp_Intervals
 from #Temp_IntervalsAll
 	Inner Join _Reference114_VT25126 ГеоЗонаВременныеИнтервалы With (NOLOCK)
@@ -1110,7 +1118,8 @@ Group By
 	#Temp_IntervalsAll.Период,
 	#Temp_IntervalsAll.ГруппаПланирования,
 	#Temp_IntervalsAll.Геозона,
-	T2._Fld25137
+	--T2._Fld25137,
+	#Temp_IntervalsAll.Приоритет
 OPTION (KEEP PLAN, KEEPFIXED PLAN)
 ;
 
@@ -1133,8 +1142,8 @@ DATEADD(
 	Sum(#Temp_IntervalsAll.КоличествоЗаказовЗаИнтервалВремени) AS КоличествоЗаказовЗаИнтервалВремени,
 #Temp_IntervalsAll.Период,
 #Temp_IntervalsAll.ГруппаПланирования,
-#Temp_IntervalsAll.Геозона
-
+#Temp_IntervalsAll.Геозона,
+#Temp_IntervalsAll.Приоритет
 from #Temp_IntervalsAll
 	Inner Join _Reference114_VT25126 ГеоЗонаВременныеИнтервалы With (NOLOCK)
 		On #Temp_IntervalsAll.Геозона = ГеоЗонаВременныеИнтервалы._Reference114_IDRRef
@@ -1152,7 +1161,8 @@ Group By
 	ГеоЗонаВременныеИнтервалы._Fld25129,
 	#Temp_IntervalsAll.Период,
 	#Temp_IntervalsAll.ГруппаПланирования,
-	#Temp_IntervalsAll.Геозона
+	#Temp_IntervalsAll.Геозона,
+	#Temp_IntervalsAll.Приоритет
 OPTION (KEEP PLAN, KEEPFIXED PLAN) 
 ;
 
@@ -1175,7 +1185,8 @@ DATEADD(
 	Sum(#Temp_IntervalsAll.КоличествоЗаказовЗаИнтервалВремени) AS КоличествоЗаказовЗаИнтервалВремени,
 #Temp_IntervalsAll.Период,
 #Temp_IntervalsAll.ГруппаПланирования,
-#Temp_IntervalsAll.Геозона
+#Temp_IntervalsAll.Геозона,
+#Temp_IntervalsAll.Приоритет
 
 from #Temp_IntervalsAll
 	Inner Join _Reference114_VT25126 ГеоЗонаВременныеИнтервалы With (NOLOCK)
@@ -1190,191 +1201,15 @@ Group By
 	ГеоЗонаВременныеИнтервалы._Fld25129,
 	#Temp_IntervalsAll.Период,
 	#Temp_IntervalsAll.ГруппаПланирования,
-	#Temp_IntervalsAll.Геозона 
+	#Temp_IntervalsAll.Геозона,
+	#Temp_IntervalsAll.Приоритет
 OPTION (KEEP PLAN, KEEPFIXED PLAN)
 ;
 
+select * from #Temp_Intervals
 
---SELECT 
---    T1._Period AS Период,
---    T1._Fld25111RRef AS Геозона,
---	T1._Fld25112RRef AS ГруппаПланирования,
---	T2.Основная AS Приоритет,
---	T1._Fld25202 AS ВремяНачалаНачальное,
---	T1._Fld25203 AS ВремяОкончанияНачальное,
---	DATEADD(
---        SECOND,
---        CAST(
---            DATEDIFF(SECOND, @P_EmptyDate, T1._Fld25202) AS NUMERIC(12)
---        ),
---        T1._Period
---    ) AS ВремяНачала,
---	DATEADD(
---        SECOND,
---        CAST(
---            DATEDIFF(SECOND, @P_EmptyDate, T1._Fld25203) AS NUMERIC(12)
---        ),
---        T1._Period
---    ) AS ВремяОкончания,
---	SUM(
---                CASE
---                    WHEN (T1._RecordKind = 0.0) THEN T1._Fld25113
---                    ELSE -(T1._Fld25113)
---                END
---            ) AS КоличествоЗаказовЗаИнтервалВремени
---Into #Temp_Intervals
---FROM
---    dbo._AccumRg25110 T1 With (NOLOCK)
---    INNER JOIN #Temp_PlanningGroups T2 With (NOLOCK) ON (T1._Fld25112RRef = T2.ГруппаПланирования)
---	AND T2.Склад IN (select СкладНазначения From #Temp_DateAvailable)
---    AND (T1._Fld25202 >= T2.ВремяДоступностиНаСегодня)
---    AND (NOT (((@P_TimeNow >= T2.ВремяСтопаСегодня))))
---	--Inner Join #Temp_GeoData ON T1._Fld25111RRef = #Temp_GeoData.Геозона
---WHERE
---    T1._Period = @P_DateTimePeriodBegin
---	AND T1._Period IN (Select Дата From #Temp_DeliveryPower)
---	AND T1._Fld25111RRef IN (Select Геозона From #Temp_GeoData)
---GROUP BY
---    T1._Period,
---    T1._Fld25111RRef,
---	T1._Fld25112RRef,
---    T1._Fld25202,
---	T1._Fld25203,
---	T2.Основная
---HAVING
---    (
---        CAST(
---            SUM(
---                CASE
---                    WHEN (T1._RecordKind = 0.0) THEN T1._Fld25113
---                    ELSE -(T1._Fld25113)
---                END
---            ) AS NUMERIC(16, 0)
---        ) > 0.0
---    )
---OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-04-14 00:00:00'));
-----option (recompile)
-----UNION
-----ALL
---INsert into #Temp_Intervals
---SELECT
---    T3._Period,
---    T3._Fld25111RRef,
---	T3._Fld25112RRef,
---	T4.Основная,
---	T3._Fld25202 AS ВремяНачалаНачальное,
---	T3._Fld25203 AS ВремяОкончанияНачальное,
---    DATEADD(
---        SECOND,
---        CAST(
---            DATEDIFF(SECOND, @P_EmptyDate, T3._Fld25202) AS NUMERIC(12)
---        ),
---        T3._Period
---    ),
---	DATEADD(
---        SECOND,
---        CAST(
---            DATEDIFF(SECOND, @P_EmptyDate, T3._Fld25203) AS NUMERIC(12)
---        ),
---        T3._Period
---    ),
---	SUM(
---                CASE
---                    WHEN (T3._RecordKind = 0.0) THEN T3._Fld25113
---                    ELSE -(T3._Fld25113)
---                END
---            )
---FROM
---    dbo._AccumRg25110 T3 With (NOLOCK)
---    INNER JOIN #Temp_PlanningGroups T4 With (NOLOCK) ON (T3._Fld25112RRef = T4.ГруппаПланирования)
---	AND T4.Склад IN (select СкладНазначения From #Temp_DateAvailable)
---    AND (
---        (@P_TimeNow < T4.ВремяСтопаЗавтра)
---        OR (T3._Fld25202 >= T4.ВремяДоступностиНаЗавтра)
---    )
---WHERE
---    T3._Period = DATEADD(DAY, 1, @P_DateTimePeriodBegin) --bigin +1
---	AND T3._Period IN (Select Дата From #Temp_DeliveryPower)
---    AND T3._Fld25111RRef in (Select Геозона From #Temp_GeoData)
---GROUP BY
---    T3._Period,
---    T3._Fld25111RRef,
---	T3._Fld25112RRef,
---    T3._Fld25202,
---	T3._Fld25203,
---	T4.Основная
---HAVING
---    (
---        CAST(
---            SUM(
---                CASE
---                    WHEN (T3._RecordKind = 0.0) THEN T3._Fld25113
---                    ELSE -(T3._Fld25113)
---                END
---            ) AS NUMERIC(16, 0)
---        ) > 0.0
---    )
---OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-04-14 00:00:00'));
-----option (recompile)
-----UNION
-----ALL
---INsert into #Temp_Intervals
---SELECT
---    T5._Period,
---    T5._Fld25111RRef,
---	T5._Fld25112RRef,
---	T4.Основная,
---	T5._Fld25202 AS ВремяНачалаНачальное,
---	T5._Fld25203 AS ВремяОкончанияНачальное,
---    DATEADD(
---        SECOND,
---        CAST(
---            DATEDIFF(SECOND, @P_EmptyDate, T5._Fld25202) AS NUMERIC(12)
---        ),
---        T5._Period
---    ),
---	DATEADD(
---        SECOND,
---        CAST(
---            DATEDIFF(SECOND, @P_EmptyDate, T5._Fld25203) AS NUMERIC(12)
---        ),
---        T5._Period
---    ),
---	SUM(
---                CASE
---                    WHEN (T5._RecordKind = 0.0) THEN T5._Fld25113
---                    ELSE -(T5._Fld25113)
---                END
---            )
---FROM
---    dbo._AccumRg25110 T5 With (NOLOCK)
---	INNER JOIN #Temp_PlanningGroups T4 With (NOLOCK) ON (T5._Fld25112RRef = T4.ГруппаПланирования)
---	AND T4.Склад IN (select СкладНазначения From #Temp_DateAvailable)
---WHERE
---    T5._Period >= DATEADD(DAY, 2, @P_DateTimePeriodBegin) --begin +2
---    AND T5._Period <= @P_DateTimePeriodEnd --end
---	AND T5._Period IN (Select Дата From #Temp_DeliveryPower)
---    AND T5._Fld25111RRef in (Select Геозона From #Temp_GeoData) 
---GROUP BY
---    T5._Period,
---    T5._Fld25111RRef,
---	T5._Fld25112RRef,
---    T5._Fld25202,
---	T5._Fld25203,
---	T4.Основная
---HAVING
---    (
---        CAST(
---            SUM(
---                CASE
---                    WHEN (T5._RecordKind = 0.0) THEN T5._Fld25113
---                    ELSE -(T5._Fld25113)
---                END
---            ) AS NUMERIC(16, 0)
---        ) > 0.0
---    )
---OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-04-14 00:00:00',@P_DateTimePeriodEnd='4021-04-19 00:00:00'));
---;
+select Период, Max(Приоритет) AS Приоритет into #Temp_PlanningGroupPriority from #Temp_Intervals Group by Период;
+
 /*Выше закончились рассчитанные интервалы*/
 
 WITH T(date) AS (
@@ -1410,6 +1245,7 @@ From
 Inner Join #Temp_DateAvailable With (NOLOCK) 
     On #Temp_Intervals.ВремяНачала >= #Temp_DateAvailable.DateAvailable
 Inner Join #Temp_TimeService With (NOLOCK) On 1=1
+Inner Join #Temp_PlanningGroupPriority With (NOLOCK) ON #Temp_Intervals.Период = #Temp_PlanningGroupPriority.Период AND #Temp_Intervals.Приоритет = #Temp_PlanningGroupPriority.Приоритет
 Where #Temp_Intervals.Период >= DATEADD(DAY, @P_Credit, @P_DateTimePeriodBegin) -- для кредита возвращаем даты начиная со следующего дня 
 Group By 
 	#Temp_Intervals.ВремяНачала,
@@ -1450,7 +1286,8 @@ FROM
 UNION ALL
 Select 
 	#Temp_AvailablePickUp.ВремяНачала,
-	#Temp_AvailablePickUp.ВремяОкончания
+	#Temp_AvailablePickUp.ВремяОкончания,
+	0
 From #Temp_AvailablePickUp
 
 
@@ -1478,3 +1315,7 @@ DROP TABLE #Temp_DateAvailable
 DROP TABLE #Temp_DeliveryPower
 Drop TABLE #Temp_PlanningGroups
 Drop TABLE #Temp_Intervals
+Drop Table #Temp_AvailablePickUp
+Drop Table #Temp_IntervalsAll
+Drop Table #Temp_PickupPoints
+Drop Table #Temp_PlanningGroupPriority
