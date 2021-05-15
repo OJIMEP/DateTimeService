@@ -514,9 +514,22 @@ namespace DateTimeService.Controllers
 
             string zoneId = "";
 
-            bool alwaysCheckGeozone = _configuration.GetValue<bool>("alwaysCheckGeozone");
 
-            bool adressExists = _geoZones.AdressExists(connString, data.address_id);
+            bool alwaysCheckGeozone = false;
+
+            bool adressExists = false;
+
+            if (data.delivery_type == "self")
+            {
+                adressExists = true;
+                alwaysCheckGeozone = false;
+            }
+            else
+            {
+                alwaysCheckGeozone = _configuration.GetValue<bool>("alwaysCheckGeozone");
+
+                adressExists = _geoZones.AdressExists(connString, data.address_id);
+            }
 
             if (!adressExists || alwaysCheckGeozone)
             {
@@ -568,8 +581,11 @@ namespace DateTimeService.Controllers
                     //define the SqlCommand object
                     SqlCommand cmd = new(query, conn);
 
-                    cmd.Parameters.Add("@P_AddressCode", SqlDbType.NVarChar);
-                    cmd.Parameters["@P_AddressCode"].Value = data.address_id;
+                    cmd.Parameters.Add("@P_AdressCode", SqlDbType.NVarChar);
+                    cmd.Parameters["@P_AdressCode"].Value = data.address_id != null ? data.address_id : DBNull.Value;
+
+                    cmd.Parameters.Add("@PickupPoint1", SqlDbType.NVarChar);
+                    cmd.Parameters["@PickupPoint1"].Value = data.pickup_point != null ? data.pickup_point : DBNull.Value;
 
                     cmd.Parameters.Add("@P_Credit", SqlDbType.Int);
                     cmd.Parameters["@P_Credit"].Value = data.payment == "partly_pay" ? 1 : 0;

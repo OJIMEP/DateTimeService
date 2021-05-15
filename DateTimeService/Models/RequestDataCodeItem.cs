@@ -18,5 +18,10 @@ namespace DateTimeService.Models
         public int quantity { get; set; }
         [JsonPropertyName("pickup_points")]
         public string[] PickupPoints { get; set; }
+
+        public RequestDataCodeItem()
+        {
+            PickupPoints = new string[0];
+        }
     }
 }

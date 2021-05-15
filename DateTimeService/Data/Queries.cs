@@ -40,13 +40,13 @@ From dbo._Reference114 Геозона With (NOLOCK)
 	Inner Join _Reference99 ЗоныДоставкиРодитель With (NOLOCK)
 	on ЗоныДоставки._ParentIDRRef = ЗоныДоставкиРодитель._IDRRef
 where
-	((@P_GeoCode = '' OR @P_GeoCode = NULL) AND 
+	(@P_GeoCode = '' AND 
 Геозона._IDRRef IN (
 	Select Top 1 --по адресу находим геозону
 	ГеоАдрес._Fld2785RRef 
 	From dbo._Reference112 ГеоАдрес With (NOLOCK)
 	Where ГеоАдрес._Fld25155 = @P_AdressCode))
-OR (NOT(@P_GeoCode = '' OR @P_GeoCode = NULL) AND Геозона._Fld21249 = @P_GeoCode)
+OR (@P_GeoCode <> '' AND Геозона._Fld21249 = @P_GeoCode)
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 {0}
 Select _IDRRef As СкладСсылка
