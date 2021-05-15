@@ -24,7 +24,7 @@ INSERT INTO
 	)
 VALUES
 	{0}
-	;";
+	OPTION (KEEP PLAN, KEEPFIXED PLAN);";
 
 
         public const string IntervalList = @"Select
