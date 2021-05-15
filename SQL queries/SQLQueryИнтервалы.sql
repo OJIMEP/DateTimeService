@@ -49,9 +49,9 @@ DECLARE @P_MaxDate datetime;
 
  Set @P_AdressCode = '47175';--'4948900';--'47175'--'47175000000'--'3298156' --код адреса
  
-  Set @P_DateTimeNow = '4021-05-14T12:50:00' 
- Set @P_DateTimePeriodBegin = '4021-05-14T00:00:00'
- Set @P_DateTimePeriodEnd = '4021-05-18T00:00:00'
+  Set @P_DateTimeNow = '4021-05-15T12:50:00' 
+ Set @P_DateTimePeriodBegin = '4021-05-15T00:00:00'
+ Set @P_DateTimePeriodEnd = '4021-05-19T00:00:00'
  Set @P_TimeNow = '2001-01-01T12:50:00'
  Set @P_EmptyDate = '2001-01-01T00:00:00'
  Set @P_MaxDate = '5999-11-11T00:00:00'
@@ -68,6 +68,32 @@ DECLARE @P_MaxDate datetime;
 
   DECLARE @P_GeoCode nvarchar(4);
  Set @P_GeoCode = '';
+
+DECLARE @Temp_GoodsRaw Table  
+(	
+	Article nvarchar(20), 
+	code nvarchar(20), 
+    PickupPoint nvarchar(10),
+    quantity int
+)
+
+INSERT INTO 
+	@Temp_GoodsRaw ( 
+		Article, code, PickupPoint, quantity 
+	)
+VALUES
+	--(@P_Article1,@P_Code1,NULL,0),
+	--(@P_Article2,@P_Code2,NULL,0),
+	--(@P_Article1,@P_Code1,NULL,0),
+	(@P_Article3,@P_Code3,NULL,1),
+	('843414',NULL,NULL,1)
+	--(@P3,3),
+	--(@P5,4),
+	--(@P6,3),
+	--(@P7,2),
+	--(@P8,1)
+	;
+
 
 Select
 	IsNull(_Reference114_VT23370._Fld23372RRef,Геозона._Fld23104RRef) As СкладСсылка,
@@ -96,26 +122,26 @@ OPTION (KEEP PLAN, KEEPFIXED PLAN)
 Select * From #Temp_GeoData
 
 /*Создание таблицы товаров и ее наполнение данными из БД*/
-Create Table #Temp_GoodsBegin 
-(	
-	Article nvarchar(20), 
-	code nvarchar(20), 
-    quantity int
-)
+-- Create Table #Temp_GoodsBegin 
+-- (	
+-- 	Article nvarchar(20), 
+-- 	code nvarchar(20), 
+--     quantity int
+-- )
 
-INSERT INTO 
-	#Temp_GoodsBegin ( 
-		Article, code, quantity
-	)
-VALUES
-	--(@P_Article1,@P_Code1,1),
-	--(@P_Article2,@P_Code2,2)
-	(@P_Article3,Null,1)--,
-	--(@P5,4),
-	--(@P6,3),
-	--(@P7,2),
-	--(@P8,1)
-	;
+-- INSERT INTO 
+-- 	#Temp_GoodsBegin ( 
+-- 		Article, code, quantity
+-- 	)
+-- VALUES
+-- 	--(@P_Article1,@P_Code1,1),
+-- 	--(@P_Article2,@P_Code2,2)
+-- 	(@P_Article3,Null,1)--,
+-- 	--(@P5,4),
+-- 	--(@P6,3),
+-- 	--(@P7,2),
+-- 	--(@P8,1)
+-- 	;
 
 Select _IDRRef As СкладСсылка
 Into #Temp_PickupPoints
@@ -128,12 +154,12 @@ OPTION (KEEP PLAN, KEEPFIXED PLAN)
 Select 
 	Номенклатура._IDRRef AS НоменклатураСсылка,
 	Упаковки._IDRRef AS УпаковкаСсылка,
-	Sum(#Temp_GoodsBegin.quantity) As Количество	
+	Sum(T1.quantity) As Количество	
 INTO #Temp_Goods
 From 
-	#Temp_GoodsBegin 
+	@Temp_GoodsRaw T1
 	Inner Join 	dbo._Reference149 Номенклатура With (NOLOCK) 
-		ON #Temp_GoodsBegin.code is NULL and #Temp_GoodsBegin.Article = Номенклатура._Fld3480
+		ON T1.code is NULL and T1.Article = Номенклатура._Fld3480
 	Inner Join dbo._Reference256 Упаковки With (NOLOCK)
 		On 
 		Упаковки._OwnerID_TYPE = 0x08  
@@ -148,11 +174,11 @@ union
 Select 
 	Номенклатура._IDRRef,
 	Упаковки._IDRRef,
-	Sum(#Temp_GoodsBegin.quantity)	
+	Sum(T1.quantity)	
 From 
-	#Temp_GoodsBegin 
+	@Temp_GoodsRaw T1
 	Inner Join 	dbo._Reference149 Номенклатура With (NOLOCK) 
-		ON #Temp_GoodsBegin.code is not NULL and #Temp_GoodsBegin.code = Номенклатура._Code
+		ON T1.code is not NULL and T1.code = Номенклатура._Code
 	Inner Join dbo._Reference256 Упаковки With (NOLOCK)
 		On 
 		Упаковки._OwnerID_TYPE = 0x08  
@@ -1294,7 +1320,7 @@ From #Temp_AvailablePickUp
 Order by ВремяНачала
 
 Drop table #Temp_GeoData
-Drop table #Temp_GoodsBegin
+--Drop table #Temp_GoodsBegin
 Drop table #Temp_Goods
 Drop table #Temp_Dimensions
 Drop table #Temp_Size

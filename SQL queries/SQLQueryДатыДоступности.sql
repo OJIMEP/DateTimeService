@@ -59,12 +59,38 @@ SET @PickupPoint6 = '2';
 
  Set @P_CityCode = '17600'--'17030' --код адреса
 
- Set @P_DateTimeNow = '4021-05-13T12:28:00' 
- Set @P_DateTimePeriodBegin = '4021-05-13T00:00:00'
- Set @P_DateTimePeriodEnd = '4021-05-17T00:00:00'
+ Set @P_DateTimeNow = '4021-05-15T12:28:00' 
+ Set @P_DateTimePeriodBegin = '4021-05-15T00:00:00'
+ Set @P_DateTimePeriodEnd = '4021-05-19T00:00:00'
  Set @P_TimeNow = '2001-01-01T12:28:00'
  Set @P_EmptyDate = '2001-01-01T00:00:00'
  Set @P_MaxDate = '5999-11-11T00:00:00'
+
+DECLARE @Temp_GoodsRaw Table  
+(	
+	Article nvarchar(20), 
+	code nvarchar(20), 
+    PickupPoint nvarchar(10),
+    quantity int
+)
+
+INSERT INTO 
+	@Temp_GoodsRaw ( 
+		Article, code, PickupPoint, quantity 
+	)
+VALUES
+	(@P_Article1,@P_Code1,@PickupPoint3,0),
+	(@P_Article2,@P_Code2,@PickupPoint2,0),
+	(@P_Article1,@P_Code1,NULL,0),
+	(@P_Article3,@P_Code3,@PickupPoint3,0),
+	('843414',NULL,NULL,0)
+	--(@P3,3),
+	--(@P5,4),
+	--(@P6,3),
+	--(@P7,2),
+	--(@P8,1)
+	;
+
 
 Select
 	IsNull(_Reference114_VT23370._Fld23372RRef,Геозона._Fld23104RRef) As СкладСсылка,
@@ -82,30 +108,6 @@ where Геозона._IDRRef IN (
 	From dbo._Reference112 ГеоАдрес With (NOLOCK)
 	Where ГеоАдрес._Fld25552 = @P_CityCode)
 OPTION (KEEP PLAN, KEEPFIXED PLAN)
-
-DECLARE @Temp_GoodsRaw Table  
-(	
-	Article nvarchar(20), 
-	code nvarchar(20), 
-    PickupPoint nvarchar(10)
-)
-
-INSERT INTO 
-	@Temp_GoodsRaw ( 
-		Article, code, PickupPoint
-	)
-VALUES
-	(@P_Article1,@P_Code1,@PickupPoint3),
-	(@P_Article2,@P_Code2,@PickupPoint2),
-	(@P_Article1,@P_Code1,NULL),
-	(@P_Article3,@P_Code3,@PickupPoint3),
-	('843414',NULL,NULL)
-	--(@P3,3),
-	--(@P5,4),
-	--(@P6,3),
-	--(@P7,2),
-	--(@P8,1)
-	;
 
 Select 
 	Номенклатура._IDRRef AS НоменклатураСсылка,
