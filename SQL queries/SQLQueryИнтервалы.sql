@@ -108,8 +108,7 @@ From dbo._Reference114 Геозона With (NOLOCK)
 	on Геозона._Fld2847RRef = ЗоныДоставки._IDRRef
 	Inner Join _Reference99 ЗоныДоставкиРодитель With (NOLOCK)
 	on ЗоныДоставки._ParentIDRRef = ЗоныДоставкиРодитель._IDRRef
-where
-	
+where	
 	((@P_GeoCode = '' OR @P_GeoCode = NULL) AND 
 Геозона._IDRRef IN (
 	Select Top 1 --по адресу находим геозону
@@ -117,40 +116,16 @@ where
 	From dbo._Reference112 ГеоАдрес With (NOLOCK)
 	Where ГеоАдрес._Fld25155 = @P_AdressCode))
 OR (NOT(@P_GeoCode = '' OR @P_GeoCode = NULL) AND Геозона._Fld21249 = @P_GeoCode) 
-OPTION (KEEP PLAN, KEEPFIXED PLAN)
-
-Select * From #Temp_GeoData
-
-/*Создание таблицы товаров и ее наполнение данными из БД*/
--- Create Table #Temp_GoodsBegin 
--- (	
--- 	Article nvarchar(20), 
--- 	code nvarchar(20), 
---     quantity int
--- )
-
--- INSERT INTO 
--- 	#Temp_GoodsBegin ( 
--- 		Article, code, quantity
--- 	)
--- VALUES
--- 	--(@P_Article1,@P_Code1,1),
--- 	--(@P_Article2,@P_Code2,2)
--- 	(@P_Article3,Null,1)--,
--- 	--(@P5,4),
--- 	--(@P6,3),
--- 	--(@P7,2),
--- 	--(@P8,1)
--- 	;
+OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
 Select _IDRRef As СкладСсылка
 Into #Temp_PickupPoints
 From dbo._Reference226 Склады 
 Where Склады._Fld19544 = @PickupPoint1
-OPTION (KEEP PLAN, KEEPFIXED PLAN)
+OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
---select * from #Temp_PickupPoints
 
+/*Создание таблицы товаров и ее наполнение данными из БД*/
 Select 
 	Номенклатура._IDRRef AS НоменклатураСсылка,
 	Упаковки._IDRRef AS УпаковкаСсылка,
@@ -189,9 +164,7 @@ From
 Group By 
 	Номенклатура._IDRRef,
 	Упаковки._IDRRef
-OPTION (KEEP PLAN, KEEPFIXED PLAN)
-
-;
+OPTION (KEEP PLAN, KEEPFIXED PLAN);
 /*Конец товаров*/
 
 /*Размеры корзины в целом для расчета габаритов*/
@@ -206,7 +179,7 @@ Into #Temp_Size
 FROM #Temp_Goods T1 WITH(NOLOCK)
 INNER JOIN dbo._Reference256 T2 With (NOLOCK) 
 ON (T2._IDRRef = T1.УпаковкаСсылка) AND (T1.УпаковкаСсылка <> 0x00000000000000000000000000000000)
-
+OPTION (KEEP PLAN, KEEPFIXED PLAN);
 /*Габарит корзины общий*/
 SELECT
     TOP 1 CASE
@@ -241,7 +214,7 @@ FROM
     INNER JOIN dbo._Const21338 T4 ON 1 = 1
     INNER JOIN dbo._Const21336 T5 ON 1 = 1
     INNER JOIN dbo._Const21579 T6 ON 1 = 1
-OPTION (KEEP PLAN, KEEPFIXED PLAN)
+OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
 SELECT
     COUNT_BIG(T1.НоменклатураСсылка) AS КоличествоСтрок,
@@ -341,8 +314,7 @@ GROUP BY
         AND (T2._Fld6000 < 50.0) THEN (T3.Fld26616_ * @P_Floor)
         ELSE 0.0
     END
-OPTION (KEEP PLAN, KEEPFIXED PLAN)
-;
+OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
 SELECT Distinct
     CASE
@@ -379,8 +351,7 @@ FROM
             ) T3
             INNER JOIN dbo._InfoRg24088 T5 ON T3.MAXPERIOD_ = T5._Period
     ) T3 ON 1 = 1
-OPTION (KEEP PLAN, KEEPFIXED PLAN)
-;
+OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
 SELECT
     T2.Fld24090_ * SUM(T1.КоличествоСтрок) AS УсловиеКоличествоСтрок,
@@ -458,8 +429,8 @@ GROUP BY
     T2.Fld26614_,
     T2.Fld24099_,
     T2.Fld24100_
-OPTION (KEEP PLAN, KEEPFIXED PLAN)
-;
+OPTION (KEEP PLAN, KEEPFIXED PLAN);
+
 /*Время обслуживания началось выше и тут итоговая цифра*/
 SELECT
     ISNULL(T2.МинимальноеВремя, 0) + ISNULL(T2.УсловиеКоличествоСтрок, 0) + ISNULL(T1.УсловиеМинскЧас, 0) + ISNULL(T2.УсловиеЭтажМассаОбщ, 0) + ISNULL(T2.УсловиеВесОбъем, 0) + ISNULL(T1.УсловиеСпособОплаты, 0) AS ВремяВыполнения
@@ -468,8 +439,7 @@ FROM
     #Temp_TimeByOrders T1 WITH(NOLOCK)
     LEFT OUTER JOIN #Temp_Time1 T2 WITH(NOLOCK)
     ON 1 = 1
-OPTION (KEEP PLAN, KEEPFIXED PLAN)
-;
+OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
 /*Группа планирования*/
 Select ГруппыПланирования._IDRRef AS ГруппаПланирования,
@@ -487,8 +457,6 @@ dbo._Reference23294 ГруппыПланирования With (NOLOCK)
 	Inner Join dbo._Reference23294_VT23309 With (NOLOCK)
 		on ГруппыПланирования._IDRRef = _Reference23294_VT23309._Reference23294_IDRRef
 		and _Reference23294_VT23309._Fld23311RRef in (Select ЗонаДоставкиРодительСсылка From #Temp_GeoData)
-	--AND 
-	--ГруппыПланирования._Fld23302RRef IN (Select СкладНазначения From #Temp_DateAvailable) --склад
 	AND ГруппыПланирования._Fld25141 = 0x01--участвует в расчете мощности
 	AND ГруппыПланирования._Fld23301RRef IN (Select Габарит From #Temp_Dimensions With (NOLOCK))  --габариты
 	AND ГруппыПланирования._Marked = 0x00
@@ -514,13 +482,11 @@ Where
 	--ГруппыПланирования._Fld23302RRef IN (Select СкладНазначения From #Temp_DateAvailable) --склад
 	--AND 
 	ГруппыПланирования._Fld25141 = 0x01--участвует в расчете мощности
-	--AND ГруппыПланирования._Fld23301RRef IN (Select Габарит From #Temp_Dimensions)  --габариты
 	AND ГруппыПланирования._Marked = 0x00
-	--AND NOT ПодчиненнаяГП._IDRRef = NULL
 OPTION (KEEP PLAN, KEEPFIXED PLAN)
 ;
 
-select * from #Temp_PlanningGroups;
+--select * from #Temp_PlanningGroups;
 
 /*Отсюда начинается процесс получения оптимальной даты отгрузки*/
 With Temp_ExchangeRates AS (
@@ -583,8 +549,7 @@ HAVING
     (SUM(T2._Fld21412) <> 0.0
     OR SUM(T2._Fld21411) <> 0.0)
 	AND SUM(T2._Fld21412) - SUM(T2._Fld21411) <> 0.0
-OPTION (OPTIMIZE FOR (@P_DateTimeNow='4021-05-13T00:00:00'),KEEP PLAN, KEEPFIXED PLAN)
-;
+OPTION (OPTIMIZE FOR (@P_DateTimeNow='4021-05-13T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
 
 SELECT Distinct
     T1._Fld23831RRef AS СкладИсточника,
@@ -598,8 +563,7 @@ FROM
 	ON T1._Fld23831RRef = #Temp_Remains.СкладИсточника
 	AND T1._Fld23832 = #Temp_Remains.ДатаСобытия
 	AND T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData UNION ALL Select СкладСсылка From #Temp_PickupPoints)
-OPTION (KEEP PLAN, KEEPFIXED PLAN)   
-;
+OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
 SELECT
 	T1._Fld23831RRef AS СкладИсточника,
@@ -621,7 +585,6 @@ GROUP BY T1._Fld23831RRef,
 T1._Fld23833RRef
 OPTION (OPTIMIZE FOR (@P_DateTimeNow='4021-05-13T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
 
-;
 
 SELECT
     T1.НоменклатураСсылка,
@@ -692,10 +655,8 @@ FROM
 WHERE
     NOT T6.Регистратор_RRRef IS NULL
 	And T6.Источник_RTRef = 0x00000153
-OPTION (KEEP PLAN, KEEPFIXED PLAN)
-;
+OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
-;
 With TempSourcesGrouped AS
 (
 Select
@@ -721,15 +682,12 @@ From
 		Left Join TempSourcesGrouped AS Источник2
 		On Источники1.НоменклатураСсылка = Источник2.НоменклатураСсылка
 		AND Источники1.СкладНазначения = Источник2.СкладНазначения
-			AND Источники1.ДатаДоступности >= Источник2.ДатаДоступности
-	
+			AND Источники1.ДатаДоступности >= Источник2.ДатаДоступности	
 Group by
 	Источники1.НоменклатураСсылка,
 	Источники1.ДатаДоступности,
 	Источники1.СкладНазначения
-OPTION (KEEP PLAN, KEEPFIXED PLAN)
-;
-
+OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
 With Temp_ExchangeRates AS (
 SELECT
@@ -738,7 +696,7 @@ SELECT
 	T1._Fld14559 AS Курс,
 	T1._Fld14560 AS Кратность
 FROM _InfoRgSL26678 T1 With (NOLOCK)
-	)
+)
 SELECT
     T1.НоменклатураСсылка,
 	T1.Количество,
@@ -768,8 +726,8 @@ FROM
         AND T1.Источник_RTRef = Резервирование._RecorderTRef
         AND T1.Источник_RRRef = Резервирование._RecorderRRef
     )
-OPTION (KEEP PLAN, KEEPFIXED PLAN)
-;
+OPTION (KEEP PLAN, KEEPFIXED PLAN);
+
 With Temp_SupplyDocs AS
 (
 SELECT
@@ -815,7 +773,7 @@ GROUP BY
     T2.ЦенаИсточника,
     T2.ЦенаИсточникаМинус,
     T2.ДатаДоступности
-OPTION (KEEP PLAN, KEEPFIXED PLAN)
+OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
 SELECT
     T1.НоменклатураСсылка,
@@ -836,16 +794,19 @@ FROM
     AND (T1.ДатаДоступности = T2.ДатаДоступности)
     AND (T1.СкладНазначения = T2.СкладНазначения)
     AND (T1.ТипИсточника = 3)
-OPTION (KEEP PLAN, KEEPFIXED PLAN)
-;
+OPTION (KEEP PLAN, KEEPFIXED PLAN);
+
 With Temp_ClosestDate AS
-(SELECT
-T1.НоменклатураСсылка,
-T1.СкладНазначения,
-MIN(T1.ДатаДоступности) AS ДатаДоступности
-FROM #Temp_Sources T1 WITH(NOLOCK)
-GROUP BY T1.НоменклатураСсылка,
-T1.СкладНазначения
+(
+    SELECT
+    T1.НоменклатураСсылка,
+    T1.СкладНазначения,
+    MIN(T1.ДатаДоступности) AS ДатаДоступности
+FROM 
+    #Temp_Sources T1 WITH(NOLOCK)
+GROUP BY 
+    T1.НоменклатураСсылка,
+    T1.СкладНазначения
 )
 Select 
 	T4.НоменклатураСсылка AS НоменклатураСсылка,
@@ -899,7 +860,7 @@ Group By
 Group by 
 	T4.НоменклатураСсылка,
 	T4.СкладНазначения
-OPTION (KEEP PLAN, KEEPFIXED PLAN)
+OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
 Select
     Top 1 
@@ -908,7 +869,8 @@ Select
 Into #Temp_DateAvailable
 from #Temp_ClosestDatesByGoods With (NOLOCK)
 Group by СкладНазначения
-Order by DateAvailable ASC;
+Order by DateAvailable ASC
+OPTION (KEEP PLAN, KEEPFIXED PLAN);
 /*Тут закончился процесс оптимальной даты. Склад назначения нужен чтоб потом правильную ГП выбрать*/
 
 /*Интервалы для ПВЗ*/
@@ -931,8 +893,7 @@ WITH Tdate(date, СкладНазначения) AS (
 		AND Tdate.СкладНазначения = #Temp_DateAvailable.СкладНазначения
 		AND #Temp_DateAvailable.СкладНазначения in (select СкладСсылка From #Temp_PickupPoints)
 )
-SELECT
-	
+SELECT	
 	CASE 
 	WHEN 
 		DATEADD(
@@ -1009,7 +970,6 @@ SELECT
 Into #Temp_DeliveryPower
 FROM
     dbo._AccumRg25104 МощностиДоставки With (NOLOCK),
-	--Inner Join #Temp_DateAvailable On CAST(CAST(МощностиДоставки._Period  AS DATE) AS DATETIME) >= CAST(CAST(#Temp_DateAvailable.DateAvailable  AS DATE) AS DATETIME),
 	#Temp_Size With (NOLOCK),
 	#Temp_TimeService With (NOLOCK)
 WHERE
@@ -1043,9 +1003,6 @@ Having
             END
         ) > #Temp_TimeService.ВремяВыполнения	
 OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-05-13T00:00:00',@P_DateTimePeriodEnd='4021-05-17T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
-
-
-
 
 /*Тут начинаются интервалы, которые рассчитанные*/
 SELECT
@@ -1146,7 +1103,7 @@ Group By
 	#Temp_IntervalsAll.Геозона,
 	--T2._Fld25137,
 	#Temp_IntervalsAll.Приоритет
-OPTION (KEEP PLAN, KEEPFIXED PLAN)
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-05-13T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
 ;
 
 INsert into #Temp_Intervals
@@ -1189,7 +1146,7 @@ Group By
 	#Temp_IntervalsAll.ГруппаПланирования,
 	#Temp_IntervalsAll.Геозона,
 	#Temp_IntervalsAll.Приоритет
-OPTION (KEEP PLAN, KEEPFIXED PLAN) 
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-05-13T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
 ;
 
 INsert into #Temp_Intervals
@@ -1209,11 +1166,10 @@ DATEADD(
         #Temp_IntervalsAll.Период
     ) AS ВремяОкончания,
 	Sum(#Temp_IntervalsAll.КоличествоЗаказовЗаИнтервалВремени) AS КоличествоЗаказовЗаИнтервалВремени,
-#Temp_IntervalsAll.Период,
-#Temp_IntervalsAll.ГруппаПланирования,
-#Temp_IntervalsAll.Геозона,
-#Temp_IntervalsAll.Приоритет
-
+    #Temp_IntervalsAll.Период,
+    #Temp_IntervalsAll.ГруппаПланирования,
+    #Temp_IntervalsAll.Геозона,
+    #Temp_IntervalsAll.Приоритет
 from #Temp_IntervalsAll
 	Inner Join _Reference114_VT25126 ГеоЗонаВременныеИнтервалы With (NOLOCK)
 		On #Temp_IntervalsAll.Геозона = ГеоЗонаВременныеИнтервалы._Reference114_IDRRef
@@ -1229,13 +1185,9 @@ Group By
 	#Temp_IntervalsAll.ГруппаПланирования,
 	#Temp_IntervalsAll.Геозона,
 	#Temp_IntervalsAll.Приоритет
-OPTION (KEEP PLAN, KEEPFIXED PLAN)
-;
-
-select * from #Temp_Intervals
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-05-13T00:00:00',@P_DateTimePeriodEnd='4021-05-17T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
 
 select Период, Max(Приоритет) AS Приоритет into #Temp_PlanningGroupPriority from #Temp_Intervals Group by Период;
-
 /*Выше закончились рассчитанные интервалы*/
 
 WITH T(date) AS (
@@ -1315,12 +1267,10 @@ Select
 	#Temp_AvailablePickUp.ВремяОкончания,
 	0
 From #Temp_AvailablePickUp
-
-
 Order by ВремяНачала
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-05-13T00:00:00',@P_DateTimePeriodEnd='4021-05-17T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
 
 Drop table #Temp_GeoData
---Drop table #Temp_GoodsBegin
 Drop table #Temp_Goods
 Drop table #Temp_Dimensions
 Drop table #Temp_Size
