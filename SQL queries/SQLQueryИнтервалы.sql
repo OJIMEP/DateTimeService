@@ -29,7 +29,7 @@ DECLARE @P_MaxDate datetime;
 
  SET @P_Article1 = '358649'; --артикулы
  SET @P_Article2 = '424941';
- SET @P_Article3 = '843414';
+ SET @P_Article3 = '69516';
  SET @P_Article4 = '5962720';
  SET @P_Article5 = '6167903';
  SET @P_Article6 = '6167903';
@@ -49,10 +49,10 @@ DECLARE @P_MaxDate datetime;
 
  Set @P_AdressCode = '47175';--'4948900';--'47175'--'47175000000'--'3298156' --код адреса
  
-  Set @P_DateTimeNow = '4021-05-15T12:50:00' 
+  Set @P_DateTimeNow = '4021-05-15T20:50:00' 
  Set @P_DateTimePeriodBegin = '4021-05-15T00:00:00'
  Set @P_DateTimePeriodEnd = '4021-05-19T00:00:00'
- Set @P_TimeNow = '2001-01-01T12:50:00'
+ Set @P_TimeNow = '2001-01-01T20:50:00'
  Set @P_EmptyDate = '2001-01-01T00:00:00'
  Set @P_MaxDate = '5999-11-11T00:00:00'
 
@@ -67,7 +67,7 @@ DECLARE @P_MaxDate datetime;
  Set @P_DaysToShow = 7;
 
   DECLARE @P_GeoCode nvarchar(4);
- Set @P_GeoCode = '';
+ Set @P_GeoCode = '28';
 
 DECLARE @Temp_GoodsRaw Table  
 (	
@@ -85,8 +85,8 @@ VALUES
 	--(@P_Article1,@P_Code1,NULL,0),
 	--(@P_Article2,@P_Code2,NULL,0),
 	--(@P_Article1,@P_Code1,NULL,0),
-	(@P_Article3,@P_Code3,NULL,1),
-	('843414',NULL,NULL,1)
+	(@P_Article3,@P_Code3,NULL,1)--,
+	--('843414',NULL,NULL,1)
 	--(@P3,3),
 	--(@P5,4),
 	--(@P6,3),
@@ -108,14 +108,14 @@ From dbo._Reference114 Геозона With (NOLOCK)
 	on Геозона._Fld2847RRef = ЗоныДоставки._IDRRef
 	Inner Join _Reference99 ЗоныДоставкиРодитель With (NOLOCK)
 	on ЗоныДоставки._ParentIDRRef = ЗоныДоставкиРодитель._IDRRef
-where	
-	((@P_GeoCode = '' OR @P_GeoCode = NULL) AND 
+where		
+	(@P_GeoCode = '' AND 
 Геозона._IDRRef IN (
 	Select Top 1 --по адресу находим геозону
 	ГеоАдрес._Fld2785RRef 
 	From dbo._Reference112 ГеоАдрес With (NOLOCK)
 	Where ГеоАдрес._Fld25155 = @P_AdressCode))
-OR (NOT(@P_GeoCode = '' OR @P_GeoCode = NULL) AND Геозона._Fld21249 = @P_GeoCode) 
+OR (@P_GeoCode <> '' AND Геозона._Fld21249 = @P_GeoCode) 
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
 Select _IDRRef As СкладСсылка
@@ -124,6 +124,7 @@ From dbo._Reference226 Склады
 Where Склады._Fld19544 = @PickupPoint1
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
+select * from #Temp_GeoData
 
 /*Создание таблицы товаров и ее наполнение данными из БД*/
 Select 

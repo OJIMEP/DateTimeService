@@ -14,7 +14,8 @@ namespace DateTimeService.Data
 	code nvarchar(20), 
     PickupPoint nvarchar(10),
     quantity int
-);";
+)
+;";
 
         public const string CreateTableGoodsRawInsert = @"
 INSERT INTO 
