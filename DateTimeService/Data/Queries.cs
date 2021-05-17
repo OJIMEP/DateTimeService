@@ -17,6 +17,15 @@ namespace DateTimeService.Data
 )
 ;";
 
+        public const string CreateTypeGoodsRaw = @"USE [tempdb]
+IF TYPE_ID(N'dbo.GoodsRawTableType') IS NULL
+CREATE TYPE dbo.GoodsRawTableType AS TABLE  
+    ( Article nvarchar(20), 
+	code nvarchar(20), 
+    PickupPoint nvarchar(10),
+    quantity int ) 
+;";
+
         public const string CreateTableGoodsRawInsert = @"
 INSERT INTO 
 	#Temp_GoodsRaw ( 
@@ -24,10 +33,28 @@ INSERT INTO
 	)
 VALUES
 	{0}
-	OPTION (KEEP PLAN, KEEPFIXED PLAN);";
+	OPTION (KEEP PLAN, KEEPFIXED PLAN)
+;";
 
 
-        public const string IntervalList = @"Select
+        public const string IntervalList = @"
+
+DECLARE  @Temp_GoodsRaw Table  
+(	
+	Article nvarchar(20), 
+	code nvarchar(20), 
+    PickupPoint nvarchar(10),
+    quantity int
+);
+
+INSERT INTO 
+	@Temp_GoodsRaw ( 
+		Article, code, PickupPoint, quantity 
+	)
+Select Article, code, PickupPoint, quantity 
+From #Temp_GoodsRaw;
+
+Select
 	IsNull(_Reference114_VT23370._Fld23372RRef,Геозона._Fld23104RRef) As СкладСсылка,
 	ЗоныДоставки._ParentIDRRef As ЗонаДоставкиРодительСсылка,
 	ЗоныДоставкиРодитель._Description AS ЗонаДоставкиРодительНаименование,
@@ -64,7 +91,7 @@ Select
 	Sum(T1.quantity) As Количество	
 INTO #Temp_Goods
 From 
-	#Temp_GoodsRaw T1
+	@Temp_GoodsRaw T1
 	Inner Join 	dbo._Reference149 Номенклатура With (NOLOCK) 
 		ON T1.code is NULL and T1.Article = Номенклатура._Fld3480
 	Inner Join dbo._Reference256 Упаковки With (NOLOCK)
@@ -83,7 +110,7 @@ Select
 	Упаковки._IDRRef,
 	Sum(T1.quantity)	
 From 
-	#Temp_GoodsRaw T1
+	@Temp_GoodsRaw T1
 	Inner Join 	dbo._Reference149 Номенклатура With (NOLOCK) 
 		ON T1.code is not NULL and T1.code = Номенклатура._Code
 	Inner Join dbo._Reference256 Упаковки With (NOLOCK)
@@ -1204,6 +1231,23 @@ OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'), 
 
         public const string AvailableDate = @"
 {0}
+
+DECLARE  @Temp_GoodsRaw Table  
+(	
+	Article nvarchar(20), 
+	code nvarchar(20), 
+    PickupPoint nvarchar(10),
+    quantity int
+);
+
+INSERT INTO 
+	@Temp_GoodsRaw ( 
+		Article, code, PickupPoint, quantity 
+	)
+Select Article, code, PickupPoint, quantity 
+From #Temp_GoodsRaw;
+
+
 Select
 	IsNull(_Reference114_VT23370._Fld23372RRef,Геозона._Fld23104RRef) As СкладСсылка,
 	ЗоныДоставки._ParentIDRRef As ЗонаДоставкиРодительСсылка,
@@ -1226,7 +1270,7 @@ Select
 	Склады._IDRRef AS СкладПВЗСсылка
 INTO #Temp_GoodsBegin
 From
-	#Temp_GoodsRaw T1
+	@Temp_GoodsRaw T1
 	Inner Join 	dbo._Reference149 Номенклатура With (NOLOCK) 
 		ON T1.code is NULL and T1.Article = Номенклатура._Fld3480
 	Left Join dbo._Reference226 Склады 
@@ -1236,7 +1280,7 @@ Select
 	Номенклатура._IDRRef,
 	Склады._IDRRef
 From 
-	#Temp_GoodsRaw T1
+	@Temp_GoodsRaw T1
 	Inner Join 	dbo._Reference149 Номенклатура With (NOLOCK) 
 		ON T1.code is not NULL and T1.code = Номенклатура._Code
 	Left Join dbo._Reference226 Склады 

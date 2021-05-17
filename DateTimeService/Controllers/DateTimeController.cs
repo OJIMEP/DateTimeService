@@ -283,6 +283,18 @@ namespace DateTimeService.Controllers
                 //define the SqlCommand object
                 SqlCommand cmd = new(query, conn);
 
+                //cmd.Parameters.AddWithValue("@Temp_GoodsRaw", FillGoodsTableParameter(data));
+
+                //string queryGoodsCreateType = Queries.CreateTypeGoodsRaw;
+
+                //SqlCommand cmdGoodsTableCreate = new(queryGoodsCreateType, conn);
+
+                //var GoodsRowsCreate = cmdGoodsTableCreate.ExecuteNonQuery();
+
+                //cmd.Parameters.Add("@Temp_GoodsRaw", SqlDbType.Structured);
+                //cmd.Parameters["@Temp_GoodsRaw"].Value = FillGoodsTableParameter(data);
+                //cmd.Parameters["@Temp_GoodsRaw"].TypeName = "dbo.GoodsRawTableType";
+
                 cmd.Parameters.Add("@P_CityCode", SqlDbType.NVarChar, 10);
                 cmd.Parameters["@P_CityCode"].Value = data.city_id;
 
@@ -753,6 +765,58 @@ namespace DateTimeService.Controllers
             cmdGoodsTable.CommandText = string.Format(queryGoods, string.Join(", ", parameters));
 
             var GoodsRows = cmdGoodsTable.ExecuteNonQuery();
+        }
+
+        private static DataTable FillGoodsTableParameter(RequestDataAvailableDate data)
+        {
+
+            var table = new DataTable();
+            table.Columns.Add("Article", typeof(string));
+            table.Columns.Add("code", typeof(string));
+            table.Columns.Add("PickupPoint", typeof(string));
+            table.Columns.Add("quantity", typeof(string));
+
+            foreach (var codesElem in data.codes)
+            {
+
+
+                var row = table.NewRow();
+
+                row["Article"] = codesElem.article;
+
+                if (String.IsNullOrEmpty(codesElem.code))
+                    row["code"] = DBNull.Value;
+                else
+                    row["code"] = codesElem.code;
+
+
+                row["PickupPoint"] = DBNull.Value;
+                row["Quantity"] = codesElem.quantity;
+
+                table.Rows.Add(row);
+
+               
+                foreach (var pickupElem in codesElem.PickupPoints)
+                {
+                    var rowPickup = table.NewRow();
+
+                    rowPickup["Article"] = codesElem.article;
+
+                    if (String.IsNullOrEmpty(codesElem.code))
+                        rowPickup["code"] = DBNull.Value;
+                    else
+                        rowPickup["code"] = codesElem.code;
+
+
+                    rowPickup["PickupPoint"] = pickupElem;
+                    rowPickup["Quantity"] = codesElem.quantity;
+
+                    table.Rows.Add(rowPickup);
+                }
+                
+            }
+
+            return table;
         }
 
     }
