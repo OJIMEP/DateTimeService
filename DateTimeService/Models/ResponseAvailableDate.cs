@@ -9,15 +9,15 @@ namespace DateTimeService.Models
     {
         public List<string> article { get; set; }
         public List<string> code { get; set; }
-        public List<DateTime> courier { get; set; }
-        public List<DateTime> self { get; set; }
+        public List<DateTimeOffset> courier { get; set; }
+        public List<DateTimeOffset> self { get; set; }
 
         public ResponseAvailableDate()
         {
             article = new List<string>();
             code = new List<string>();
-            courier = new List<DateTime>();
-            self = new List<DateTime>();
+            courier = new List<DateTimeOffset>();
+            self = new List<DateTimeOffset>();
         }
 
 

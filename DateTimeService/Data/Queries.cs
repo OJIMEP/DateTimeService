@@ -1245,7 +1245,9 @@ INSERT INTO
 		Article, code, PickupPoint, quantity 
 	)
 Select Article, code, PickupPoint, quantity 
-From #Temp_GoodsRaw;
+From #Temp_GoodsRaw
+--Option (Recompile)
+;
 
 
 Select

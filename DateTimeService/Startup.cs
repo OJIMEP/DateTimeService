@@ -37,7 +37,7 @@ namespace DateTimeService
 
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
-            services.AddControllers();
+            services.AddControllers(options => options.Filters.Add(typeof(Filters.ConnectionResetExceptionFilter)));
 
             // For Entity Framework  
             services.AddDbContext<DateTimeServiceContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DateTimeServiceContextConnection")));
@@ -91,28 +91,14 @@ namespace DateTimeService
             services.AddScoped<IGeoZones, GeoZones>();
 
             services.AddSwaggerGen();
-            //c =>
-            //{
-            //    c.SwaggerDoc("v1", new OpenApiInfo
-            //    {
-            //        Version = "v1",
-            //        Title = "DateTime API",
-            //        Description = "API для получения дат и интервалов доставки и самовывоза",
-            //        Contact = new OpenApiContact
-            //        {
-            //            Name = "Андрей Бородавко",
-            //            Email = "a.borodavko@21vek.by",
-            //        }
-            //    });
-            //});
-
+            
         }
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory)
         {
 
             //app.UseCors(builder => builder.AllowAnyHeader().AllowAnyMethod().SetIsOriginAllowedToAllowWildcardSubdomains().WithOrigins("https://*.21vek.by", "https://localhost*", "https://*.swagger.io"));
-            app.UseCors(builder => builder.AllowAnyHeader().AllowAnyMethod().SetIsOriginAllowedToAllowWildcardSubdomains().WithOrigins("*"));
+            app.UseCors(builder => builder.AllowAnyHeader().AllowAnyMethod().SetIsOriginAllowedToAllowWildcardSubdomains().WithOrigins(Configuration["AllowedHosts"]));
 
             app.UseStaticFiles();
             app.UseSwagger();
@@ -139,7 +125,7 @@ namespace DateTimeService
 
             //loggerFactory = LoggerFactory.Create(builder => builder.ClearProviders());
 
-            loggerFactory.AddHttp("192.168.2.16", 5048);
+            loggerFactory.AddHttp(Configuration["loggerHost"], Configuration.GetValue<int>("loggerPort"));
             var logger = loggerFactory.CreateLogger("HttpLogger");           
 
             

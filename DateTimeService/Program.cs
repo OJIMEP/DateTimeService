@@ -57,7 +57,7 @@ namespace DateTimeService
             Host.CreateDefaultBuilder(args)
                 .ConfigureLogging(logging =>
                 {
-                    logging.ClearProviders();
+                    //logging.ClearProviders();
                 })
                 .ConfigureWebHostDefaults(webBuilder =>
                 {

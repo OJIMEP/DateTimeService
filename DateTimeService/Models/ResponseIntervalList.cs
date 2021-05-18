@@ -16,9 +16,26 @@ namespace DateTimeService.Models
 
     }
 
+    public class ResponseIntervalListWithOffSet
+    {
+        public List<ResponseIntervalListElementWithOffSet> data { get; set; }
+
+        public ResponseIntervalListWithOffSet()
+        {
+            data = new List<ResponseIntervalListElementWithOffSet>();
+        }
+
+    }
+
     public class ResponseIntervalListElement
     {
         public DateTime begin { get; set; }
         public DateTime end { get; set; }
+    }
+
+    public class ResponseIntervalListElementWithOffSet
+    {
+        public DateTimeOffset begin { get; set; }
+        public DateTimeOffset end { get; set; }
     }
 }

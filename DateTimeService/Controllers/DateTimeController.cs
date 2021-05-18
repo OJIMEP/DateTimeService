@@ -279,21 +279,13 @@ namespace DateTimeService.Controllers
 
                 FillGoodsTable(data, conn);
 
+                if (_configuration.GetValue<bool>("disableKeepFixedPlan"))
+                {
+                    query = query.Replace(", KEEPFIXED PLAN", "");
+                }
 
                 //define the SqlCommand object
                 SqlCommand cmd = new(query, conn);
-
-                //cmd.Parameters.AddWithValue("@Temp_GoodsRaw", FillGoodsTableParameter(data));
-
-                //string queryGoodsCreateType = Queries.CreateTypeGoodsRaw;
-
-                //SqlCommand cmdGoodsTableCreate = new(queryGoodsCreateType, conn);
-
-                //var GoodsRowsCreate = cmdGoodsTableCreate.ExecuteNonQuery();
-
-                //cmd.Parameters.Add("@Temp_GoodsRaw", SqlDbType.Structured);
-                //cmd.Parameters["@Temp_GoodsRaw"].Value = FillGoodsTableParameter(data);
-                //cmd.Parameters["@Temp_GoodsRaw"].TypeName = "dbo.GoodsRawTableType";
 
                 cmd.Parameters.Add("@P_CityCode", SqlDbType.NVarChar, 10);
                 cmd.Parameters["@P_CityCode"].Value = data.city_id;
@@ -376,8 +368,8 @@ namespace DateTimeService.Controllers
 
                         dbResult.article.Add(article);
                         dbResult.code.Add(code);
-                        dbResult.courier.Add(availableDateCourier);
-                        dbResult.self.Add(availableDateSelf);
+                        dbResult.courier.Add(new(availableDateCourier));
+                        dbResult.self.Add(new(availableDateSelf));
                     }
                 }
 
@@ -584,6 +576,10 @@ namespace DateTimeService.Controllers
 
                     string query = Queries.IntervalList;
 
+                    if (_configuration.GetValue<bool>("disableKeepFixedPlan"))
+                    {
+                        query = query.Replace(", KEEPFIXED PLAN", "");
+                    }
 
                     var DateMove = DateTime.Now.AddMonths(24000);
                     var TimeNow = new DateTime(2001, 1, 1, DateMove.Hour, DateMove.Minute, DateMove.Second);
@@ -656,6 +652,8 @@ namespace DateTimeService.Controllers
                     //execute the SQLCommand
                     SqlDataReader dr = cmd.ExecuteReader();
 
+                    var resultLog = new ResponseIntervalListWithOffSet();
+
                     //check if there are records
                     if (dr.HasRows)
                     {
@@ -668,6 +666,12 @@ namespace DateTimeService.Controllers
                             {
                                 begin = begin,
                                 end = end
+                            });
+
+                            resultLog.data.Add(new ResponseIntervalListElementWithOffSet
+                            {
+                                begin = new(begin),
+                                end = new(end)
                             });
                         }
                     }
@@ -682,7 +686,7 @@ namespace DateTimeService.Controllers
                     conn.Close();
 
                     logElement.TimeSQLExecution = sqlCommandExecutionTime;
-                    logElement.ResponseContent = JsonSerializer.Serialize(result);
+                    logElement.ResponseContent = JsonSerializer.Serialize(resultLog);
                     logElement.Status = "Ok";
                 }
                 catch (Exception ex)
