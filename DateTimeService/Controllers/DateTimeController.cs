@@ -194,6 +194,7 @@ namespace DateTimeService.Controllers
                 AuthenticatedUser = User.Identity.Name
             };
 
+
             string connString;
             Stopwatch watch = new();
             watch.Start();
@@ -226,6 +227,9 @@ namespace DateTimeService.Controllers
                 LoadBalancingExecution = watch.ElapsedMilliseconds
             };
 
+            logElement.AdditionalData.Add(new KeyValuePair<string, string>("Referer",Request.Headers["Referer"].ToString()));
+            logElement.AdditionalData.Add(new KeyValuePair<string, string>("User-Agent", Request.Headers["User-Agent"].ToString()));
+            logElement.AdditionalData.Add(new KeyValuePair<string, string>("RemoteIpAddress", Request.HttpContext.Connection.RemoteIpAddress.ToString())); 
 
             watch.Reset();
 
@@ -480,6 +484,10 @@ namespace DateTimeService.Controllers
                 AuthenticatedUser = User.Identity.Name,
                 LoadBalancingExecution = watch.ElapsedMilliseconds
             };
+
+            logElement.AdditionalData.Add(new KeyValuePair<string, string>("Referer", Request.Headers["Referer"].ToString()));
+            logElement.AdditionalData.Add(new KeyValuePair<string, string>("User-Agent", Request.Headers["Referer"].ToString()));
+            logElement.AdditionalData.Add(new KeyValuePair<string, string>("RemoteIpAddress", Request.HttpContext.Connection.RemoteIpAddress.ToString()));
 
             watch.Reset();
 
