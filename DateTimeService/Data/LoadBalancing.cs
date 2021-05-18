@@ -44,7 +44,7 @@ namespace DateTimeService.Data
                 foreach (var connParametr in connectionParameters)
                 {
                     percentCounter += connParametr.Priority;
-                    if (timeMS <= percentCounter || firstAvailable)
+                    if ((timeMS <= percentCounter && connParametr.Priority != 0) || firstAvailable)
                         try
                         {
                             var queryStringCheck = "";
