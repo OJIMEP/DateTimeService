@@ -281,7 +281,11 @@ namespace DateTimeService.Controllers
                 var EmptyDate = new DateTime(2001, 1, 1, 0, 0, 0);
                 var MaxDate = new DateTime(5999, 11, 11, 0, 0, 0);
 
-                FillGoodsTable(data, conn);
+                SqlCommand cmd = new(query, conn);
+
+                //FillGoodsTable(data, conn);
+
+                var queryTextBegin = TextFillGoodsTable(data, cmd);
 
                 if (_configuration.GetValue<bool>("disableKeepFixedPlan"))
                 {
@@ -289,7 +293,7 @@ namespace DateTimeService.Controllers
                 }
 
                 //define the SqlCommand object
-                SqlCommand cmd = new(query, conn);
+                
 
                 cmd.Parameters.Add("@P_CityCode", SqlDbType.NVarChar, 10);
                 cmd.Parameters["@P_CityCode"].Value = data.city_id;
@@ -348,7 +352,7 @@ namespace DateTimeService.Controllers
                 //    }
                 //}
 
-                cmd.CommandText = string.Format(query, "",
+                cmd.CommandText = queryTextBegin +  string.Format(query, "",
                     DateMove.Date.ToString("yyyy-MM-ddTHH:mm:ss"),
                     DateMove.Date.ToString("yyyy-MM-ddTHH:mm:ss"),
                     DateMove.Date.AddDays(Parameters1C.First(x => x.Name.Contains("rsp_КоличествоДнейЗаполненияГрафика")).ValueDouble - 1).ToString("yyyy-MM-ddTHH:mm:ss"),
@@ -580,9 +584,15 @@ namespace DateTimeService.Controllers
                     //open connection
                     conn.Open();
 
-                    FillGoodsTable(data, conn);
-
                     string query = Queries.IntervalList;
+
+                    SqlCommand cmd = new(query, conn);
+
+                    //FillGoodsTable(data, conn);
+
+                    var queryTextBegin = TextFillGoodsTable(data, cmd);
+
+                    
 
                     if (_configuration.GetValue<bool>("disableKeepFixedPlan"))
                     {
@@ -595,7 +605,7 @@ namespace DateTimeService.Controllers
                     var MaxDate = new DateTime(5999, 11, 11, 0, 0, 0);
 
                     //define the SqlCommand object
-                    SqlCommand cmd = new(query, conn);
+                    //SqlCommand cmd = new(query, conn);
 
                     cmd.Parameters.Add("@P_AdressCode", SqlDbType.NVarChar);
                     cmd.Parameters["@P_AdressCode"].Value = data.address_id != null ? data.address_id : DBNull.Value;
@@ -648,7 +658,7 @@ namespace DateTimeService.Controllers
                     //    cmd.Parameters.AddWithValue(string.Format("@Quantity{0}", i), data.orderItems[i].quantity);
                     //}
 
-                    cmd.CommandText = string.Format(query, "",
+                    cmd.CommandText = queryTextBegin + string.Format(query, "",
                         DateMove.Date.ToString("yyyy-MM-ddTHH:mm:ss"),
                         DateMove.Date.ToString("yyyy-MM-ddTHH:mm:ss"),
                         DateMove.Date.AddDays(Parameters1C.First(x => x.Name.Contains("rsp_КоличествоДнейЗаполненияГрафика")).ValueDouble - 1).ToString("yyyy-MM-ddTHH:mm:ss"),
@@ -829,6 +839,59 @@ namespace DateTimeService.Controllers
             }
 
             return table;
+        }
+
+
+        private static string TextFillGoodsTable(RequestIntervalList data, SqlCommand cmdGoodsTable)
+        {
+            RequestDataAvailableDate convertedData = new()
+            {
+                codes = data.orderItems.ToArray()
+            };
+
+            return TextFillGoodsTable(convertedData, cmdGoodsTable);
+        }
+
+        private static string TextFillGoodsTable(RequestDataAvailableDate data, SqlCommand cmdGoodsTable)
+        {
+
+          
+            string queryGoods = Queries.CreateTableGoodsRawCreate + Queries.CreateTableGoodsRawInsert;
+
+            var parameters = new List<string>();//string[data.codes.Length];
+
+            var codesCounter = 0;
+            var pickupPointsCounter = 0;
+
+            foreach (var codesElem in data.codes)
+            {
+
+                var parameterString = string.Format("(@Article{0}, @Code{0}, NULL, @Quantity{0})", codesCounter);
+
+                cmdGoodsTable.Parameters.AddWithValue(string.Format("@Article{0}", codesCounter), codesElem.article);
+                if (String.IsNullOrEmpty(codesElem.code))
+                    cmdGoodsTable.Parameters.AddWithValue(string.Format("@Code{0}", codesCounter), DBNull.Value);
+                else
+                    cmdGoodsTable.Parameters.AddWithValue(string.Format("@Code{0}", codesCounter), codesElem.code);
+                cmdGoodsTable.Parameters.AddWithValue(string.Format("@Quantity{0}", codesCounter), codesElem.quantity);
+
+                parameters.Add(parameterString);
+
+                foreach (var pickupElem in codesElem.PickupPoints)
+                {
+                    var parameterStringPickup = string.Format("(@Article{0}, @Code{0}, @PickupPoint{1}, @Quantity{0})", codesCounter, pickupPointsCounter);
+
+                    cmdGoodsTable.Parameters.AddWithValue(string.Format("@PickupPoint{0}", pickupPointsCounter), pickupElem);
+
+                    parameters.Add(parameterStringPickup);
+
+                    pickupPointsCounter++;
+                }
+                codesCounter++;
+            }
+
+            return string.Format(queryGoods, string.Join(", ", parameters));
+
         }
 
     }

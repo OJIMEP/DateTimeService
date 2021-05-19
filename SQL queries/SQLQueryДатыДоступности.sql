@@ -57,15 +57,15 @@ SET @PickupPoint4 = '417';
 SET @PickupPoint5 = '234';
 SET @PickupPoint6 = '2';
 
- Set @P_CityCode = '17600'--'17030' --код адреса
+ Set @P_CityCode = '17030'--'17030' --код адреса
 
 DECLARE @P_DaysToShow numeric(2);
  Set @P_DaysToShow = 7;
 
- Set @P_DateTimeNow = '4021-05-15T12:28:00' 
- Set @P_DateTimePeriodBegin = '4021-05-15T00:00:00'
- Set @P_DateTimePeriodEnd = '4021-05-19T00:00:00'
- Set @P_TimeNow = '2001-01-01T12:28:00'
+ Set @P_DateTimeNow = '4021-05-19T16:28:00' 
+ Set @P_DateTimePeriodBegin = '4021-05-19T00:00:00'
+ Set @P_DateTimePeriodEnd = '4021-05-23T00:00:00'
+ Set @P_TimeNow = '2001-01-01T16:28:00'
  Set @P_EmptyDate = '2001-01-01T00:00:00'
  Set @P_MaxDate = '5999-11-11T00:00:00'
 
@@ -612,67 +612,79 @@ GROUP BY
 	T1.СкладНазначения
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
+Select 
+	Max(ДатаСоСклада) AS МаксимальнаяДата,
+	Min(ДатаСоСклада) AS МинимальнаяДата,
+	СкладНазначения
+Into #Temp_PickupDatesGroup
+From 
+	#Temp_ShipmentDatesPickUp
+Group By
+	СкладНазначения
+OPTION (KEEP PLAN, KEEPFIXED PLAN);
+
 /*Это получение списка дат интервалов ПВЗ*/
-WITH Tdate(date, НоменклатураСсылка, СкладНазначения) AS (    
+WITH Tdate(date, Склад) AS (    
     SELECT         
-		CAST(CAST(#Temp_ShipmentDatesPickUp.ДатаСоСклада  AS DATE) AS DATETIME), 		
-		#Temp_ShipmentDatesPickUp.НоменклатураСсылка,
-		#Temp_ShipmentDatesPickUp.СкладНазначения
-	From #Temp_ShipmentDatesPickUp
+		CAST(CAST(#Temp_PickupDatesGroup.МинимальнаяДата  AS DATE) AS DATETIME),
+		СкладНазначения
+	From #Temp_PickupDatesGroup
     UNION
     ALL
     SELECT 
         DateAdd(day, 1, Tdate.date),
-		#Temp_ShipmentDatesPickUp.НоменклатураСсылка,
-		#Temp_ShipmentDatesPickUp.СкладНазначения
+		СкладНазначения
     FROM
         Tdate
-		Inner Join #Temp_ShipmentDatesPickUp 
-		ON Tdate.date < DateAdd(DAY, @P_DaysToShow, CAST(CAST(#Temp_ShipmentDatesPickUp.ДатаСоСклада  AS DATE) AS DATETIME))
-		AND Tdate.НоменклатураСсылка = #Temp_ShipmentDatesPickUp.НоменклатураСсылка
-		AND Tdate.СкладНазначения = #Temp_ShipmentDatesPickUp.СкладНазначения
+		Inner Join #Temp_PickupDatesGroup 
+		ON Tdate.date < DateAdd(DAY, @P_DaysToShow, CAST(CAST(#Temp_PickupDatesGroup.МаксимальнаяДата  AS DATE) AS DATETIME))
+		AND Склад = СкладНазначения
 )
+Select 
+	DATEADD(
+		SECOND,
+		CAST(
+			DATEDIFF(SECOND, @P_EmptyDate, ПВЗГрафикРаботы._Fld23617) AS NUMERIC(12)
+		),
+		date) AS ВремяНачала,
+	DATEADD(
+		SECOND,
+		CAST(
+			DATEDIFF(SECOND, @P_EmptyDate, ПВЗГрафикРаботы._Fld23618) AS NUMERIC(12)
+		),
+		date) AS ВремяОкончания,
+	Tdate.Склад AS СкладНазначения
+INTO #Temp_PickupWorkingHours
+From 
+	Tdate
+	Inner Join dbo._Reference226 Склады 
+		ON Склады._IDRRef = Tdate.Склад
+	Inner Join _Reference23612 
+		On Склады._Fld23620RRef = _Reference23612._IDRRef
+	Inner Join _Reference23612_VT23613 As ПВЗГрафикРаботы 
+		On _Reference23612._IDRRef = _Reference23612_IDRRef
+			AND (case when DATEPART ( dw , Tdate.date ) = 1 then 7 else DATEPART ( dw , Tdate.date ) -1 END) = ПВЗГрафикРаботы._Fld23615
+			AND ПВЗГрафикРаботы._Fld25265 = 0x00 --не выходной
+;			
+
+
 SELECT
 	#Temp_ShipmentDatesPickUp.НоменклатураСсылка,
 	#Temp_ShipmentDatesPickUp.article,
 	#Temp_ShipmentDatesPickUp.code,
 	Min(CASE 
 	WHEN 
-		DATEADD(
-			SECOND,
-			CAST(
-				DATEDIFF(SECOND, @P_EmptyDate, ПВЗГрафикРаботы._Fld23617) AS NUMERIC(12)
-			),
-			date
-		) < #Temp_ShipmentDatesPickUp.ДатаСоСклада 
+		#Temp_PickupWorkingHours.ВремяНачала < #Temp_ShipmentDatesPickUp.ДатаСоСклада 
 		then #Temp_ShipmentDatesPickUp.ДатаСоСклада
 	Else
-		DATEADD(
-			SECOND,
-			CAST(
-				DATEDIFF(SECOND, @P_EmptyDate, ПВЗГрафикРаботы._Fld23617) AS NUMERIC(12)
-			),
-			date
-		)
+		#Temp_PickupWorkingHours.ВремяНачала
 	End) As ВремяНачала
 Into #Temp_AvailablePickUp
 FROM
     #Temp_ShipmentDatesPickUp
-		Inner Join Tdate On 
-			#Temp_ShipmentDatesPickUp.НоменклатураСсылка = Tdate.НоменклатураСсылка
-			And #Temp_ShipmentDatesPickUp.СкладНазначения = Tdate.СкладНазначения
-		Inner Join dbo._Reference226 Склады ON Склады._IDRRef = #Temp_ShipmentDatesPickUp.СкладНазначения
-			Inner Join _Reference23612 On Склады._Fld23620RRef = _Reference23612._IDRRef
-				Inner Join _Reference23612_VT23613 As ПВЗГрафикРаботы 
-				On _Reference23612._IDRRef = _Reference23612_IDRRef
-				AND (case when DATEPART ( dw , Tdate.date ) = 1 then 7 else DATEPART ( dw , Tdate.date ) -1 END) = ПВЗГрафикРаботы._Fld23615
-					AND ПВЗГрафикРаботы._Fld25265 = 0x00 --не выходной				
-		WHERE DATEADD(
-			SECOND,
-			CAST(
-            DATEDIFF(SECOND, @P_EmptyDate, ПВЗГрафикРаботы._Fld23618) AS NUMERIC(12)
-			),
-			Tdate.date) > #Temp_ShipmentDatesPickUp.ДатаСоСклада 	 
+		Inner Join #Temp_PickupWorkingHours
+		On #Temp_PickupWorkingHours.СкладНазначения = #Temp_ShipmentDatesPickUp.СкладНазначения
+		And #Temp_PickupWorkingHours.ВремяОкончания > #Temp_ShipmentDatesPickUp.ДатаСоСклада 	 
 Group by
 	#Temp_ShipmentDatesPickUp.НоменклатураСсылка,
 	#Temp_ShipmentDatesPickUp.article,
@@ -919,3 +931,4 @@ Drop Table #Temp_T3
 DROP TABLE #Temp_ShipmentDatesPickUp
 DROP TABLE #Temp_AvailableCourier
 DROP TABLE #Temp_AvailablePickUp
+DROP TABLE #Temp_PickupDatesGroup

@@ -17,15 +17,6 @@ namespace DateTimeService.Data
 )
 ;";
 
-        public const string CreateTypeGoodsRaw = @"USE [tempdb]
-IF TYPE_ID(N'dbo.GoodsRawTableType') IS NULL
-CREATE TYPE dbo.GoodsRawTableType AS TABLE  
-    ( Article nvarchar(20), 
-	code nvarchar(20), 
-    PickupPoint nvarchar(10),
-    quantity int ) 
-;";
-
         public const string CreateTableGoodsRawInsert = @"
 INSERT INTO 
 	#Temp_GoodsRaw ( 
@@ -38,22 +29,6 @@ VALUES
 
 
         public const string IntervalList = @"
-
-DECLARE  @Temp_GoodsRaw Table  
-(	
-	Article nvarchar(20), 
-	code nvarchar(20), 
-    PickupPoint nvarchar(10),
-    quantity int
-);
-
-INSERT INTO 
-	@Temp_GoodsRaw ( 
-		Article, code, PickupPoint, quantity 
-	)
-Select Article, code, PickupPoint, quantity 
-From #Temp_GoodsRaw;
-
 Select
 	IsNull(_Reference114_VT23370._Fld23372RRef,Геозона._Fld23104RRef) As СкладСсылка,
 	ЗоныДоставки._ParentIDRRef As ЗонаДоставкиРодительСсылка,
@@ -91,7 +66,7 @@ Select
 	Sum(T1.quantity) As Количество	
 INTO #Temp_Goods
 From 
-	@Temp_GoodsRaw T1
+	#Temp_GoodsRaw T1
 	Inner Join 	dbo._Reference149 Номенклатура With (NOLOCK) 
 		ON T1.code is NULL and T1.Article = Номенклатура._Fld3480
 	Inner Join dbo._Reference256 Упаковки With (NOLOCK)
@@ -110,7 +85,7 @@ Select
 	Упаковки._IDRRef,
 	Sum(T1.quantity)	
 From 
-	@Temp_GoodsRaw T1
+	#Temp_GoodsRaw T1
 	Inner Join 	dbo._Reference149 Номенклатура With (NOLOCK) 
 		ON T1.code is not NULL and T1.code = Номенклатура._Code
 	Inner Join dbo._Reference256 Упаковки With (NOLOCK)
@@ -1232,22 +1207,6 @@ OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'), 
         public const string AvailableDate = @"
 {0}
 
-DECLARE  @Temp_GoodsRaw Table  
-(	
-	Article nvarchar(20), 
-	code nvarchar(20), 
-    PickupPoint nvarchar(10),
-    quantity int
-);
-
-INSERT INTO 
-	@Temp_GoodsRaw ( 
-		Article, code, PickupPoint, quantity 
-	)
-Select Article, code, PickupPoint, quantity 
-From #Temp_GoodsRaw
---Option (Recompile)
-;
 
 
 Select
@@ -1272,7 +1231,7 @@ Select
 	Склады._IDRRef AS СкладПВЗСсылка
 INTO #Temp_GoodsBegin
 From
-	@Temp_GoodsRaw T1
+	#Temp_GoodsRaw T1
 	Inner Join 	dbo._Reference149 Номенклатура With (NOLOCK) 
 		ON T1.code is NULL and T1.Article = Номенклатура._Fld3480
 	Left Join dbo._Reference226 Склады 
@@ -1282,7 +1241,7 @@ Select
 	Номенклатура._IDRRef,
 	Склады._IDRRef
 From 
-	@Temp_GoodsRaw T1
+	#Temp_GoodsRaw T1
 	Inner Join 	dbo._Reference149 Номенклатура With (NOLOCK) 
 		ON T1.code is not NULL and T1.code = Номенклатура._Code
 	Left Join dbo._Reference226 Склады 
@@ -1767,67 +1726,79 @@ GROUP BY
 	T1.СкладНазначения
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
+Select 
+	Max(ДатаСоСклада) AS МаксимальнаяДата,
+	Min(ДатаСоСклада) AS МинимальнаяДата,
+	СкладНазначения
+Into #Temp_PickupDatesGroup
+From 
+	#Temp_ShipmentDatesPickUp
+Group By
+	СкладНазначения
+OPTION (KEEP PLAN, KEEPFIXED PLAN);
+
 /*Это получение списка дат интервалов ПВЗ*/
-WITH Tdate(date, НоменклатураСсылка, СкладНазначения) AS (    
+WITH Tdate(date, Склад) AS (    
     SELECT         
-		CAST(CAST(#Temp_ShipmentDatesPickUp.ДатаСоСклада  AS DATE) AS DATETIME), 		
-		#Temp_ShipmentDatesPickUp.НоменклатураСсылка,
-		#Temp_ShipmentDatesPickUp.СкладНазначения
-	From #Temp_ShipmentDatesPickUp
+		CAST(CAST(#Temp_PickupDatesGroup.МинимальнаяДата  AS DATE) AS DATETIME),
+		СкладНазначения
+	From #Temp_PickupDatesGroup
     UNION
     ALL
     SELECT 
         DateAdd(day, 1, Tdate.date),
-		#Temp_ShipmentDatesPickUp.НоменклатураСсылка,
-		#Temp_ShipmentDatesPickUp.СкладНазначения
+		СкладНазначения
     FROM
         Tdate
-		Inner Join #Temp_ShipmentDatesPickUp 
-		ON Tdate.date < DateAdd(DAY, @P_DaysToShow, CAST(CAST(#Temp_ShipmentDatesPickUp.ДатаСоСклада  AS DATE) AS DATETIME))
-		AND Tdate.НоменклатураСсылка = #Temp_ShipmentDatesPickUp.НоменклатураСсылка
-		AND Tdate.СкладНазначения = #Temp_ShipmentDatesPickUp.СкладНазначения
+		Inner Join #Temp_PickupDatesGroup 
+		ON Tdate.date < DateAdd(DAY, @P_DaysToShow, CAST(CAST(#Temp_PickupDatesGroup.МаксимальнаяДата  AS DATE) AS DATETIME))
+		AND Склад = СкладНазначения
 )
+Select 
+	DATEADD(
+		SECOND,
+		CAST(
+			DATEDIFF(SECOND, @P_EmptyDate, ПВЗГрафикРаботы._Fld23617) AS NUMERIC(12)
+		),
+		date) AS ВремяНачала,
+	DATEADD(
+		SECOND,
+		CAST(
+			DATEDIFF(SECOND, @P_EmptyDate, ПВЗГрафикРаботы._Fld23618) AS NUMERIC(12)
+		),
+		date) AS ВремяОкончания,
+	Tdate.Склад AS СкладНазначения
+INTO #Temp_PickupWorkingHours
+From 
+	Tdate
+	Inner Join dbo._Reference226 Склады 
+		ON Склады._IDRRef = Tdate.Склад
+	Inner Join _Reference23612 
+		On Склады._Fld23620RRef = _Reference23612._IDRRef
+	Inner Join _Reference23612_VT23613 As ПВЗГрафикРаботы 
+		On _Reference23612._IDRRef = _Reference23612_IDRRef
+			AND (case when DATEPART ( dw , Tdate.date ) = 1 then 7 else DATEPART ( dw , Tdate.date ) -1 END) = ПВЗГрафикРаботы._Fld23615
+			AND ПВЗГрафикРаботы._Fld25265 = 0x00 --не выходной
+;			
+
+
 SELECT
 	#Temp_ShipmentDatesPickUp.НоменклатураСсылка,
 	#Temp_ShipmentDatesPickUp.article,
 	#Temp_ShipmentDatesPickUp.code,
 	Min(CASE 
 	WHEN 
-		DATEADD(
-			SECOND,
-			CAST(
-				DATEDIFF(SECOND, @P_EmptyDate, ПВЗГрафикРаботы._Fld23617) AS NUMERIC(12)
-			),
-			date
-		) < #Temp_ShipmentDatesPickUp.ДатаСоСклада 
+		#Temp_PickupWorkingHours.ВремяНачала < #Temp_ShipmentDatesPickUp.ДатаСоСклада 
 		then #Temp_ShipmentDatesPickUp.ДатаСоСклада
 	Else
-		DATEADD(
-			SECOND,
-			CAST(
-				DATEDIFF(SECOND, @P_EmptyDate, ПВЗГрафикРаботы._Fld23617) AS NUMERIC(12)
-			),
-			date
-		)
+		#Temp_PickupWorkingHours.ВремяНачала
 	End) As ВремяНачала
 Into #Temp_AvailablePickUp
 FROM
     #Temp_ShipmentDatesPickUp
-		Inner Join Tdate On 
-			#Temp_ShipmentDatesPickUp.НоменклатураСсылка = Tdate.НоменклатураСсылка
-			And #Temp_ShipmentDatesPickUp.СкладНазначения = Tdate.СкладНазначения
-		Inner Join dbo._Reference226 Склады ON Склады._IDRRef = #Temp_ShipmentDatesPickUp.СкладНазначения
-			Inner Join _Reference23612 On Склады._Fld23620RRef = _Reference23612._IDRRef
-				Inner Join _Reference23612_VT23613 As ПВЗГрафикРаботы 
-				On _Reference23612._IDRRef = _Reference23612_IDRRef
-				AND (case when DATEPART ( dw , Tdate.date ) = 1 then 7 else DATEPART ( dw , Tdate.date ) -1 END) = ПВЗГрафикРаботы._Fld23615
-					AND ПВЗГрафикРаботы._Fld25265 = 0x00 --не выходной				
-		WHERE DATEADD(
-			SECOND,
-			CAST(
-            DATEDIFF(SECOND, @P_EmptyDate, ПВЗГрафикРаботы._Fld23618) AS NUMERIC(12)
-			),
-			Tdate.date) > #Temp_ShipmentDatesPickUp.ДатаСоСклада 	 
+		Inner Join #Temp_PickupWorkingHours
+		On #Temp_PickupWorkingHours.СкладНазначения = #Temp_ShipmentDatesPickUp.СкладНазначения
+		And #Temp_PickupWorkingHours.ВремяОкончания > #Temp_ShipmentDatesPickUp.ДатаСоСклада 	 
 Group by
 	#Temp_ShipmentDatesPickUp.НоменклатураСсылка,
 	#Temp_ShipmentDatesPickUp.article,
