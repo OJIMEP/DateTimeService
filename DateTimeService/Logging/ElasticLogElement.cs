@@ -20,7 +20,7 @@ namespace DateTimeService
         public long TimeLocationExecution { get; set; }
         public long LoadBalancingExecution { get; set; }
         public long GlobalParametersExecution { get; set; }
-        public List<KeyValuePair<string, string>> AdditionalData{ get; set; }
+        public Dictionary<string, string> AdditionalData { get; set; }
 
         public ElasticLogElement()
         {

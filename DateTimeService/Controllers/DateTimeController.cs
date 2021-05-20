@@ -227,9 +227,10 @@ namespace DateTimeService.Controllers
                 LoadBalancingExecution = watch.ElapsedMilliseconds
             };
 
-            logElement.AdditionalData.Add(new KeyValuePair<string, string>("Referer",Request.Headers["Referer"].ToString()));
-            logElement.AdditionalData.Add(new KeyValuePair<string, string>("User-Agent", Request.Headers["User-Agent"].ToString()));
-            logElement.AdditionalData.Add(new KeyValuePair<string, string>("RemoteIpAddress", Request.HttpContext.Connection.RemoteIpAddress.ToString())); 
+            logElement.AdditionalData.Add("Referer",Request.Headers["Referer"].ToString());
+            logElement.AdditionalData.Add("User-Agent", Request.Headers["User-Agent"].ToString());
+            logElement.AdditionalData.Add("RemoteIpAddress", Request.HttpContext.Connection.RemoteIpAddress.ToString()); 
+
 
             watch.Reset();
 
@@ -290,6 +291,7 @@ namespace DateTimeService.Controllers
                 if (_configuration.GetValue<bool>("disableKeepFixedPlan"))
                 {
                     query = query.Replace(", KEEPFIXED PLAN", "");
+                    queryTextBegin = queryTextBegin.Replace(", KEEPFIXED PLAN", "");
                 }
 
                 //define the SqlCommand object
@@ -489,9 +491,9 @@ namespace DateTimeService.Controllers
                 LoadBalancingExecution = watch.ElapsedMilliseconds
             };
 
-            logElement.AdditionalData.Add(new KeyValuePair<string, string>("Referer", Request.Headers["Referer"].ToString()));
-            logElement.AdditionalData.Add(new KeyValuePair<string, string>("User-Agent", Request.Headers["Referer"].ToString()));
-            logElement.AdditionalData.Add(new KeyValuePair<string, string>("RemoteIpAddress", Request.HttpContext.Connection.RemoteIpAddress.ToString()));
+            logElement.AdditionalData.Add("Referer", Request.Headers["Referer"].ToString());
+            logElement.AdditionalData.Add("User-Agent", Request.Headers["Referer"].ToString());
+            logElement.AdditionalData.Add("RemoteIpAddress", Request.HttpContext.Connection.RemoteIpAddress.ToString());
 
             watch.Reset();
 
@@ -597,6 +599,7 @@ namespace DateTimeService.Controllers
                     if (_configuration.GetValue<bool>("disableKeepFixedPlan"))
                     {
                         query = query.Replace(", KEEPFIXED PLAN", "");
+                        queryTextBegin = queryTextBegin.Replace(", KEEPFIXED PLAN", "");
                     }
 
                     var DateMove = DateTime.Now.AddMonths(24000);
@@ -607,10 +610,10 @@ namespace DateTimeService.Controllers
                     //define the SqlCommand object
                     //SqlCommand cmd = new(query, conn);
 
-                    cmd.Parameters.Add("@P_AdressCode", SqlDbType.NVarChar);
+                    cmd.Parameters.Add("@P_AdressCode", SqlDbType.NVarChar, 20);
                     cmd.Parameters["@P_AdressCode"].Value = data.address_id != null ? data.address_id : DBNull.Value;
 
-                    cmd.Parameters.Add("@PickupPoint1", SqlDbType.NVarChar);
+                    cmd.Parameters.Add("@PickupPoint1", SqlDbType.NVarChar,5);
                     cmd.Parameters["@PickupPoint1"].Value = data.pickup_point != null ? data.pickup_point : DBNull.Value;
 
                     cmd.Parameters.Add("@P_Credit", SqlDbType.Int);
@@ -860,20 +863,57 @@ namespace DateTimeService.Controllers
 
             var parameters = new List<string>();//string[data.codes.Length];
 
-            var codesCounter = 0;
+            //var codesCounter = 0;
             var pickupPointsCounter = 0;
+
+            var maxPickups = 0;
+
+            var maxCodes = data.codes.Length;
 
             foreach (var codesElem in data.codes)
             {
+                maxPickups = maxPickups > codesElem.PickupPoints.Length ? maxPickups : codesElem.PickupPoints.Length;
+            }
+
+            if (maxPickups > 2) maxPickups = 7;
+
+            if (data.codes.Length > 2) maxCodes = 10;
+            if (data.codes.Length > 10) maxCodes = 30;
+            if (data.codes.Length > 30) maxCodes = 60;
+            if (data.codes.Length > 60) maxCodes = 100;
+            if (data.codes.Length > maxCodes) maxCodes = data.codes.Length;
+
+            for (int codesCounter = 0; codesCounter < maxCodes; codesCounter++)
+            {
+
+                RequestDataCodeItem codesElem;
+                if (codesCounter< data.codes.Length)
+                {
+                    codesElem = data.codes[codesCounter];
+                }
+                else
+                {
+                    codesElem = data.codes[data.codes.Length-1];
+                }
+                
+
 
                 var parameterString = string.Format("(@Article{0}, @Code{0}, NULL, @Quantity{0})", codesCounter);
 
-                cmdGoodsTable.Parameters.AddWithValue(string.Format("@Article{0}", codesCounter), codesElem.article);
+                
+                //cmdGoodsTable.Parameters.AddWithValue(string.Format("@Article{0}", codesCounter), codesElem.article);
+                cmdGoodsTable.Parameters.Add(string.Format("@Article{0}", codesCounter), SqlDbType.NVarChar, 11);
+                cmdGoodsTable.Parameters[string.Format("@Article{0}", codesCounter)].Value = codesElem.article;
+
+                cmdGoodsTable.Parameters.Add(string.Format("@Code{0}", codesCounter), SqlDbType.NVarChar, 11);
                 if (String.IsNullOrEmpty(codesElem.code))
-                    cmdGoodsTable.Parameters.AddWithValue(string.Format("@Code{0}", codesCounter), DBNull.Value);
+                    cmdGoodsTable.Parameters[string.Format("@Code{0}", codesCounter)].Value = DBNull.Value;
                 else
-                    cmdGoodsTable.Parameters.AddWithValue(string.Format("@Code{0}", codesCounter), codesElem.code);
-                cmdGoodsTable.Parameters.AddWithValue(string.Format("@Quantity{0}", codesCounter), codesElem.quantity);
+                    cmdGoodsTable.Parameters[string.Format("@Code{0}", codesCounter)].Value = codesElem.code;
+
+                //cmdGoodsTable.Parameters.AddWithValue(string.Format("@Quantity{0}", codesCounter), codesElem.quantity);
+                cmdGoodsTable.Parameters.Add(string.Format("@Quantity{0}", codesCounter), SqlDbType.Int, 10);
+                cmdGoodsTable.Parameters[string.Format("@Quantity{0}", codesCounter)].Value = codesElem.quantity;
 
                 parameters.Add(parameterString);
 
@@ -881,13 +921,31 @@ namespace DateTimeService.Controllers
                 {
                     var parameterStringPickup = string.Format("(@Article{0}, @Code{0}, @PickupPoint{1}, @Quantity{0})", codesCounter, pickupPointsCounter);
 
-                    cmdGoodsTable.Parameters.AddWithValue(string.Format("@PickupPoint{0}", pickupPointsCounter), pickupElem);
+                    //cmdGoodsTable.Parameters.AddWithValue(string.Format("@PickupPoint{0}", pickupPointsCounter), pickupElem);
+
+                    cmdGoodsTable.Parameters.Add(string.Format("@PickupPoint{0}", pickupPointsCounter), SqlDbType.NVarChar, 4);
+                    cmdGoodsTable.Parameters[string.Format("@PickupPoint{0}", pickupPointsCounter)].Value = pickupElem;
 
                     parameters.Add(parameterStringPickup);
 
                     pickupPointsCounter++;
                 }
-                codesCounter++;
+
+                while (pickupPointsCounter < maxPickups)
+                {
+                    var parameterStringPickup = string.Format("(@Article{0}, @Code{0}, @PickupPoint{1}, @Quantity{0})", codesCounter, pickupPointsCounter);
+
+                    //cmdGoodsTable.Parameters.AddWithValue(string.Format("@PickupPoint{0}", pickupPointsCounter), DBNull.Value);
+
+                    cmdGoodsTable.Parameters.Add(string.Format("@PickupPoint{0}", pickupPointsCounter), SqlDbType.NVarChar, 4);
+                    cmdGoodsTable.Parameters[string.Format("@PickupPoint{0}", pickupPointsCounter)].Value = DBNull.Value;
+
+                    parameters.Add(parameterStringPickup);
+
+                    pickupPointsCounter++;
+                }                
+
+                //codesCounter++;
             }
 
             return string.Format(queryGoods, string.Join(", ", parameters));

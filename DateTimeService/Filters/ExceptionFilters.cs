@@ -22,6 +22,8 @@ namespace DateTimeService.Filters
                     Content = $"В методе {actionName} возникло исключение: \n {exceptionMessage} \n {exceptionStack}"
                 };
                 context.ExceptionHandled = true;
+
+                
             }
             return Task.CompletedTask;
         }

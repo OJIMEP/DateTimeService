@@ -50,6 +50,7 @@ namespace DateTimeService
                     {
                         logElement.ErrorDescription += ";" + exception.Message;
                         logElement.Status = "Error";
+                        logElement.AdditionalData.Add("StackTrace", exception.StackTrace);
                     }
 
                     var logstringElement = JsonSerializer.Serialize(logElement);
