@@ -404,45 +404,63 @@ namespace DateTimeService.Controllers
             }
 
             var resultDict = new ResponseAvailableDateDict();
-            foreach (var codeItem in data.codes)
+
+            try
             {
-                var resultElement = new ResponseAvailableDateDictElement
+                foreach (var codeItem in data.codes)
                 {
-                    code = codeItem.article,
-                    sales_code = codeItem.sales_code,
-                    courier = null,
-                    self = null
-                };
 
-                int dbResultIndex = -1;
-                if (String.IsNullOrEmpty(codeItem.code))
-                {
-                    dbResultIndex = dbResult.article.FindIndex(s => s == codeItem.article);
-                }
-                else
-                {
-                    dbResultIndex = dbResult.code.FindIndex(s => s == codeItem.code);
-                }
+                    if (data.codes.Length == 0 || (data.codes.Length == 1 && data.codes[0] == null))
+                    {
+                        break;
+                    }
 
-                if (dbResultIndex == -1)
-                    continue;
+                    var resultElement = new ResponseAvailableDateDictElement
+                    {
+                        code = codeItem.article,
+                        sales_code = codeItem.sales_code,
+                        courier = null,
+                        self = null
+                    };
 
-                resultElement.courier = data.delivery_types.Contains("courier")
-                    ? dbResult.courier[dbResultIndex].Date.ToString("yyyy-MM-ddTHH:mm:ss")
-                    : null;
-                resultElement.self = data.delivery_types.Contains("self")
-                    ? dbResult.self[dbResultIndex].Date.ToString("yyyy-MM-ddTHH:mm:ss")
-                    : null;
+                    int dbResultIndex = -1;
+                    if (String.IsNullOrEmpty(codeItem.code))
+                    {
+                        dbResultIndex = dbResult.article.FindIndex(s => s == codeItem.article);
+                    }
+                    else
+                    {
+                        dbResultIndex = dbResult.code.FindIndex(s => s == codeItem.code);
+                    }
 
-                if (String.IsNullOrEmpty(codeItem.code))
-                {
-                    resultDict.data.Add(codeItem.article, resultElement);
-                }
-                else
-                {
-                    resultDict.data.Add(String.Concat(codeItem.article, "_", codeItem.sales_code), resultElement);
+                    if (dbResultIndex == -1)
+                        continue;
+
+                    resultElement.courier = data.delivery_types.Contains("courier")
+                        ? dbResult.courier[dbResultIndex].Date.ToString("yyyy-MM-ddTHH:mm:ss")
+                        : null;
+                    resultElement.self = data.delivery_types.Contains("self")
+                        ? dbResult.self[dbResultIndex].Date.ToString("yyyy-MM-ddTHH:mm:ss")
+                        : null;
+
+                    if (String.IsNullOrEmpty(codeItem.code))
+                    {
+                        resultDict.data.Add(codeItem.article, resultElement);
+                    }
+                    else
+                    {
+                        resultDict.data.Add(String.Concat(codeItem.article, "_", codeItem.sales_code), resultElement);
+                    }
                 }
             }
+            catch(Exception ex)
+            {
+                logElement.TimeSQLExecution = sqlCommandExecutionTime;
+                logElement.ErrorDescription = ex.Message;
+                logElement.Status = "Error";
+            }
+            
+            
             watch.Stop();
             logElement.TimeSQLExecutionFact = watch.ElapsedMilliseconds;
 

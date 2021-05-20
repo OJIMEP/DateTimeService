@@ -38,5 +38,9 @@ namespace DateTimeService.Models
         [Required, MinLength(1), JsonPropertyName("codeItems")]
         public RequestDataCodeItem[] codes { get; set; }
 
+        public RequestDataAvailableDate()
+        {
+            codes = Array.Empty<RequestDataCodeItem>();
+        }
     }
 }
