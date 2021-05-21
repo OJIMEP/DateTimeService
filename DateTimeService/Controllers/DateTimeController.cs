@@ -882,24 +882,45 @@ namespace DateTimeService.Controllers
             var parameters = new List<string>();//string[data.codes.Length];
 
             //var codesCounter = 0;
-            var pickupPointsCounter = 0;
+            //var pickupPointsCounter = 0;
 
             var maxPickups = 0;
+            List<string> PickupsList = new();
 
             var maxCodes = data.codes.Length;
 
             foreach (var codesElem in data.codes)
             {
-                maxPickups = maxPickups > codesElem.PickupPoints.Length ? maxPickups : codesElem.PickupPoints.Length;
+                foreach (var item in codesElem.PickupPoints)
+                {
+                    if (!PickupsList.Contains(item))
+                    {
+                        PickupsList.Add(item);
+                    }                    
+                }
             }
 
-            if (maxPickups > 2) maxPickups = 7;
+            maxPickups = PickupsList.Count;
+            PickupsList.Add("");
+            //if (maxPickups > 2) maxPickups = 7;
 
             if (data.codes.Length > 2) maxCodes = 10;
             if (data.codes.Length > 10) maxCodes = 30;
             if (data.codes.Length > 30) maxCodes = 60;
             if (data.codes.Length > 60) maxCodes = 100;
             if (data.codes.Length > maxCodes) maxCodes = data.codes.Length;
+
+            foreach (var pickupElem in PickupsList)
+            {
+                var index = PickupsList.IndexOf(pickupElem);
+                cmdGoodsTable.Parameters.Add(string.Format("@PickupPoint{0}", index), SqlDbType.NVarChar, 4);
+                cmdGoodsTable.Parameters[string.Format("@PickupPoint{0}", index)].Value = pickupElem;
+
+                if (String.IsNullOrEmpty(pickupElem))
+                {
+                    cmdGoodsTable.Parameters[string.Format("@PickupPoint{0}", index)].Value = DBNull.Value;
+                }
+            }
 
             for (int codesCounter = 0; codesCounter < maxCodes; codesCounter++)
             {
@@ -913,10 +934,10 @@ namespace DateTimeService.Controllers
                 {
                     codesElem = data.codes[data.codes.Length-1];
                 }
-                
 
-
-                var parameterString = string.Format("(@Article{0}, @Code{0}, NULL, @Quantity{0})", codesCounter);
+                var pickupPointsCounter = 0;
+                var indexNullPickup = PickupsList.IndexOf("");
+                var parameterString = string.Format("(@Article{0}, @Code{0}, @PickupPoint{1}, @Quantity{0})", codesCounter, indexNullPickup);
 
                 
                 //cmdGoodsTable.Parameters.AddWithValue(string.Format("@Article{0}", codesCounter), codesElem.article);
@@ -937,12 +958,9 @@ namespace DateTimeService.Controllers
 
                 foreach (var pickupElem in codesElem.PickupPoints)
                 {
-                    var parameterStringPickup = string.Format("(@Article{0}, @Code{0}, @PickupPoint{1}, @Quantity{0})", codesCounter, pickupPointsCounter);
 
-                    //cmdGoodsTable.Parameters.AddWithValue(string.Format("@PickupPoint{0}", pickupPointsCounter), pickupElem);
-
-                    cmdGoodsTable.Parameters.Add(string.Format("@PickupPoint{0}", pickupPointsCounter), SqlDbType.NVarChar, 4);
-                    cmdGoodsTable.Parameters[string.Format("@PickupPoint{0}", pickupPointsCounter)].Value = pickupElem;
+                    var index = PickupsList.IndexOf(pickupElem);
+                    var parameterStringPickup = string.Format("(@Article{0}, @Code{0}, @PickupPoint{1}, @Quantity{0})", codesCounter, index);                    
 
                     parameters.Add(parameterStringPickup);
 
@@ -951,12 +969,14 @@ namespace DateTimeService.Controllers
 
                 while (pickupPointsCounter < maxPickups)
                 {
-                    var parameterStringPickup = string.Format("(@Article{0}, @Code{0}, @PickupPoint{1}, @Quantity{0})", codesCounter, pickupPointsCounter);
+
+                    var index = PickupsList.IndexOf("");
+                    var parameterStringPickup = string.Format("(@Article{0}, @Code{0}, @PickupPoint{1}, @Quantity{0})", codesCounter, index);
 
                     //cmdGoodsTable.Parameters.AddWithValue(string.Format("@PickupPoint{0}", pickupPointsCounter), DBNull.Value);
 
-                    cmdGoodsTable.Parameters.Add(string.Format("@PickupPoint{0}", pickupPointsCounter), SqlDbType.NVarChar, 4);
-                    cmdGoodsTable.Parameters[string.Format("@PickupPoint{0}", pickupPointsCounter)].Value = DBNull.Value;
+                    //cmdGoodsTable.Parameters.Add(string.Format("@PickupPoint{0}", pickupPointsCounter), SqlDbType.NVarChar, 4);
+                    //cmdGoodsTable.Parameters[string.Format("@PickupPoint{0}", pickupPointsCounter)].Value = DBNull.Value;
 
                     parameters.Add(parameterStringPickup);
 

@@ -1822,8 +1822,8 @@ into #Temp_IntervalsAll
 FROM
     dbo._AccumRg25110 T5 With (NOLOCK)
 WHERE
-    T5._Period >= @P_DateTimePeriodBegin --begin +2
-    AND T5._Period <= @P_DateTimePeriodEnd --end
+    T5._Period BETWEEN @P_DateTimePeriodBegin AND @P_DateTimePeriodEnd --begin +2
+    --AND T5._Period <= @P_DateTimePeriodEnd --end
     AND T5._Fld25111RRef in (Select Геозона From #Temp_GeoData) 
 GROUP BY
     T5._Period,
