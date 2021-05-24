@@ -93,7 +93,10 @@ namespace DateTimeService
             services.AddScoped<IGeoZones, GeoZones>();
 
             services.AddSwaggerGen();
+
+            services.AddHttpClient<ILogger, HttpLogger>();
             
+
         }
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory)
@@ -135,7 +138,7 @@ namespace DateTimeService
 
             //loggerFactory = LoggerFactory.Create(builder => builder.ClearProviders());
 
-            loggerFactory.AddHttp(Configuration["loggerHost"], Configuration.GetValue<int>("loggerPort"));
+            loggerFactory.AddHttp(Configuration["loggerHost"], Configuration.GetValue<int>("loggerPortUdp"), Configuration.GetValue<int>("loggerPortHttp"));
             var logger = loggerFactory.CreateLogger("HttpLogger");           
 
             
