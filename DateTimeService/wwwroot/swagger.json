@@ -853,6 +853,11 @@
             "description": "Вид доставки - самовывоз (self) или курьер (courier). Если не указан, то считается как доставка",
             "example": "self"
           },
+          "pickup_point": {
+            "type": "string",
+            "description": "Код точки самовывоза",
+            "example": "360"
+          },
           "floor": {
             "type": "number",
             "description": "Этаж",
@@ -918,16 +923,39 @@
               "sales_code": {
                 "type": "string",
                 "description": "Код номенклатуры для уценки (goods_id). Если не уценка, то не отправляется в принципе, либо null"
+              },
+              "pickup_points": {
+                "type": "array",
+                "description": "Список кодов ПВЗ",
+                "items": {
+                  "type": "string"
+                }
               }
             },
             "description": "Список артикулов с кодами уценки",
             "example": [
               {
                 "code": "789734",
-                "sales_code": "2242670"
+                "sales_code": "2242670",
+                "pickup_points": [
+                  "340",
+                  "388",
+                  "460",
+                  "417",
+                  "234",
+                  "2"
+                ]
               },
               {
-                "code": "69516"
+                "code": "69516",
+                "pickup_points": [
+                  "340",
+                  "388",
+                  "460",
+                  "417",
+                  "234",
+                  "2"
+                ]
               }
             ]
           }
