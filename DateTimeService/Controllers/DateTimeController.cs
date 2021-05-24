@@ -168,19 +168,10 @@ namespace DateTimeService.Controllers
         [Authorize(Roles = UserRoles.AvailableDate + "," + UserRoles.Admin)]
         [Route("AvailableDate")]
         [HttpPost]
-        public async Task<IActionResult> AvailableDateAsync([FromBody] JsonElement inputDataJson)
+        public async Task<IActionResult> AvailableDateAsync([FromBody] RequestDataAvailableDateByCodeItemsDTO inputDataJson)
         {
-            RequestDataAvailableDate data = new();
-            try //здесь по хорошему нужно проверить на схему, но т.к. решение временное применим просто трай кэтч
-            {
-                var inputDataByCodeItems = JsonSerializer.Deserialize<RequestDataAvailableDateByCodeItemsDTO>(inputDataJson.ToString());
-                data = _mapper.Map<RequestDataAvailableDate>(inputDataByCodeItems);
-            }
-            catch
-            {
-                var inputDataByCodes = JsonSerializer.Deserialize<RequestDataAvailableDateByCodesDTO>(inputDataJson.ToString());
-                data = _mapper.Map<RequestDataAvailableDate>(inputDataByCodes);
-            }
+                        
+            var data = _mapper.Map<RequestDataAvailableDate>(inputDataJson);
 
             Stopwatch stopwatchExecution = new();
             stopwatchExecution.Start();
@@ -323,36 +314,6 @@ namespace DateTimeService.Controllers
 
                 cmd.CommandTimeout = 5;
 
-
-
-                //var count = data.codes.Length > 60 ? data.codes.Length : 60;
-                //var articleParameters = new string[count];
-                //var codeParameters = new string[count];
-
-                //for (int i = 0; i < count; i++)
-                //{
-                //    articleParameters[i] = string.Format("@Article{0}", i);
-                //    codeParameters[i]    = string.Format("@Code{0}", i);
-                //    cmd.Parameters.Add(articleParameters[i], SqlDbType.NVarChar,10);
-                //    cmd.Parameters.Add(codeParameters[i], SqlDbType.NVarChar, 11);
-
-                //    if (i >= data.codes.Length)
-                //    {
-                //        cmd.Parameters[articleParameters[i]].Value = DBNull.Value;
-                //        cmd.Parameters[codeParameters[i]].Value = DBNull.Value;
-                //    }
-                //    else
-                //    {
-                //        if (String.IsNullOrEmpty(data.codes[i].article))
-                //            cmd.Parameters[articleParameters[i]].Value = DBNull.Value;
-                //        else
-                //            cmd.Parameters[articleParameters[i]].Value = data.codes[i].article;
-                //        if (String.IsNullOrEmpty(data.codes[i].code))
-                //            cmd.Parameters[codeParameters[i]].Value = DBNull.Value;
-                //        else
-                //            cmd.Parameters[codeParameters[i]].Value = data.codes[i].code;
-                //    }
-                //}
 
                 var dateTimeNowOptimizeString = "";
                 if (_configuration.GetValue<bool>("optimizeDateTimeNowEveryHour"))
@@ -676,19 +637,6 @@ namespace DateTimeService.Controllers
 
                     cmd.CommandTimeout = 5;
 
-                    //var parameters = new string[data.orderItems.Count];
-                    //for (int i = 0; i < data.orderItems.Count; i++)
-                    //{
-                    //    parameters[i] = string.Format("(@Article{0}, @Code{0}, @Quantity{0})", i);
-
-                    //    cmd.Parameters.AddWithValue(string.Format("@Article{0}", i), data.orderItems[i].article);
-                    //    if (String.IsNullOrEmpty(data.orderItems[i].code))
-                    //        cmd.Parameters.AddWithValue(string.Format("@Code{0}", i), DBNull.Value);
-                    //    else
-                    //        cmd.Parameters.AddWithValue(string.Format("@Code{0}", i), data.orderItems[i].code);
-                    //    cmd.Parameters.AddWithValue(string.Format("@Quantity{0}", i), data.orderItems[i].quantity);
-                    //}
-
                     var dateTimeNowOptimizeString = "";
                     if (_configuration.GetValue<bool>("optimizeDateTimeNowEveryHour"))
                     {
@@ -897,14 +845,11 @@ namespace DateTimeService.Controllers
         {
 
           
-            string queryGoods = Queries.CreateTableGoodsRawCreate + Queries.CreateTableGoodsRawInsert;
+            var resultString = Queries.CreateTableGoodsRawCreate;
+
+            var insertRowsLimit = 10;
 
             var parameters = new List<string>();//string[data.codes.Length];
-
-            //var codesCounter = 0;
-            //var pickupPointsCounter = 0;
-
-            var maxPickups = 0;
             List<string> PickupsList = new();
 
             var maxCodes = data.codes.Length;
@@ -920,7 +865,10 @@ namespace DateTimeService.Controllers
                 }
             }
 
-            maxPickups = PickupsList.Count;
+            //var codesCounter = 0;
+            //var pickupPointsCounter = 0;
+
+            int maxPickups = PickupsList.Count;
             PickupsList.Add("");
             //if (maxPickups > 2) maxPickups = 7;
 
@@ -976,6 +924,13 @@ namespace DateTimeService.Controllers
 
                 parameters.Add(parameterString);
 
+                if (parameters.Count == insertRowsLimit)
+                {
+                    resultString += string.Format(Queries.CreateTableGoodsRawInsert, string.Join(", ", parameters));
+
+                    parameters.Clear();
+                }
+
                 foreach (var pickupElem in codesElem.PickupPoints)
                 {
 
@@ -985,6 +940,13 @@ namespace DateTimeService.Controllers
                     parameters.Add(parameterStringPickup);
 
                     pickupPointsCounter++;
+
+                    if (parameters.Count == insertRowsLimit)
+                    {
+                        resultString += string.Format(Queries.CreateTableGoodsRawInsert, string.Join(", ", parameters));
+
+                        parameters.Clear();
+                    }
                 }
 
                 while (pickupPointsCounter < maxPickups)
@@ -993,20 +955,30 @@ namespace DateTimeService.Controllers
                     var index = PickupsList.IndexOf("");
                     var parameterStringPickup = string.Format("(@Article{0}, @Code{0}, @PickupPoint{1}, @Quantity{0})", codesCounter, index);
 
-                    //cmdGoodsTable.Parameters.AddWithValue(string.Format("@PickupPoint{0}", pickupPointsCounter), DBNull.Value);
-
-                    //cmdGoodsTable.Parameters.Add(string.Format("@PickupPoint{0}", pickupPointsCounter), SqlDbType.NVarChar, 4);
-                    //cmdGoodsTable.Parameters[string.Format("@PickupPoint{0}", pickupPointsCounter)].Value = DBNull.Value;
-
                     parameters.Add(parameterStringPickup);
 
                     pickupPointsCounter++;
-                }                
 
-                //codesCounter++;
+                    if (parameters.Count == insertRowsLimit)
+                    {
+                        resultString += string.Format(Queries.CreateTableGoodsRawInsert, string.Join(", ", parameters));
+
+                        parameters.Clear();
+                    }
+                }
+
+                //codesCounter++;           
+
             }
 
-            return string.Format(queryGoods, string.Join(", ", parameters));
+            if (parameters.Count > 0)
+            {
+                resultString += string.Format(Queries.CreateTableGoodsRawInsert, string.Join(", ", parameters));
+
+                parameters.Clear();
+            }
+
+            return resultString;//string.Format(queryGoods, string.Join(", ", parameters));
 
         }
 
