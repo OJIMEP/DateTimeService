@@ -286,7 +286,7 @@ namespace DateTimeService.Controllers
 
                 //FillGoodsTable(data, conn);
 
-                var queryTextBegin = TextFillGoodsTable(data, cmd);
+                var queryTextBegin = TextFillGoodsTable(data, cmd, true);
 
                 if (_configuration.GetValue<bool>("disableKeepFixedPlan"))
                 {
@@ -354,8 +354,18 @@ namespace DateTimeService.Controllers
                 //    }
                 //}
 
+                var dateTimeNowOptimizeString = "";
+                if (_configuration.GetValue<bool>("optimizeDateTimeNowEveryHour"))
+                {
+                    dateTimeNowOptimizeString = DateMove.ToString("yyyy-MM-ddTHH:00:00");
+                }
+                else
+                {
+                    dateTimeNowOptimizeString = dateTimeNowOptimizeString = DateMove.Date.ToString("yyyy-MM-ddTHH:mm:ss"); 
+                }
+
                 cmd.CommandText = queryTextBegin +  string.Format(query, "",
-                    DateMove.Date.ToString("yyyy-MM-ddTHH:mm:ss"),
+                    dateTimeNowOptimizeString,
                     DateMove.Date.ToString("yyyy-MM-ddTHH:mm:ss"),
                     DateMove.Date.AddDays(Parameters1C.First(x => x.Name.Contains("rsp_КоличествоДнейЗаполненияГрафика")).ValueDouble - 1).ToString("yyyy-MM-ddTHH:mm:ss"),
                     Parameters1C.First(x => x.Name.Contains("КоличествоДнейАнализаЛучшейЦеныПриОтсрочкеЗаказа")).ValueDouble,
@@ -610,7 +620,7 @@ namespace DateTimeService.Controllers
 
                     //FillGoodsTable(data, conn);
 
-                    var queryTextBegin = TextFillGoodsTable(data, cmd);
+                    var queryTextBegin = TextFillGoodsTable(data, cmd, false);
 
                     
 
@@ -679,8 +689,18 @@ namespace DateTimeService.Controllers
                     //    cmd.Parameters.AddWithValue(string.Format("@Quantity{0}", i), data.orderItems[i].quantity);
                     //}
 
+                    var dateTimeNowOptimizeString = "";
+                    if (_configuration.GetValue<bool>("optimizeDateTimeNowEveryHour"))
+                    {
+                        dateTimeNowOptimizeString = DateMove.ToString("yyyy-MM-ddTHH:00:00");
+                    }
+                    else
+                    {
+                        dateTimeNowOptimizeString = DateMove.Date.ToString("yyyy-MM-ddTHH:mm:ss");
+                    }
+
                     cmd.CommandText = queryTextBegin + string.Format(query, "",
-                        DateMove.Date.ToString("yyyy-MM-ddTHH:mm:ss"),
+                        dateTimeNowOptimizeString,
                         DateMove.Date.ToString("yyyy-MM-ddTHH:mm:ss"),
                         DateMove.Date.AddDays(Parameters1C.First(x => x.Name.Contains("rsp_КоличествоДнейЗаполненияГрафика")).ValueDouble - 1).ToString("yyyy-MM-ddTHH:mm:ss"),
                         Parameters1C.First(x => x.Name.Contains("КоличествоДнейАнализаЛучшейЦеныПриОтсрочкеЗаказа")).ValueDouble,
@@ -863,17 +883,17 @@ namespace DateTimeService.Controllers
         }
 
 
-        private static string TextFillGoodsTable(RequestIntervalList data, SqlCommand cmdGoodsTable)
+        private static string TextFillGoodsTable(RequestIntervalList data, SqlCommand cmdGoodsTable, bool optimizeRowsCount)
         {
             RequestDataAvailableDate convertedData = new()
             {
                 codes = data.orderItems.ToArray()
             };
 
-            return TextFillGoodsTable(convertedData, cmdGoodsTable);
+            return TextFillGoodsTable(convertedData, cmdGoodsTable, optimizeRowsCount);
         }
 
-        private static string TextFillGoodsTable(RequestDataAvailableDate data, SqlCommand cmdGoodsTable)
+        private static string TextFillGoodsTable(RequestDataAvailableDate data, SqlCommand cmdGoodsTable, bool optimizeRowsCount)
         {
 
           
@@ -908,7 +928,7 @@ namespace DateTimeService.Controllers
             if (data.codes.Length > 10) maxCodes = 30;
             if (data.codes.Length > 30) maxCodes = 60;
             if (data.codes.Length > 60) maxCodes = 100;
-            if (data.codes.Length > maxCodes) maxCodes = data.codes.Length;
+            if (data.codes.Length > maxCodes || !optimizeRowsCount) maxCodes = data.codes.Length;
 
             foreach (var pickupElem in PickupsList)
             {
