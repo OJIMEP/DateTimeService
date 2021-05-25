@@ -847,7 +847,7 @@ namespace DateTimeService.Controllers
           
             var resultString = Queries.CreateTableGoodsRawCreate;
 
-            var insertRowsLimit = 10;
+            var insertRowsLimit = 900;
 
             var parameters = new List<string>();//string[data.codes.Length];
             List<string> PickupsList = new();
