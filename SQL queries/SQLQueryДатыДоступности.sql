@@ -62,10 +62,10 @@ SET @PickupPoint6 = '2';
 DECLARE @P_DaysToShow numeric(2);
  Set @P_DaysToShow = 7;
 
- Set @P_DateTimeNow = '4021-05-19T16:28:00' 
- Set @P_DateTimePeriodBegin = '4021-05-19T00:00:00'
- Set @P_DateTimePeriodEnd = '4021-05-23T00:00:00'
- Set @P_TimeNow = '2001-01-01T16:28:00'
+ Set @P_DateTimeNow = '4021-05-26T14:28:00' 
+ Set @P_DateTimePeriodBegin = '4021-05-26T00:00:00'
+ Set @P_DateTimePeriodEnd = '4021-05-30T00:00:00'
+ Set @P_TimeNow = '2001-01-01T14:28:00'
  Set @P_EmptyDate = '2001-01-01T00:00:00'
  Set @P_MaxDate = '5999-11-11T00:00:00'
 
@@ -229,7 +229,7 @@ HAVING
     (SUM(T2._Fld21412) <> 0.0
     OR SUM(T2._Fld21411) <> 0.0)
 	AND SUM(T2._Fld21412) - SUM(T2._Fld21411) <> 0.0
-OPTION (OPTIMIZE FOR (@P_DateTimeNow='4021-05-13T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
+OPTION (OPTIMIZE FOR (@P_DateTimeNow='4021-05-26T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
 
 SELECT Distinct
     T1._Fld23831RRef AS СкладИсточника,
@@ -264,7 +264,7 @@ WHERE
 		AND T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData UNION ALL Select СкладСсылка From #Temp_Goods)
 GROUP BY T1._Fld23831RRef,
 T1._Fld23833RRef
-OPTION (OPTIMIZE FOR (@P_DateTimeNow='4021-05-13T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
+OPTION (OPTIMIZE FOR (@P_DateTimeNow='4021-05-26T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
 
 ;
 
@@ -728,7 +728,7 @@ HAVING
             ) AS NUMERIC(16, 0)
         ) > 0.0
     )
-OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-05-12T00:00:00',@P_DateTimePeriodEnd='4021-05-16T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-05-26T00:00:00',@P_DateTimePeriodEnd='4021-05-30T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
 ;
 
 select
@@ -899,7 +899,7 @@ GROUP BY
 	T1.НоменклатураСсылка,
     T1.article,
 	T1.code
-OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-05-12T00:00:00',@P_DateTimePeriodEnd='4021-05-16T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-05-26T00:00:00',@P_DateTimePeriodEnd='4021-05-30T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
 
 Select 
 	IsNull(#Temp_AvailableCourier.article,#Temp_AvailablePickUp.article) AS article,
@@ -932,3 +932,4 @@ DROP TABLE #Temp_ShipmentDatesPickUp
 DROP TABLE #Temp_AvailableCourier
 DROP TABLE #Temp_AvailablePickUp
 DROP TABLE #Temp_PickupDatesGroup
+DROP TAble #Temp_PickupWorkingHours
