@@ -365,3 +365,6 @@ FodyWeavers.xsd
 logger.txt
 /.vscode/launch.json
 /.vscode/tasks.json
+logger.txt
+.vscode/launch.json
+.vscode/tasks.json

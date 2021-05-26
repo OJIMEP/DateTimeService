@@ -6,6 +6,7 @@ using DateTimeService.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -15,6 +16,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
@@ -35,7 +37,9 @@ namespace DateTimeService
 
             services.AddCors();
 
-            services.AddControllers();
+            services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
+            services.AddControllers(options => options.Filters.Add(typeof(Filters.ConnectionResetExceptionFilter)));
 
             // For Entity Framework  
             services.AddDbContext<DateTimeServiceContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DateTimeServiceContextConnection")));
@@ -89,28 +93,25 @@ namespace DateTimeService
             services.AddScoped<IGeoZones, GeoZones>();
 
             services.AddSwaggerGen();
-            //c =>
-            //{
-            //    c.SwaggerDoc("v1", new OpenApiInfo
-            //    {
-            //        Version = "v1",
-            //        Title = "DateTime API",
-            //        Description = "API для получения дат и интервалов доставки и самовывоза",
-            //        Contact = new OpenApiContact
-            //        {
-            //            Name = "Андрей Бородавко",
-            //            Email = "a.borodavko@21vek.by",
-            //        }
-            //    });
-            //});
+
+            services.AddHttpClient<ILogger, HttpLogger>();
+            
 
         }
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory)
         {
 
+            app.UseForwardedHeaders(new ForwardedHeadersOptions
+            {
+                ForwardedHeaders = ForwardedHeaders.XForwardedFor |
+                           ForwardedHeaders.XForwardedProto
+            });
+
             //app.UseCors(builder => builder.AllowAnyHeader().AllowAnyMethod().SetIsOriginAllowedToAllowWildcardSubdomains().WithOrigins("https://*.21vek.by", "https://localhost*", "https://*.swagger.io"));
-            app.UseCors(builder => builder.AllowAnyHeader().AllowAnyMethod().SetIsOriginAllowedToAllowWildcardSubdomains().WithOrigins("*"));
+            app.UseCors(builder => builder.AllowAnyHeader().AllowAnyMethod().SetIsOriginAllowedToAllowWildcardSubdomains().WithOrigins(Configuration.GetSection("CorsOrigins").Get<List<string>>().ToArray()));
+
+            
 
             app.UseStaticFiles();
             app.UseSwagger();
@@ -137,7 +138,7 @@ namespace DateTimeService
 
             //loggerFactory = LoggerFactory.Create(builder => builder.ClearProviders());
 
-            loggerFactory.AddHttp("192.168.2.16", 5048);
+            loggerFactory.AddHttp(Configuration["loggerHost"], Configuration.GetValue<int>("loggerPortUdp"), Configuration.GetValue<int>("loggerPortHttp"));
             var logger = loggerFactory.CreateLogger("HttpLogger");           
 
             

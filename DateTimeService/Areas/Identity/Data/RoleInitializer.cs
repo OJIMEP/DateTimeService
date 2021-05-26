@@ -1,6 +1,9 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using DateTimeService.Data;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using System.Threading.Tasks;
+using System.Linq;
+using Microsoft.EntityFrameworkCore;
 
 namespace DateTimeService.Areas.Identity.Data
 {
@@ -40,5 +43,12 @@ namespace DateTimeService.Areas.Identity.Data
                 }
             }
         }
+        public static async Task CleanTokensAsync(DateTimeServiceContext db)
+        {
+            var result = await db.Database.ExecuteSqlRawAsync(@"Delete
+  FROM [dbo].[RefreshToken]
+  Where[Created] < DATEADD(DAY, -2, GETUTCDATE())");
+        }
+
     }
 }

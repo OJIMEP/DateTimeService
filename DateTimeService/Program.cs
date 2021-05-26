@@ -1,4 +1,5 @@
 using DateTimeService.Areas.Identity.Data;
+using DateTimeService.Controllers;
 using DateTimeService.Data;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
@@ -29,7 +30,7 @@ namespace DateTimeService
                 }
                 catch (Exception ex)
                 {
-                    var logger = services.GetRequiredService<ILogger<Program>>();
+                    var logger = services.GetRequiredService<ILogger<DateTimeController>>();
                     logger.LogError(ex, "An error occurred while migrating the database.");
                 }
 
@@ -43,11 +44,22 @@ namespace DateTimeService
                 }
                 catch (Exception ex)
                 {
-                    var logger = services.GetRequiredService<ILogger<Program>>();
+                    var logger = services.GetRequiredService<ILogger<DateTimeController>>();
                     logger.LogError(ex, "An error occurred while seeding the database.");
                 }
 
-               
+                try
+                {
+                    var db = scope.ServiceProvider.GetRequiredService<DateTimeServiceContext>();
+                    await RoleInitializer.CleanTokensAsync(db);
+                }
+                catch (Exception ex)
+                {
+                    var logger = services.GetRequiredService<ILogger<DateTimeController>>();
+                    logger.LogError(ex, "An error occurred while seeding the database.");
+                }
+
+
             }
 
             host.Run();
@@ -57,7 +69,7 @@ namespace DateTimeService
             Host.CreateDefaultBuilder(args)
                 .ConfigureLogging(logging =>
                 {
-                    logging.ClearProviders();
+                    //logging.ClearProviders();
                 })
                 .ConfigureWebHostDefaults(webBuilder =>
                 {

@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Net.Http;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
@@ -11,14 +12,18 @@ namespace DateTimeService
     public class HttpLogger : ILogger
     {
         private readonly string logsHost;
-        private readonly int logsPort;
+        private readonly int logsPortUdp;
+        private readonly int logsPortHttp;
         readonly UdpClient udpClient;
-        
-        public HttpLogger(string host, int port)
+        readonly HttpClient httpClient;
+
+        public HttpLogger(string host, int port, int portHttp)
         {
             logsHost = host;
-            logsPort = port;
-            udpClient = new UdpClient(logsHost, logsPort);
+            logsPortUdp = port;
+            logsPortHttp = portHttp;
+            udpClient = new UdpClient(logsHost, logsPortUdp);
+            httpClient = new HttpClient();
         }
         public IDisposable BeginScope<TState>(TState state)
         {
@@ -50,6 +55,7 @@ namespace DateTimeService
                     {
                         logElement.ErrorDescription += ";" + exception.Message;
                         logElement.Status = "Error";
+                        logElement.AdditionalData.Add("StackTrace", exception.StackTrace);
                     }
 
                     var logstringElement = JsonSerializer.Serialize(logElement);
@@ -67,7 +73,12 @@ namespace DateTimeService
                 
                 try
                 {
-                    await udpClient.SendAsync(sendBytes, sendBytes.Length);
+                    if (sendBytes.Length > 60000)
+                    {
+                        var result = await httpClient.PostAsync(new Uri("http://" + logsHost + ":" + logsPortHttp.ToString("D")), new StringContent(resultLog, Encoding.UTF8, "application/json"));
+                    }                        
+                    else
+                        await udpClient.SendAsync(sendBytes, sendBytes.Length);
                 }
                 catch (Exception e)
                 {
