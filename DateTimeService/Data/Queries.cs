@@ -937,6 +937,22 @@ Having
 OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'),KEEP PLAN, KEEPFIXED PLAN);
 
 /*Тут начинаются интервалы, которые рассчитанные*/
+Select
+	Case 
+		When DATEPART(MINUTE,ГрафикПланирования._Fld23333) > 0 
+		Then DATEADD(HOUR,1,ГрафикПланирования._Fld23333) 
+		else ГрафикПланирования._Fld23333 
+	End As ВремяВыезда,
+	ГрафикПланирования._Fld23321 AS Дата,
+	ГрафикПланирования._Fld23322RRef AS ГруппаПланирования
+Into #Temp_CourierDepartureDates
+From 
+	dbo._InfoRg23320 AS ГрафикПланирования With (NOLOCK)
+	INNER JOIN #Temp_PlanningGroups T2 With (NOLOCK) ON (ГрафикПланирования._Fld23322RRef = T2.ГруппаПланирования) 
+Where ГрафикПланирования._Fld23321 BETWEEN @P_DateTimePeriodBegin AND @P_DateTimePeriodEnd 
+	AND ГрафикПланирования._Fld23333 > @P_DateTimeNow
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}',@P_DateTimeNow='{1}'),KEEP PLAN, KEEPFIXED PLAN);
+
 SELECT
     T5._Period AS Период,
     T5._Fld25112RRef As ГруппаПланирования, 
@@ -969,6 +985,10 @@ FROM
     dbo._AccumRg25110 T5 With (NOLOCK)
 	INNER JOIN #Temp_PlanningGroups T2 With (NOLOCK) ON (T5._Fld25112RRef = T2.ГруппаПланирования)
 	AND T2.Склад IN (select СкладНазначения From #Temp_DateAvailable)
+    INNER JOIN #Temp_CourierDepartureDates With (NOLOCK) 
+		ON T5._Fld25112RRef = #Temp_CourierDepartureDates.ГруппаПланирования
+		AND T5._Period = #Temp_CourierDepartureDates.Дата
+		AND DATEPART(HOUR,#Temp_CourierDepartureDates.ВремяВыезда) <= DATEPART(HOUR,T5._Fld25202)
 WHERE
     T5._Period >= @P_DateTimePeriodBegin --begin +2
     AND T5._Period <= @P_DateTimePeriodEnd --end

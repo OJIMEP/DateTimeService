@@ -141,6 +141,10 @@ INCLUDE([_Fld6003RRef],[_Fld6006],[_Fld6000]) WITH (PAD_INDEX = OFF, STATISTICS_
 GO
 
 
+CREATE NONCLUSTERED INDEX [_InfoRg23320_Custom1]
+ON [dbo].[_InfoRg23320] ([_Fld23322RRef],[_Fld23321],[_Fld23333])
+GO
+
 use [triovist_repl];
 GO
 use [master];
