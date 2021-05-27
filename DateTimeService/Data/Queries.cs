@@ -1220,10 +1220,17 @@ From dbo._Reference114 Геозона With (NOLOCK)
 	Inner Join _Reference99 ЗоныДоставки With (NOLOCK)
 	on Геозона._Fld2847RRef = ЗоныДоставки._IDRRef
 where Геозона._IDRRef IN (
-	Select Top 1 --по городу в геоадресе находим геозону
-	ГеоАдрес._Fld2785RRef 
-	From dbo._Reference112 ГеоАдрес With (NOLOCK)
-	Where ГеоАдрес._Fld25552 = @P_CityCode)
+	SELECT TOP 1
+		T3._Fld26708RRef AS Fld26823RRef --геозона из рс векРасстоянияАВ
+	FROM (SELECT
+			T1._Fld25549 AS Fld25549_,
+			MAX(T1._Period) AS MAXPERIOD_ 
+		FROM dbo._InfoRg21711 T1 With (NOLOCK)
+		WHERE T1._Fld26708RRef <> 0x00 and T1._Fld25549 = @P_CityCode
+		GROUP BY T1._Fld25549) T2
+	INNER JOIN dbo._InfoRg21711 T3 With (NOLOCK)
+	ON T2.Fld25549_ = T3._Fld25549 AND T2.MAXPERIOD_ = T3._Period
+	)
 OPTION (KEEP PLAN, KEEPFIXED PLAN)
 
 Select 
