@@ -2057,7 +2057,9 @@ from [master].[sys].[dm_hadr_database_replica_states]";
 
         public const string DatebaseBalancingReplicaTables = @"SELECT name
 FROM sys.databases
-WHERE OBJECT_ID(name+'.dbo.MSreplication_objects') IS NOT NULL
+WHERE OBJECT_ID(name+'.dbo.MSreplication_objects') IS NOT NULL;
+
+select top (1) _IDRRef from dbo._Reference99;
 ";
     }
 }
