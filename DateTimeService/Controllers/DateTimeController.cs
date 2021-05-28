@@ -394,6 +394,14 @@ namespace DateTimeService.Controllers
                         self = null
                     };
 
+                    var newResultElement = new Dictionary<string, string>();
+                    newResultElement.Add("code", codeItem.article);
+                    if (!String.IsNullOrEmpty(codeItem.sales_code))
+                    {
+                        newResultElement.Add("sales_code", codeItem.sales_code);
+                    }
+                    
+
                     int dbResultIndex = -1;
                     if (String.IsNullOrEmpty(codeItem.code))
                     {
@@ -407,6 +415,20 @@ namespace DateTimeService.Controllers
                     if (dbResultIndex == -1)
                         continue;
 
+                    if (data.delivery_types.Contains("courier"))
+                    {
+                        newResultElement.Add("courier", dbResult.courier[dbResultIndex].Year != 3999
+                        ? dbResult.courier[dbResultIndex].Date.ToString("yyyy-MM-ddTHH:mm:ss")
+                        : null);
+                    }
+
+                    if (data.delivery_types.Contains("self"))
+                    {
+                        newResultElement.Add("self", dbResult.self[dbResultIndex].Year != 3999
+                        ? dbResult.self[dbResultIndex].Date.ToString("yyyy-MM-ddTHH:mm:ss")
+                        : null);
+                    }
+
                     resultElement.courier = data.delivery_types.Contains("courier")
                         ? dbResult.courier[dbResultIndex].Date.ToString("yyyy-MM-ddTHH:mm:ss")
                         : null;
@@ -417,10 +439,12 @@ namespace DateTimeService.Controllers
                     if (String.IsNullOrEmpty(codeItem.code))
                     {
                         resultDict.data.Add(codeItem.article, resultElement);
+                        resultDict.data1.Add(codeItem.article, newResultElement);
                     }
                     else
                     {
                         resultDict.data.Add(String.Concat(codeItem.article, "_", codeItem.sales_code), resultElement);
+                        resultDict.data1.Add(String.Concat(codeItem.article, "_", codeItem.sales_code), newResultElement);
                     }
                 }
             }
