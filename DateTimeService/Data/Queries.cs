@@ -1574,7 +1574,7 @@ SELECT
 		Into #Temp_T3
         FROM
             #Temp_Sources T4 WITH(NOLOCK)
-            LEFT OUTER JOIN Temp_ClosestDate T5 WITH(NOLOCK)
+            INNER JOIN Temp_ClosestDate T5 WITH(NOLOCK)
             ON (T4.НоменклатураСсылка = T5.НоменклатураСсылка)
             AND (T4.СкладНазначения = T5.СкладНазначения)
             AND (T4.ТипИсточника = 1)

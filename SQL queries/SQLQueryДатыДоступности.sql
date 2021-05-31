@@ -36,7 +36,7 @@ DECLARE @P_MaxDate datetime;
  SET @P_Article2 = '424941';
  SET @P_Article3 = '6445627';
  SET @P_Article4 = '5962720';
- SET @P_Article5 = '6167903';
+ SET @P_Article5 = '600017';
  SET @P_Article6 = '6167903';
  SET @P_Article7 = '380386';
  SET @P_Article8 = '358619';
@@ -57,15 +57,15 @@ SET @PickupPoint4 = '417';
 SET @PickupPoint5 = '234';
 SET @PickupPoint6 = '2';
 
- Set @P_CityCode = '17030'--'17030' --код адреса
+ Set @P_CityCode = '2721'--'17030' --код адреса
 
 DECLARE @P_DaysToShow numeric(2);
  Set @P_DaysToShow = 7;
 
- Set @P_DateTimeNow = '4021-05-26T14:28:00' 
- Set @P_DateTimePeriodBegin = '4021-05-26T00:00:00'
- Set @P_DateTimePeriodEnd = '4021-05-30T00:00:00'
- Set @P_TimeNow = '2001-01-01T14:28:00'
+ Set @P_DateTimeNow = '4021-05-31T10:00:00' 
+ Set @P_DateTimePeriodBegin = '4021-05-31T00:00:00'
+ Set @P_DateTimePeriodEnd = '4021-06-04T00:00:00'
+ Set @P_TimeNow = '2001-01-01T10:00:00'
  Set @P_EmptyDate = '2001-01-01T00:00:00'
  Set @P_MaxDate = '5999-11-11T00:00:00'
 
@@ -82,12 +82,12 @@ INSERT INTO
 		Article, code, PickupPoint, quantity 
 	)
 VALUES
-	(@P_Article1,@P_Code1,@PickupPoint3,0),
-	(@P_Article2,@P_Code2,@PickupPoint2,0),
-	(@P_Article1,@P_Code1,NULL,0),
-	(@P_Article3,@P_Code3,@PickupPoint3,0),
-	('843414',NULL,NULL,0)
-	--(@P3,3),
+	--(@P_Article1,@P_Code1,@PickupPoint3,0),
+	--(@P_Article2,@P_Code2,@PickupPoint2,0),
+	--(@P_Article1,@P_Code1,NULL,0),
+	--(@P_Article3,@P_Code3,@PickupPoint3,0),
+	--('843414',NULL,NULL,0)
+	(@P_Article5,NULL,NULL,0)--,
 	--(@P5,4),
 	--(@P6,3),
 	--(@P7,2),
@@ -460,7 +460,7 @@ SELECT
 		Into #Temp_T3
         FROM
             #Temp_Sources T4 WITH(NOLOCK)
-            LEFT OUTER JOIN Temp_ClosestDate T5 WITH(NOLOCK)
+            Inner JOIN Temp_ClosestDate T5 WITH(NOLOCK)
             ON (T4.НоменклатураСсылка = T5.НоменклатураСсылка)
             AND (T4.СкладНазначения = T5.СкладНазначения)
             AND (T4.ТипИсточника = 1)
