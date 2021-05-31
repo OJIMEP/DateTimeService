@@ -8,8 +8,9 @@ namespace DateTimeService.Models
 {
     public class ResponseAvailableDateDict
     {
+        [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
         public Dictionary<string, ResponseAvailableDateDictElement> data { get; set; }
-
+        [JsonPropertyName("data")]
         public Dictionary<string, Dictionary<string,string>> data1 { get; set; }
 
 
