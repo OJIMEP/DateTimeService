@@ -62,10 +62,10 @@ SET @PickupPoint6 = '2';
 DECLARE @P_DaysToShow numeric(2);
  Set @P_DaysToShow = 7;
 
- Set @P_DateTimeNow = '4021-05-31T10:00:00' 
- Set @P_DateTimePeriodBegin = '4021-05-31T00:00:00'
- Set @P_DateTimePeriodEnd = '4021-06-04T00:00:00'
- Set @P_TimeNow = '2001-01-01T10:00:00'
+ Set @P_DateTimeNow = '4021-06-01T14:00:00' 
+ Set @P_DateTimePeriodBegin = '4021-06-01T00:00:00'
+ Set @P_DateTimePeriodEnd = '4021-06-05T00:00:00'
+ Set @P_TimeNow = '2001-01-01T14:00:00'
  Set @P_EmptyDate = '2001-01-01T00:00:00'
  Set @P_MaxDate = '5999-11-11T00:00:00'
 
@@ -236,7 +236,7 @@ HAVING
     (SUM(T2._Fld21412) <> 0.0
     OR SUM(T2._Fld21411) <> 0.0)
 	AND SUM(T2._Fld21412) - SUM(T2._Fld21411) <> 0.0
-OPTION (OPTIMIZE FOR (@P_DateTimeNow='4021-05-26T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
+OPTION (OPTIMIZE FOR (@P_DateTimeNow='4021-06-01T14:00:00'),KEEP PLAN, KEEPFIXED PLAN);
 
 SELECT Distinct
     T1._Fld23831RRef AS СкладИсточника,
@@ -271,7 +271,7 @@ WHERE
 		AND T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData UNION ALL Select СкладСсылка From #Temp_Goods)
 GROUP BY T1._Fld23831RRef,
 T1._Fld23833RRef
-OPTION (OPTIMIZE FOR (@P_DateTimeNow='4021-05-26T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
+OPTION (OPTIMIZE FOR (@P_DateTimeNow='4021-06-01T14:00:00'),KEEP PLAN, KEEPFIXED PLAN);
 
 ;
 
