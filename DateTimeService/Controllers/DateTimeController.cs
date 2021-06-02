@@ -170,7 +170,9 @@ namespace DateTimeService.Controllers
         [HttpPost]
         public async Task<IActionResult> AvailableDateAsync([FromBody] RequestDataAvailableDateByCodeItemsDTO inputDataJson)
         {
-                        
+
+            OkObjectResult result;
+
             var data = _mapper.Map<RequestDataAvailableDate>(inputDataJson);
 
             Stopwatch stopwatchExecution = new();
@@ -393,14 +395,7 @@ namespace DateTimeService.Controllers
                         courier = null,
                         self = null
                     };
-
-                    var newResultElement = new Dictionary<string, string>();
-                    newResultElement.Add("code", codeItem.article);
-                    if (!String.IsNullOrEmpty(codeItem.sales_code))
-                    {
-                        newResultElement.Add("sales_code", codeItem.sales_code);
-                    }
-                    
+                  
 
                     int dbResultIndex = -1;
                     if (String.IsNullOrEmpty(codeItem.code))
@@ -415,36 +410,20 @@ namespace DateTimeService.Controllers
                     if (dbResultIndex == -1)
                         continue;
 
-                    if (data.delivery_types.Contains("courier"))
-                    {
-                        newResultElement.Add("courier", dbResult.courier[dbResultIndex].Year != 3999
-                        ? dbResult.courier[dbResultIndex].Date.ToString("yyyy-MM-ddTHH:mm:ss")
-                        : null);
-                    }
-
-                    if (data.delivery_types.Contains("self"))
-                    {
-                        newResultElement.Add("self", dbResult.self[dbResultIndex].Year != 3999
-                        ? dbResult.self[dbResultIndex].Date.ToString("yyyy-MM-ddTHH:mm:ss")
-                        : null);
-                    }
-
-                    resultElement.courier = data.delivery_types.Contains("courier")
+                    resultElement.courier = data.delivery_types.Contains("courier") && dbResult.courier[dbResultIndex].Year != 3999
                         ? dbResult.courier[dbResultIndex].Date.ToString("yyyy-MM-ddTHH:mm:ss")
                         : null;
-                    resultElement.self = data.delivery_types.Contains("self")
+                    resultElement.self = data.delivery_types.Contains("self") && dbResult.self[dbResultIndex].Year != 3999
                         ? dbResult.self[dbResultIndex].Date.ToString("yyyy-MM-ddTHH:mm:ss")
                         : null;
 
                     if (String.IsNullOrEmpty(codeItem.code))
                     {
                         resultDict.data.Add(codeItem.article, resultElement);
-                        resultDict.data1.Add(codeItem.article, newResultElement);
                     }
                     else
                     {
                         resultDict.data.Add(String.Concat(codeItem.article, "_", codeItem.sales_code), resultElement);
-                        resultDict.data1.Add(String.Concat(codeItem.article, "_", codeItem.sales_code), newResultElement);
                     }
                 }
             }
@@ -454,8 +433,33 @@ namespace DateTimeService.Controllers
                 logElement.ErrorDescription = ex.Message;
                 logElement.Status = "Error";
             }
+
             
-            
+
+            if (data.delivery_types.Contains("self") && data.delivery_types.Contains("courier"))
+            {
+                var resultBoth = new ResponseAvailableDateDictBothDates();
+
+                foreach(var item in resultDict.data)
+                {
+                    var newItem = new ResponseAvailableDateDictElementBothDates
+                    {
+                        code = item.Value.code,
+                        sales_code = item.Value.sales_code,
+                        courier = item.Value.courier,
+                        self = item.Value.self
+                    };
+
+                    resultBoth.data.Add(item.Key, newItem);
+                }
+
+                result = Ok(resultBoth);
+            }
+            else
+            {
+                result = Ok(resultDict);
+            }
+
             watch.Stop();
             logElement.TimeSQLExecutionFact = watch.ElapsedMilliseconds;
 
@@ -466,7 +470,7 @@ namespace DateTimeService.Controllers
 
             _logger.LogInformation(logstringElement);
 
-            return Ok(resultDict);
+            return result;
         }
 
 

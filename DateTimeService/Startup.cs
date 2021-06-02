@@ -115,14 +115,16 @@ namespace DateTimeService
 
             app.UseStaticFiles();
             app.UseSwagger();
-            app.UseSwaggerUI(c => c.SwaggerEndpoint("/NetMS/swagger.json", "DateTimeService v1"));
+            
 
             if (env.IsDevelopment())
             {
+                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger.json", "DateTimeService v1"));
                 app.UseDeveloperExceptionPage();
             }
             else
             {
+                app.UseSwaggerUI(c => c.SwaggerEndpoint("/NetMS/swagger.json", "DateTimeService v1"));
                 app.UseExceptionHandler("/Home/Error");
                 app.UseHsts();
             }

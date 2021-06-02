@@ -8,16 +8,12 @@ namespace DateTimeService.Models
 {
     public class ResponseAvailableDateDict
     {
-        [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
         public Dictionary<string, ResponseAvailableDateDictElement> data { get; set; }
-        [JsonPropertyName("data")]
-        public Dictionary<string, Dictionary<string,string>> data1 { get; set; }
 
 
         public ResponseAvailableDateDict()
         {
             data = new Dictionary<string, ResponseAvailableDateDictElement>();
-            data1 = new Dictionary<string, Dictionary<string,string>>();
         }
     }
 
@@ -28,9 +24,29 @@ namespace DateTimeService.Models
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string sales_code { get; set; }
 
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string courier { get; set; }
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string self { get; set; }
+    }
+
+    public class ResponseAvailableDateDictBothDates
+    {
+        public Dictionary<string, ResponseAvailableDateDictElementBothDates> data { get; set; }
+       
+        public ResponseAvailableDateDictBothDates()
+        {
+            data = new Dictionary<string, ResponseAvailableDateDictElementBothDates>();
+        }
+    }
+
+    public class ResponseAvailableDateDictElementBothDates
+    {
+        public string code { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string sales_code { get; set; }
+        public string courier { get; set; }
         public string self { get; set; }
     }
 
