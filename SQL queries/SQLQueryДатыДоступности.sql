@@ -62,10 +62,10 @@ SET @PickupPoint6 = '2';
 DECLARE @P_DaysToShow numeric(2);
  Set @P_DaysToShow = 7;
 
- Set @P_DateTimeNow = '4021-06-07T02:00:00' 
+ Set @P_DateTimeNow = '4021-06-07T14:00:00' 
  Set @P_DateTimePeriodBegin = '4021-06-07T00:00:00'
  Set @P_DateTimePeriodEnd = '4021-06-11T00:00:00'
- Set @P_TimeNow = '2001-01-01T02:00:00'
+ Set @P_TimeNow = '2001-01-01T14:00:00'
  Set @P_EmptyDate = '2001-01-01T00:00:00'
  Set @P_MaxDate = '5999-11-11T00:00:00'
 
@@ -236,7 +236,7 @@ HAVING
     (SUM(T2._Fld21412) <> 0.0
     OR SUM(T2._Fld21411) <> 0.0)
 	AND SUM(T2._Fld21412) - SUM(T2._Fld21411) <> 0.0
-OPTION (OPTIMIZE FOR (@P_DateTimeNow='4021-06-01T14:00:00'),KEEP PLAN, KEEPFIXED PLAN);
+OPTION (OPTIMIZE FOR (@P_DateTimeNow='4021-06-07T14:00:00'),KEEP PLAN, KEEPFIXED PLAN);
 
 SELECT Distinct
     T1._Fld23831RRef AS СкладИсточника,
@@ -266,12 +266,12 @@ WHERE
             T2.СкладИсточника AS СкладИсточника
         FROM
             #Temp_Remains T2 WITH(NOLOCK)) 
-		AND T1._Fld23832 >= @P_DateTimeNow
-		AND T1._Fld23832 <= DateAdd(DAY,6,@P_DateTimeNow)
+		AND T1._Fld23832 BETWEEN @P_DateTimeNow AND  DateAdd(DAY,6,@P_DateTimeNow)
+		--AND T1._Fld23832 <= DateAdd(DAY,6,@P_DateTimeNow)
 		AND T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData UNION ALL Select СкладСсылка From #Temp_Goods)
 GROUP BY T1._Fld23831RRef,
 T1._Fld23833RRef
-OPTION (OPTIMIZE FOR (@P_DateTimeNow='4021-06-01T14:00:00'),KEEP PLAN, KEEPFIXED PLAN);
+OPTION (OPTIMIZE FOR (@P_DateTimeNow='4021-06-07T14:00:00'),KEEP PLAN, KEEPFIXED PLAN);
 
 ;
 
@@ -735,7 +735,7 @@ HAVING
             ) AS NUMERIC(16, 0)
         ) > 0.0
     )
-OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-05-26T00:00:00',@P_DateTimePeriodEnd='4021-05-30T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-06-07T00:00:00',@P_DateTimePeriodEnd='4021-06-11T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
 ;
 
 select
@@ -906,7 +906,7 @@ GROUP BY
 	T1.НоменклатураСсылка,
     T1.article,
 	T1.code
-OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-05-26T00:00:00',@P_DateTimePeriodEnd='4021-05-30T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-06-07T00:00:00',@P_DateTimePeriodEnd='4021-06-11T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
 
 Select 
 	IsNull(#Temp_AvailableCourier.article,#Temp_AvailablePickUp.article) AS article,
