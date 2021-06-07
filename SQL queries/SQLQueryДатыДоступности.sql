@@ -62,10 +62,10 @@ SET @PickupPoint6 = '2';
 DECLARE @P_DaysToShow numeric(2);
  Set @P_DaysToShow = 7;
 
- Set @P_DateTimeNow = '4021-06-01T14:00:00' 
- Set @P_DateTimePeriodBegin = '4021-06-01T00:00:00'
- Set @P_DateTimePeriodEnd = '4021-06-05T00:00:00'
- Set @P_TimeNow = '2001-01-01T14:00:00'
+ Set @P_DateTimeNow = '4021-06-07T02:00:00' 
+ Set @P_DateTimePeriodBegin = '4021-06-07T00:00:00'
+ Set @P_DateTimePeriodEnd = '4021-06-11T00:00:00'
+ Set @P_TimeNow = '2001-01-01T02:00:00'
  Set @P_EmptyDate = '2001-01-01T00:00:00'
  Set @P_MaxDate = '5999-11-11T00:00:00'
 
@@ -82,11 +82,11 @@ INSERT INTO
 		Article, code, PickupPoint, quantity 
 	)
 VALUES
-	--(@P_Article1,@P_Code1,@PickupPoint3,0),
-	--(@P_Article2,@P_Code2,@PickupPoint2,0),
-	--(@P_Article1,@P_Code1,NULL,0),
-	--(@P_Article3,@P_Code3,@PickupPoint3,0),
-	--('843414',NULL,NULL,0)
+	(@P_Article1,@P_Code1,@PickupPoint3,0),
+	(@P_Article2,@P_Code2,@PickupPoint2,0),
+	(@P_Article1,@P_Code1,NULL,0),
+	(@P_Article3,@P_Code3,@PickupPoint3,0),
+	('843414',NULL,NULL,0),
 	(@P_Article5,NULL,NULL,0)--,
 	--(@P5,4),
 	--(@P6,3),
