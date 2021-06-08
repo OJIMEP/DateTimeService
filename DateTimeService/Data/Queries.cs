@@ -2037,9 +2037,6 @@ from [master].[sys].[dm_hadr_database_replica_states]";
 
         public const string DatebaseBalancingMain = @"select top (1) _IDRRef from dbo._Reference112";
 
-        public const string DatebaseBalancingReplicaTables = @"SELECT name
-FROM sys.databases
-WHERE OBJECT_ID(name+'.dbo.MSreplication_objects') IS NOT NULL
-";
+        public const string DatebaseBalancingReplicaTables = @"Select TOP(1) _IDRRef FROM dbo._Reference99";
     }
 }

@@ -16,7 +16,7 @@ namespace DateTimeService.Data
         public double DefaultDouble { get; set; }
 
 
-        public static Boolean FillValues(string connString, List<GlobalParam1C> names, ILogger<DateTimeController> _logger)
+        public static Boolean FillValues(SqlConnection conn, List<GlobalParam1C> names, ILogger<DateTimeController> _logger)
         {
 
             bool querySuccessful = false;
@@ -24,7 +24,7 @@ namespace DateTimeService.Data
             try
             {
                 //sql connection object
-                using SqlConnection conn = new(connString);
+                //using SqlConnection conn = new(connString);
 
 
 
@@ -46,7 +46,7 @@ namespace DateTimeService.Data
 
                 cmd.CommandText = string.Format(queryParametrs, string.Join(", ", parameters));
 
-                conn.Open();
+                //conn.Open();
 
                 //execute the SQLCommand
                 SqlDataReader drParametrs = cmd.ExecuteReader();
@@ -66,7 +66,7 @@ namespace DateTimeService.Data
                 drParametrs.Close();
 
                 //close connection
-                conn.Close();
+                //conn.Close();
 
             }
             catch (Exception ex)
@@ -76,7 +76,7 @@ namespace DateTimeService.Data
                     TimeSQLExecution = 0,
                     ErrorDescription = ex.Message,
                     Status = "Error",
-                    DatabaseConnection = LoadBalancing.RemoveCredentialsFromConnectionString(connString)
+                    DatabaseConnection = LoadBalancing.RemoveCredentialsFromConnectionString(conn.ConnectionString)
                 };
 
                 var logstringElement = JsonSerializer.Serialize(logElement);

@@ -51,7 +51,9 @@ namespace DateTimeService.Controllers
 
             //string connString = _configuration.GetConnectionString("1CDataSqlConnection");
 
-            string connString = await _loadBalacing.GetDatabaseConnectionAsync();
+            //string connString = await _loadBalacing.GetDatabaseConnectionAsync();
+
+            var conn = await _loadBalacing.GetDatabaseConnectionAsync();
 
             //string connString = @"Server=localhost;Database=DevBase_cut_v3;Uid=sa;Pwd=; Trusted_Connection = False;";
 
@@ -62,7 +64,7 @@ namespace DateTimeService.Controllers
                 Host = HttpContext.Request.Host.ToString(),
                 RequestContent = JsonSerializer.Serialize(nomenclatures),
                 Id = Guid.NewGuid().ToString(),
-                DatabaseConnection = LoadBalancing.RemoveCredentialsFromConnectionString(connString),
+                DatabaseConnection = LoadBalancing.RemoveCredentialsFromConnectionString(conn.ConnectionString),
                 AuthenticatedUser = User.Identity.Name
             };
 
@@ -73,7 +75,7 @@ namespace DateTimeService.Controllers
             try
             {
                 //sql connection object
-                using SqlConnection conn = new(connString);
+                //using SqlConnection conn = new(connString);
 
                 conn.StatisticsEnabled = true;
 
@@ -117,7 +119,7 @@ namespace DateTimeService.Controllers
                 cmd.CommandText = string.Format(query, string.Join(", ", parameters));
 
                 //open connection
-                conn.Open();
+                //conn.Open();
 
                 //execute the SQLCommand
                 SqlDataReader dr = cmd.ExecuteReader();
@@ -144,7 +146,7 @@ namespace DateTimeService.Controllers
                 dr.Close();
 
                 //close connection
-                conn.Close();
+                //conn.Close();
 
                 logElement.TimeSQLExecution = sqlCommandExecutionTime;
                 logElement.ResponseContent = JsonSerializer.Serialize(result);
@@ -156,6 +158,8 @@ namespace DateTimeService.Controllers
                 logElement.ErrorDescription = ex.Message;
                 logElement.Status = "Error";
             }
+
+            conn.Close();
 
             var logstringElement = JsonSerializer.Serialize(logElement);
 
@@ -186,21 +190,24 @@ namespace DateTimeService.Controllers
             };
 
 
-            string connString;
+            //string connString;
+            SqlConnection conn;
             Stopwatch watch = new();
             watch.Start();
             try
             {
-                connString = await _loadBalacing.GetDatabaseConnectionAsync();
+                //connString = await _loadBalacing.GetDatabaseConnectionAsync();
+                conn = await _loadBalacing.GetDatabaseConnectionAsync();
             }
             catch (Exception ex)
             {
-                connString = "";
+                //connString = "";
                 logElementLoadBal.TimeSQLExecution = 0;
                 logElementLoadBal.ErrorDescription = ex.Message;
                 logElementLoadBal.Status = "Error";
                 var logstringElement1 = JsonSerializer.Serialize(logElementLoadBal);
                 _logger.LogInformation(logstringElement1);
+                return StatusCode(500);
             }
             watch.Stop();
             //string connString = @"Server=localhost;Database=DevBase_cut_v3;Uid=sa;Pwd=; Trusted_Connection = False;";
@@ -213,7 +220,7 @@ namespace DateTimeService.Controllers
                 Host = HttpContext.Request.Host.ToString(),
                 RequestContent = JsonSerializer.Serialize(data),
                 Id = Guid.NewGuid().ToString(),
-                DatabaseConnection = LoadBalancing.RemoveCredentialsFromConnectionString(connString),
+                DatabaseConnection = LoadBalancing.RemoveCredentialsFromConnectionString(conn.ConnectionString),
                 AuthenticatedUser = User.Identity.Name,
                 LoadBalancingExecution = watch.ElapsedMilliseconds
             };
@@ -244,7 +251,7 @@ namespace DateTimeService.Controllers
                 }
             };
             watch.Start();
-            GlobalParam1C.FillValues(connString, Parameters1C, _logger);
+            GlobalParam1C.FillValues(conn, Parameters1C, _logger);
             watch.Stop();
             logElement.GlobalParametersExecution = watch.ElapsedMilliseconds;
             watch.Reset();
@@ -259,12 +266,12 @@ namespace DateTimeService.Controllers
                 }
 
                 //sql connection object
-                using SqlConnection conn = new(connString);
+                //using SqlConnection conn = new(connString);
 
                 conn.StatisticsEnabled = true;
 
                 //open connection
-                conn.Open();
+                //conn.Open();
 
                 string query = Queries.AvailableDate;
 
@@ -361,7 +368,7 @@ namespace DateTimeService.Controllers
                 dr.Close();
 
                 //close connection
-                conn.Close();
+                //conn.Close();
 
                 logElement.TimeSQLExecution = sqlCommandExecutionTime;
                 logElement.ResponseContent = JsonSerializer.Serialize(dbResult);
@@ -373,6 +380,8 @@ namespace DateTimeService.Controllers
                 logElement.ErrorDescription = ex.Message;
                 logElement.Status = "Error";
             }
+
+            conn.Close();
 
             var resultDict = new ResponseAvailableDateDict();
 
@@ -457,9 +466,34 @@ namespace DateTimeService.Controllers
             Stopwatch stopwatchExecution = new();
             stopwatchExecution.Start();
 
+            var logElementLoadBal = new ElasticLogElement
+            {
+                Path = HttpContext.Request.Path,
+                Host = HttpContext.Request.Host.ToString(),
+                RequestContent = JsonSerializer.Serialize(data),
+                Id = Guid.NewGuid().ToString(),
+                AuthenticatedUser = User.Identity.Name
+            };
+
+            //string connString;
+            SqlConnection conn;
             Stopwatch watch = new();
             watch.Start();
-            string connString = await _loadBalacing.GetDatabaseConnectionAsync();
+            try
+            {
+                //connString = await _loadBalacing.GetDatabaseConnectionAsync();
+                conn = await _loadBalacing.GetDatabaseConnectionAsync();
+            }
+            catch (Exception ex)
+            {
+                //connString = "";
+                logElementLoadBal.TimeSQLExecution = 0;
+                logElementLoadBal.ErrorDescription = ex.Message;
+                logElementLoadBal.Status = "Error";
+                var logstringElement1 = JsonSerializer.Serialize(logElementLoadBal);
+                _logger.LogInformation(logstringElement1);
+                return StatusCode(500);
+            }
             watch.Stop();
 
             //string connString = _configuration.GetConnectionString("1CDataSqlConnection");
@@ -475,7 +509,7 @@ namespace DateTimeService.Controllers
                 Host = HttpContext.Request.Host.ToString(),
                 RequestContent = JsonSerializer.Serialize(inputData),
                 Id = Guid.NewGuid().ToString(),
-                DatabaseConnection = LoadBalancing.RemoveCredentialsFromConnectionString(connString),
+                DatabaseConnection = LoadBalancing.RemoveCredentialsFromConnectionString(conn.ConnectionString),
                 AuthenticatedUser = User.Identity.Name,
                 LoadBalancingExecution = watch.ElapsedMilliseconds
             };
@@ -511,7 +545,7 @@ namespace DateTimeService.Controllers
             };
 
             watch.Start();
-            GlobalParam1C.FillValues(connString, Parameters1C, _logger);
+            GlobalParam1C.FillValues(conn, Parameters1C, _logger);
             watch.Stop();
             logElement.GlobalParametersExecution = watch.ElapsedMilliseconds;
             watch.Reset();
@@ -535,7 +569,7 @@ namespace DateTimeService.Controllers
             {
                 alwaysCheckGeozone = _configuration.GetValue<bool>("alwaysCheckGeozone");
 
-                adressExists = _geoZones.AdressExists(connString, data.address_id);
+                adressExists = _geoZones.AdressExists(conn, data.address_id);
             }
 
             if (!adressExists || alwaysCheckGeozone)
@@ -568,12 +602,12 @@ namespace DateTimeService.Controllers
                 try
                 {
                     //sql connection object
-                    using SqlConnection conn = new(connString);
+                    //using SqlConnection conn = new(connString);
 
                     conn.StatisticsEnabled = true;
 
                     //open connection
-                    conn.Open();
+                    //conn.Open();
 
                     string query = Queries.IntervalList;
 
@@ -690,7 +724,7 @@ namespace DateTimeService.Controllers
                     dr.Close();
 
                     //close connection
-                    conn.Close();
+                    //conn.Close();
 
                     logElement.TimeSQLExecution = sqlCommandExecutionTime;
                     logElement.ResponseContent = JsonSerializer.Serialize(resultLog);
@@ -703,7 +737,7 @@ namespace DateTimeService.Controllers
                     logElement.Status = "Error";
                 }
 
-
+            conn.Close();
             watch.Stop();
             logElement.TimeSQLExecutionFact = watch.ElapsedMilliseconds;
 
@@ -716,120 +750,7 @@ namespace DateTimeService.Controllers
 
             return Ok(result);
         }
-
-        private static void FillGoodsTable(RequestIntervalList data, SqlConnection conn)
-        {
-            RequestDataAvailableDate convertedData = new()
-            {
-                codes = data.orderItems.ToArray()
-            };
-
-            FillGoodsTable(convertedData, conn);
-        }
-
-
-        private static void FillGoodsTable(RequestDataAvailableDate data, SqlConnection conn)
-        {
-
-            string queryGoodsCreate = Queries.CreateTableGoodsRawCreate;
-
-            SqlCommand cmdGoodsTableCreate = new(queryGoodsCreate, conn);
-
-            var GoodsRowsCreate = cmdGoodsTableCreate.ExecuteNonQuery();
-
-            string queryGoods = Queries.CreateTableGoodsRawInsert;
-
-            SqlCommand cmdGoodsTable = new(queryGoods, conn);
-
-            var parameters = new List<string>();//string[data.codes.Length];
-
-            var codesCounter = 0;
-            var pickupPointsCounter = 0;
-
-            foreach (var codesElem in data.codes)
-            {
-
-                var parameterString = string.Format("(@Article{0}, @Code{0}, NULL, @Quantity{0})", codesCounter);
-
-                cmdGoodsTable.Parameters.AddWithValue(string.Format("@Article{0}", codesCounter), codesElem.article);
-                if (String.IsNullOrEmpty(codesElem.code))
-                    cmdGoodsTable.Parameters.AddWithValue(string.Format("@Code{0}", codesCounter), DBNull.Value);
-                else
-                    cmdGoodsTable.Parameters.AddWithValue(string.Format("@Code{0}", codesCounter), codesElem.code);
-                cmdGoodsTable.Parameters.AddWithValue(string.Format("@Quantity{0}", codesCounter), codesElem.quantity);
-
-                parameters.Add(parameterString);
-
-                foreach (var pickupElem in codesElem.PickupPoints)
-                {
-                    var parameterStringPickup = string.Format("(@Article{0}, @Code{0}, @PickupPoint{1}, @Quantity{0})", codesCounter, pickupPointsCounter);
-
-                    cmdGoodsTable.Parameters.AddWithValue(string.Format("@PickupPoint{0}", pickupPointsCounter), pickupElem);
-
-                    parameters.Add(parameterStringPickup);
-
-                    pickupPointsCounter++;
-                }
-                codesCounter++;
-            }
-
-            cmdGoodsTable.CommandText = string.Format(queryGoods, string.Join(", ", parameters));
-
-            var GoodsRows = cmdGoodsTable.ExecuteNonQuery();
-        }
-
-        private static DataTable FillGoodsTableParameter(RequestDataAvailableDate data)
-        {
-
-            var table = new DataTable();
-            table.Columns.Add("Article", typeof(string));
-            table.Columns.Add("code", typeof(string));
-            table.Columns.Add("PickupPoint", typeof(string));
-            table.Columns.Add("quantity", typeof(string));
-
-            foreach (var codesElem in data.codes)
-            {
-
-
-                var row = table.NewRow();
-
-                row["Article"] = codesElem.article;
-
-                if (String.IsNullOrEmpty(codesElem.code))
-                    row["code"] = DBNull.Value;
-                else
-                    row["code"] = codesElem.code;
-
-
-                row["PickupPoint"] = DBNull.Value;
-                row["Quantity"] = codesElem.quantity;
-
-                table.Rows.Add(row);
-
-               
-                foreach (var pickupElem in codesElem.PickupPoints)
-                {
-                    var rowPickup = table.NewRow();
-
-                    rowPickup["Article"] = codesElem.article;
-
-                    if (String.IsNullOrEmpty(codesElem.code))
-                        rowPickup["code"] = DBNull.Value;
-                    else
-                        rowPickup["code"] = codesElem.code;
-
-
-                    rowPickup["PickupPoint"] = pickupElem;
-                    rowPickup["Quantity"] = codesElem.quantity;
-
-                    table.Rows.Add(rowPickup);
-                }
-                
-            }
-
-            return table;
-        }
-
+        
 
         private static string TextFillGoodsTable(RequestIntervalList data, SqlCommand cmdGoodsTable, bool optimizeRowsCount)
         {

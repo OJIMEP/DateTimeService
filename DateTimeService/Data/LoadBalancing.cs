@@ -12,7 +12,7 @@ namespace DateTimeService.Data
 {
     public interface ILoadBalancing
     {
-        Task<string> GetDatabaseConnectionAsync();
+        Task<SqlConnection> GetDatabaseConnectionAsync();
     }
 
     public class LoadBalancing : ILoadBalancing
@@ -26,7 +26,7 @@ namespace DateTimeService.Data
             _logger = logger;
         }
 
-        public async Task<string> GetDatabaseConnectionAsync()
+        public async Task<SqlConnection> GetDatabaseConnectionAsync()
         {
             //string connString = _configuration.GetConnectionString("1CDataSqlConnection");
             
@@ -37,6 +37,8 @@ namespace DateTimeService.Data
             bool firstAvailable = false;
 
             var result = "";
+
+            SqlConnection resultConnection = null;
 
             while (true)
             {
@@ -59,7 +61,9 @@ namespace DateTimeService.Data
 
 
                             //sql connection object
-                            using SqlConnection conn = new(connParametr.Connection);
+                            SqlConnection conn = new(connParametr.Connection);
+                            
+                                                       
 
                             conn.Open();
 
@@ -71,9 +75,10 @@ namespace DateTimeService.Data
                             
                             dr.Close();
 
-                            //close connection
-                            conn.Close();
 
+                            //close connection
+                            //conn.Close();
+                            resultConnection = conn;
                             result = connParametr.Connection;
                             break;
                         }
@@ -98,7 +103,7 @@ namespace DateTimeService.Data
                     firstAvailable = true;
             }
 
-            return result;
+            return resultConnection;
         }
 
         public static string RemoveCredentialsFromConnectionString(string connectionString)
@@ -127,5 +132,7 @@ namespace DateTimeService.Data
         public string Type { get; set; } //main, replica_full, replica_tables 
 
     }
+
+  
 
 }

@@ -19,7 +19,7 @@ namespace DateTimeService.Data
     {
         Task<string> GetGeoZoneID(AdressCoords coords);
         Task<AdressCoords> GetAddressCoordinates(string address_id);
-        Boolean AdressExists(string connString, string _addressId);
+        Boolean AdressExists(SqlConnection conn, string _addressId);
     }
 
     public class AdressCoords
@@ -43,7 +43,7 @@ namespace DateTimeService.Data
         }
 
 
-        public Boolean AdressExists(string connString, string _addressId)
+        public Boolean AdressExists(SqlConnection conn, string _addressId)
         {
 
             bool result = false;
@@ -51,7 +51,7 @@ namespace DateTimeService.Data
             try
             {
                 //sql connection object
-                using SqlConnection conn = new(connString);
+                //using SqlConnection conn = new(connString);
 
 
 
@@ -70,7 +70,7 @@ namespace DateTimeService.Data
 
                 cmd.CommandText = queryParametrs;
 
-                conn.Open();
+                //conn.Open();
 
                 //execute the SQLCommand
                 SqlDataReader drParametrs = cmd.ExecuteReader();
@@ -85,7 +85,7 @@ namespace DateTimeService.Data
                 drParametrs.Close();
 
                 //close connection
-                conn.Close();
+                //conn.Close();
 
             }
             catch (Exception ex)
@@ -95,7 +95,7 @@ namespace DateTimeService.Data
                     TimeSQLExecution = 0,
                     ErrorDescription = ex.Message,
                     Status = "Error",
-                    DatabaseConnection = LoadBalancing.RemoveCredentialsFromConnectionString(connString)
+                    DatabaseConnection = LoadBalancing.RemoveCredentialsFromConnectionString(conn.ConnectionString)
                 };
 
                 var logstringElement = JsonSerializer.Serialize(logElement);
