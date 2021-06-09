@@ -174,7 +174,9 @@ namespace DateTimeService.Controllers
         [HttpPost]
         public async Task<IActionResult> AvailableDateAsync([FromBody] RequestDataAvailableDateByCodeItemsDTO inputDataJson)
         {
-                        
+
+            OkObjectResult result;
+
             var data = _mapper.Map<RequestDataAvailableDate>(inputDataJson);
 
             Stopwatch stopwatchExecution = new();
@@ -402,6 +404,7 @@ namespace DateTimeService.Controllers
                         courier = null,
                         self = null
                     };
+                  
 
                     int dbResultIndex = -1;
                     if (String.IsNullOrEmpty(codeItem.code))
@@ -416,10 +419,10 @@ namespace DateTimeService.Controllers
                     if (dbResultIndex == -1)
                         continue;
 
-                    resultElement.courier = data.delivery_types.Contains("courier")
+                    resultElement.courier = data.delivery_types.Contains("courier") && dbResult.courier[dbResultIndex].Year != 3999
                         ? dbResult.courier[dbResultIndex].Date.ToString("yyyy-MM-ddTHH:mm:ss")
                         : null;
-                    resultElement.self = data.delivery_types.Contains("self")
+                    resultElement.self = data.delivery_types.Contains("self") && dbResult.self[dbResultIndex].Year != 3999
                         ? dbResult.self[dbResultIndex].Date.ToString("yyyy-MM-ddTHH:mm:ss")
                         : null;
 
@@ -439,8 +442,33 @@ namespace DateTimeService.Controllers
                 logElement.ErrorDescription = ex.Message;
                 logElement.Status = "Error";
             }
+
             
-            
+
+            if (data.delivery_types.Contains("self") && data.delivery_types.Contains("courier"))
+            {
+                var resultBoth = new ResponseAvailableDateDictBothDates();
+
+                foreach(var item in resultDict.data)
+                {
+                    var newItem = new ResponseAvailableDateDictElementBothDates
+                    {
+                        code = item.Value.code,
+                        sales_code = item.Value.sales_code,
+                        courier = item.Value.courier,
+                        self = item.Value.self
+                    };
+
+                    resultBoth.data.Add(item.Key, newItem);
+                }
+
+                result = Ok(resultBoth);
+            }
+            else
+            {
+                result = Ok(resultDict);
+            }
+
             watch.Stop();
             logElement.TimeSQLExecutionFact = watch.ElapsedMilliseconds;
 
@@ -451,7 +479,7 @@ namespace DateTimeService.Controllers
 
             _logger.LogInformation(logstringElement);
 
-            return Ok(resultDict);
+            return result;
         }
 
 
