@@ -33,18 +33,26 @@ namespace DateTimeService.Data
             var connectionParameters = _configuration.GetSection("OneSDatabases").Get<List<DatabaseConnectionParameter>>();
 
             var timeMS = DateTime.Now.Millisecond % 100;
-            
+
+            List<string> failedConnections = new();
+
             bool firstAvailable = false;
 
             var result = "";
 
             SqlConnection resultConnection = null;
+            SqlConnection conn = null;
 
             while (true)
             {
                 int percentCounter = 0;
                 foreach (var connParametr in connectionParameters)
                 {
+
+                    if (firstAvailable && failedConnections.Contains(connParametr.Connection))
+                        continue;
+
+
                     percentCounter += connParametr.Priority;
                     if ((timeMS <= percentCounter && connParametr.Priority != 0) || firstAvailable)
                         try
@@ -61,8 +69,7 @@ namespace DateTimeService.Data
 
 
                             //sql connection object
-                            SqlConnection conn = new(connParametr.Connection);
-                            
+                            conn = new(connParametr.Connection);      
                                                        
 
                             conn.Open();
@@ -95,9 +102,16 @@ namespace DateTimeService.Data
                             var logstringElement = JsonSerializer.Serialize(logElement);
 
                             _logger.LogInformation(logstringElement);
+                            
+                            if (conn != null && conn.State != System.Data.ConnectionState.Closed )
+                            {
+                                conn.Close();
+                            }
+
+                            failedConnections.Add(connParametr.Connection);
                         }
                 }
-                if (result.Length > 0)
+                if (result.Length > 0 || firstAvailable)
                     break;
                 else
                     firstAvailable = true;

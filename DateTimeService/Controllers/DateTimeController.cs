@@ -209,10 +209,25 @@ namespace DateTimeService.Controllers
                 logElementLoadBal.Status = "Error";
                 var logstringElement1 = JsonSerializer.Serialize(logElementLoadBal);
                 _logger.LogInformation(logstringElement1);
-                return StatusCode(500);
+                return StatusCode(503);
             }
             watch.Stop();
             //string connString = @"Server=localhost;Database=DevBase_cut_v3;Uid=sa;Pwd=; Trusted_Connection = False;";
+
+            if(conn == null)
+            {
+                logElementLoadBal.TimeSQLExecution = 0;
+                logElementLoadBal.ErrorDescription = "Не найдено доступное соединение к БД";
+                logElementLoadBal.Status = "Error";
+                logElementLoadBal.LoadBalancingExecution = watch.ElapsedMilliseconds;
+                var logstringElement1 = JsonSerializer.Serialize(logElementLoadBal);
+                _logger.LogInformation(logstringElement1);
+
+                Dictionary<string, string> errorDesc = new();
+                errorDesc.Add("ErrorDescription", "Не найдено доступное соединение к БД");
+
+                return StatusCode(500, errorDesc);
+            }
 
             ResponseAvailableDate dbResult = new();
 
