@@ -1776,7 +1776,7 @@ SELECT
 	DATEADD(dd,t.N-1,f.МинимальнаяДата) AS Date
 INTO #Temp_Dates
 FROM #Temp_PickupDatesGroup f
-  CROSS APPLY (SELECT TOP (DATEDIFF(dd,f.МинимальнаяДата,f.МаксимальнаяДата)+1)
+  CROSS APPLY (SELECT TOP (Isnull(DATEDIFF(dd,f.МинимальнаяДата,f.МаксимальнаяДата)+1,1))
         N
     FROM cteTally
     ORDER BY N) t
