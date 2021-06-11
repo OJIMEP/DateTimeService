@@ -338,7 +338,7 @@ namespace DateTimeService.Controllers
 
                 //execute the SQLCommand
                 SqlDataReader dr = cmd.ExecuteReader();
-
+                
                 //check if there are records
                 if (dr.HasRows)
                 {
@@ -368,6 +368,7 @@ namespace DateTimeService.Controllers
                 logElement.TimeSQLExecution = sqlCommandExecutionTime;
                 logElement.ResponseContent = JsonSerializer.Serialize(dbResult);
                 logElement.Status = "Ok";
+                logElement.AdditionalData.Add("stats", JsonSerializer.Serialize(stats));
             }
             catch (Exception ex)
             {
