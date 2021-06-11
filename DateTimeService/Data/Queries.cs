@@ -1125,7 +1125,7 @@ select Период, Max(Приоритет) AS Приоритет into #Temp_Pl
 WITH T(date) AS (
     /*Это получение списка дат интервалов после даты окончания расчета*/
     SELECT
-        Case When @P_DateTimePeriodEnd > CAST(CAST(#Temp_DateAvailable.DateAvailable  AS DATE) AS DATETIME) Then
+        Case When @P_DateTimePeriodEnd >= CAST(CAST(#Temp_DateAvailable.DateAvailable  AS DATE) AS DATETIME) Then
 		DateAdd(day, 1,
 		@P_DateTimePeriodEnd
 		)
