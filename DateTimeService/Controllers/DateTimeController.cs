@@ -277,7 +277,7 @@ namespace DateTimeService.Controllers
             watch.Start();
             try
             {
-                if (data.codes.Length == 0 || (data.codes.Length == 1 && data.codes[0] == null))
+                if (data.Codes.Length == 0 || (data.Codes.Length == 1 && data.Codes[0] == null))
                 {
                     throw new Exception("Пустой массив кодов");
                 }
@@ -313,7 +313,7 @@ namespace DateTimeService.Controllers
                 
 
                 cmd.Parameters.Add("@P_CityCode", SqlDbType.NVarChar, 10);
-                cmd.Parameters["@P_CityCode"].Value = data.city_id;
+                cmd.Parameters["@P_CityCode"].Value = data.CityId;
 
                 cmd.Parameters.Add("@P_DateTimeNow", SqlDbType.DateTime);
                 cmd.Parameters["@P_DateTimeNow"].Value = DateMove;
@@ -371,10 +371,10 @@ namespace DateTimeService.Controllers
                         var availableDateCourier = dr.GetDateTime(2).AddMonths(-24000);
                         var availableDateSelf = dr.GetDateTime(3).AddMonths(-24000);
 
-                        dbResult.article.Add(article);
-                        dbResult.code.Add(code);
-                        dbResult.courier.Add(new(availableDateCourier));
-                        dbResult.self.Add(new(availableDateSelf));
+                        dbResult.Article.Add(article);
+                        dbResult.Code.Add(code);
+                        dbResult.Courier.Add(new(availableDateCourier));
+                        dbResult.Self.Add(new(availableDateSelf));
                     }
                 }
 
@@ -404,50 +404,50 @@ namespace DateTimeService.Controllers
 
             try
             {
-                foreach (var codeItem in data.codes)
+                foreach (var codeItem in data.Codes)
                 {
 
-                    if (data.codes.Length == 0 || (data.codes.Length == 1 && data.codes[0] == null))
+                    if (data.Codes.Length == 0 || (data.Codes.Length == 1 && data.Codes[0] == null))
                     {
                         break;
                     }
 
                     var resultElement = new ResponseAvailableDateDictElement
                     {
-                        code = codeItem.article,
-                        sales_code = codeItem.sales_code,
-                        courier = null,
-                        self = null
+                        Code = codeItem.Article,
+                        SalesCode = codeItem.SalesCode,
+                        Courier = null,
+                        Self = null
                     };
                   
 
                     int dbResultIndex = -1;
-                    if (String.IsNullOrEmpty(codeItem.code))
+                    if (String.IsNullOrEmpty(codeItem.Code))
                     {
-                        dbResultIndex = dbResult.article.FindIndex(s => s == codeItem.article);
+                        dbResultIndex = dbResult.Article.FindIndex(s => s == codeItem.Article);
                     }
                     else
                     {
-                        dbResultIndex = dbResult.code.FindIndex(s => s == codeItem.code);
+                        dbResultIndex = dbResult.Code.FindIndex(s => s == codeItem.Code);
                     }
 
                     if (dbResultIndex == -1)
                         continue;
 
-                    resultElement.courier = data.delivery_types.Contains("courier") && dbResult.courier[dbResultIndex].Year != 3999
-                        ? dbResult.courier[dbResultIndex].Date.ToString("yyyy-MM-ddTHH:mm:ss")
+                    resultElement.Courier = data.DeliveryTypes.Contains("courier") && dbResult.Courier[dbResultIndex].Year != 3999
+                        ? dbResult.Courier[dbResultIndex].Date.ToString("yyyy-MM-ddTHH:mm:ss")
                         : null;
-                    resultElement.self = data.delivery_types.Contains("self") && dbResult.self[dbResultIndex].Year != 3999
-                        ? dbResult.self[dbResultIndex].Date.ToString("yyyy-MM-ddTHH:mm:ss")
+                    resultElement.Self = data.DeliveryTypes.Contains("self") && dbResult.Self[dbResultIndex].Year != 3999
+                        ? dbResult.Self[dbResultIndex].Date.ToString("yyyy-MM-ddTHH:mm:ss")
                         : null;
 
-                    if (String.IsNullOrEmpty(codeItem.code))
+                    if (String.IsNullOrEmpty(codeItem.Code))
                     {
-                        resultDict.data.Add(codeItem.article, resultElement);
+                        resultDict.Data.Add(codeItem.Article, resultElement);
                     }
                     else
                     {
-                        resultDict.data.Add(String.Concat(codeItem.article, "_", codeItem.sales_code), resultElement);
+                        resultDict.Data.Add(String.Concat(codeItem.Article, "_", codeItem.SalesCode), resultElement);
                     }
                 }
             }
@@ -460,21 +460,21 @@ namespace DateTimeService.Controllers
 
             
 
-            if (data.delivery_types.Contains("self") && data.delivery_types.Contains("courier"))
+            if (data.DeliveryTypes.Contains("self") && data.DeliveryTypes.Contains("courier"))
             {
                 var resultBoth = new ResponseAvailableDateDictBothDates();
 
-                foreach(var item in resultDict.data)
+                foreach(var item in resultDict.Data)
                 {
                     var newItem = new ResponseAvailableDateDictElementBothDates
                     {
-                        code = item.Value.code,
-                        sales_code = item.Value.sales_code,
-                        courier = item.Value.courier,
-                        self = item.Value.self
+                        Code = item.Value.Code,
+                        SalesCode = item.Value.SalesCode,
+                        Courier = item.Value.Courier,
+                        Self = item.Value.Self
                     };
 
-                    resultBoth.data.Add(item.Key, newItem);
+                    resultBoth.Data.Add(item.Key, newItem);
                 }
 
                 result = Ok(resultBoth);
@@ -603,7 +603,7 @@ namespace DateTimeService.Controllers
 
             bool adressExists = false;
 
-            if (data.delivery_type == "self")
+            if (data.DeliveryType == "self")
             {
                 adressExists = true;
                 alwaysCheckGeozone = false;
@@ -612,7 +612,7 @@ namespace DateTimeService.Controllers
             {
                 alwaysCheckGeozone = _configuration.GetValue<bool>("alwaysCheckGeozone");
 
-                adressExists = _geoZones.AdressExists(conn, data.address_id);
+                adressExists = _geoZones.AdressExists(conn, data.AddressId);
             }
 
             if (!adressExists || alwaysCheckGeozone)
@@ -620,7 +620,7 @@ namespace DateTimeService.Controllers
                 //TODO: добавить обращение к сервисам для получения геозоны
                 Stopwatch stopwatch = new();
                 stopwatch.Start();
-                var coords = await _geoZones.GetAddressCoordinates(data.address_id);
+                var coords = await _geoZones.GetAddressCoordinates(data.AddressId);
                 stopwatch.Stop();
                 logElement.TimeLocationExecution = stopwatch.ElapsedMilliseconds;
                 stopwatch.Reset();
@@ -677,16 +677,16 @@ namespace DateTimeService.Controllers
                     //SqlCommand cmd = new(query, conn);
 
                     cmd.Parameters.Add("@P_AdressCode", SqlDbType.NVarChar, 20);
-                    cmd.Parameters["@P_AdressCode"].Value = data.address_id != null ? data.address_id : DBNull.Value;
+                    cmd.Parameters["@P_AdressCode"].Value = data.AddressId != null ? data.AddressId : DBNull.Value;
 
                     cmd.Parameters.Add("@PickupPoint1", SqlDbType.NVarChar,5);
-                    cmd.Parameters["@PickupPoint1"].Value = data.pickup_point != null ? data.pickup_point : DBNull.Value;
+                    cmd.Parameters["@PickupPoint1"].Value = data.PickupPoint != null ? data.PickupPoint : DBNull.Value;
 
                     cmd.Parameters.Add("@P_Credit", SqlDbType.Int);
-                    cmd.Parameters["@P_Credit"].Value = data.payment == "partly_pay" ? 1 : 0;
+                    cmd.Parameters["@P_Credit"].Value = data.Payment == "partly_pay" ? 1 : 0;
 
                     cmd.Parameters.Add("@P_Floor", SqlDbType.Float);
-                    cmd.Parameters["@P_Floor"].Value = (double)(data.floor != null ? data.floor : Parameters1C.First(x => x.Name.Contains("Логистика_ЭтажПоУмолчанию")).ValueDouble);
+                    cmd.Parameters["@P_Floor"].Value = (double)(data.Floor != null ? data.Floor : Parameters1C.First(x => x.Name.Contains("Логистика_ЭтажПоУмолчанию")).ValueDouble);
 
                     cmd.Parameters.Add("@P_DaysToShow", SqlDbType.Int);
                     cmd.Parameters["@P_DaysToShow"].Value = 7;
@@ -746,16 +746,16 @@ namespace DateTimeService.Controllers
                             var begin = dr.GetDateTime(0).AddMonths(-24000);
                             var end = dr.GetDateTime(1).AddMonths(-24000);
 
-                            result.data.Add(new ResponseIntervalListElement
+                            result.Data.Add(new ResponseIntervalListElement
                             {
-                                begin = begin,
-                                end = end
+                                Begin = begin,
+                                End = end
                             });
 
-                            resultLog.data.Add(new ResponseIntervalListElementWithOffSet
+                            resultLog.Data.Add(new ResponseIntervalListElementWithOffSet
                             {
-                                begin = new(begin),
-                                end = new(end)
+                                Begin = new(begin),
+                                End = new(end)
                             });
                         }
                     }
@@ -799,7 +799,7 @@ namespace DateTimeService.Controllers
         {
             RequestDataAvailableDate convertedData = new()
             {
-                codes = data.orderItems.ToArray()
+                Codes = data.OrderItems.ToArray()
             };
 
             return TextFillGoodsTable(convertedData, cmdGoodsTable, optimizeRowsCount);
@@ -816,9 +816,9 @@ namespace DateTimeService.Controllers
             var parameters = new List<string>();//string[data.codes.Length];
             List<string> PickupsList = new();
 
-            var maxCodes = data.codes.Length;
+            var maxCodes = data.Codes.Length;
 
-            foreach (var codesElem in data.codes)
+            foreach (var codesElem in data.Codes)
             {
                 foreach (var item in codesElem.PickupPoints)
                 {
@@ -836,11 +836,11 @@ namespace DateTimeService.Controllers
             PickupsList.Add("");
             //if (maxPickups > 2) maxPickups = 7;
 
-            if (data.codes.Length > 2) maxCodes = 10;
-            if (data.codes.Length > 10) maxCodes = 30;
-            if (data.codes.Length > 30) maxCodes = 60;
-            if (data.codes.Length > 60) maxCodes = 100;
-            if (data.codes.Length > maxCodes || !optimizeRowsCount) maxCodes = data.codes.Length;
+            if (data.Codes.Length > 2) maxCodes = 10;
+            if (data.Codes.Length > 10) maxCodes = 30;
+            if (data.Codes.Length > 30) maxCodes = 60;
+            if (data.Codes.Length > 60) maxCodes = 100;
+            if (data.Codes.Length > maxCodes || !optimizeRowsCount) maxCodes = data.Codes.Length;
 
             foreach (var pickupElem in PickupsList)
             {
@@ -858,13 +858,13 @@ namespace DateTimeService.Controllers
             {
 
                 RequestDataCodeItem codesElem;
-                if (codesCounter< data.codes.Length)
+                if (codesCounter< data.Codes.Length)
                 {
-                    codesElem = data.codes[codesCounter];
+                    codesElem = data.Codes[codesCounter];
                 }
                 else
                 {
-                    codesElem = data.codes[data.codes.Length-1];
+                    codesElem = data.Codes[^1];
                 }
 
                 var pickupPointsCounter = 0;
@@ -874,17 +874,17 @@ namespace DateTimeService.Controllers
                 
                 //cmdGoodsTable.Parameters.AddWithValue(string.Format("@Article{0}", codesCounter), codesElem.article);
                 cmdGoodsTable.Parameters.Add(string.Format("@Article{0}", codesCounter), SqlDbType.NVarChar, 11);
-                cmdGoodsTable.Parameters[string.Format("@Article{0}", codesCounter)].Value = codesElem.article;
+                cmdGoodsTable.Parameters[string.Format("@Article{0}", codesCounter)].Value = codesElem.Article;
 
                 cmdGoodsTable.Parameters.Add(string.Format("@Code{0}", codesCounter), SqlDbType.NVarChar, 11);
-                if (String.IsNullOrEmpty(codesElem.code))
+                if (String.IsNullOrEmpty(codesElem.Code))
                     cmdGoodsTable.Parameters[string.Format("@Code{0}", codesCounter)].Value = DBNull.Value;
                 else
-                    cmdGoodsTable.Parameters[string.Format("@Code{0}", codesCounter)].Value = codesElem.code;
+                    cmdGoodsTable.Parameters[string.Format("@Code{0}", codesCounter)].Value = codesElem.Code;
 
                 //cmdGoodsTable.Parameters.AddWithValue(string.Format("@Quantity{0}", codesCounter), codesElem.quantity);
                 cmdGoodsTable.Parameters.Add(string.Format("@Quantity{0}", codesCounter), SqlDbType.Int, 10);
-                cmdGoodsTable.Parameters[string.Format("@Quantity{0}", codesCounter)].Value = codesElem.quantity;
+                cmdGoodsTable.Parameters[string.Format("@Quantity{0}", codesCounter)].Value = codesElem.Quantity;
 
                 parameters.Add(parameterString);
 

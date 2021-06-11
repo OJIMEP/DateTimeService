@@ -26,7 +26,7 @@ namespace DateTimeService.Areas.Identity.Data
 
     public class UserService : IUserService
     {
-        private DateTimeServiceContext _context;
+        private readonly DateTimeServiceContext _context;
         private readonly UserManager<DateTimeServiceUser> userManager;
         private readonly IConfiguration _configuration;
         //private readonly AppSettings _appSettings;
@@ -49,8 +49,8 @@ namespace DateTimeService.Areas.Identity.Data
                 return null;
 
             // authentication successful so generate jwt and refresh tokens
-            var jwtToken = await generateJwtTokenAsync(user);
-            var refreshToken = generateRefreshToken(ipAddress);
+            var jwtToken = await GenerateJwtTokenAsync(user);
+            var refreshToken = GenerateRefreshToken(ipAddress);
 
             // save refresh token
             if (user.RefreshTokens == null)
@@ -78,7 +78,7 @@ namespace DateTimeService.Areas.Identity.Data
             if (!refreshToken.IsActive) return null;
 
             // replace old refresh token with a new one and save
-            var newRefreshToken = generateRefreshToken(ipAddress);
+            var newRefreshToken = GenerateRefreshToken(ipAddress);
             refreshToken.Revoked = DateTime.UtcNow;
             refreshToken.RevokedByIp = ipAddress;
             refreshToken.ReplacedByToken = newRefreshToken.Token;
@@ -91,7 +91,7 @@ namespace DateTimeService.Areas.Identity.Data
             _context.SaveChanges();
 
             // generate new jwt
-            var jwtToken = await generateJwtTokenAsync(user);
+            var jwtToken = await GenerateJwtTokenAsync(user);
 
             var jwtTokenString = new JwtSecurityTokenHandler().WriteToken(jwtToken);
 
@@ -131,7 +131,7 @@ namespace DateTimeService.Areas.Identity.Data
 
         // helper methods
 
-        private async Task<JwtSecurityToken> generateJwtTokenAsync(DateTimeServiceUser user)
+        private async Task<JwtSecurityToken> GenerateJwtTokenAsync(DateTimeServiceUser user)
         {
             var userRoles = await userManager.GetRolesAsync(user);
 
@@ -159,7 +159,7 @@ namespace DateTimeService.Areas.Identity.Data
             return token;//new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        private static RefreshToken generateRefreshToken(string ipAddress)
+        private static RefreshToken GenerateRefreshToken(string ipAddress)
         {
             using var rngCryptoServiceProvider = new RNGCryptoServiceProvider();
             var randomBytes = new byte[64];

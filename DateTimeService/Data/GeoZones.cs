@@ -10,6 +10,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 
@@ -141,8 +142,8 @@ namespace DateTimeService.Data
                 var locationsResponse = JsonSerializer.Deserialize<LocationsResponse>(responseString);
 
                 IFormatProvider formatter = new NumberFormatInfo { NumberDecimalSeparator = "." };
-                result.X_coordinates = Double.Parse(locationsResponse.data.attributes.x_coordinate, formatter);
-                result.Y_coordinates = Double.Parse(locationsResponse.data.attributes.y_coordinate, formatter);
+                result.X_coordinates = Double.Parse(locationsResponse.Data.Attributes.X_coordinate, formatter);
+                result.Y_coordinates = Double.Parse(locationsResponse.Data.Attributes.Y_coordinate, formatter);
                 result.AvailableToUse = true;
             }
             catch(Exception ex)
@@ -230,37 +231,23 @@ namespace DateTimeService.Data
 
     public class LocationsResponse
     {
-        public LocationsResponseElem data { get; set; }
+        [JsonPropertyName("data")]
+        public LocationsResponseElem Data { get; set; }
     }
     public class LocationsResponseElem
     {
-        public LocationsResponseElemAttrib attributes { get; set; }        
-        public string type { get; set; }
-        public string id { get; set; }
+        [JsonPropertyName("attributes")]
+        public LocationsResponseElemAttrib Attributes { get; set; }
+        [JsonPropertyName("type")]
+        public string Type { get; set; }
+        [JsonPropertyName("id")]
+        public string Id { get; set; }
     }
     public class LocationsResponseElemAttrib
     {
-        public string x_coordinate { get; set; }
-        public string y_coordinate { get; set; }
+        [JsonPropertyName("x_coordinate")]
+        public string X_coordinate { get; set; }
+        [JsonPropertyName("y_coordinate")]
+        public string Y_coordinate { get; set; }
     }
-
-    public class BTSResponse
-    {
-        [XmlElement(Namespace = "http://www.cpandl.com")]
-        public string ItemName;
-        [XmlElement(Namespace = "http://www.cpandl.com")]
-        public string Description;
-        [XmlElement(Namespace = "http://www.cohowinery.com")]
-        public decimal UnitPrice;
-        [XmlElement(Namespace = "http://www.cpandl.com")]
-        public int Quantity;
-        [XmlElement(Namespace = "http://www.cohowinery.com")]
-        public decimal LineTotal;
-        // A custom method used to calculate price per item.
-        public void Calculate()
-        {
-            LineTotal = UnitPrice * Quantity;
-        }
-    }
-
 }

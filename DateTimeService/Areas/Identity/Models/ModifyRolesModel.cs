@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace DateTimeService.Areas.Identity.Models
@@ -10,7 +11,11 @@ namespace DateTimeService.Areas.Identity.Models
     {
         [Required(ErrorMessage = "User Name is required")]
         public string Username { get; set; }
-        public string[] addRoles { get; set; }
-        public string[] deleteRoles { get; set; }
+
+        [JsonPropertyName("addRoles")]
+        public string[] AddRoles { get; set; }
+
+        [JsonPropertyName("deleteRoles")]
+        public string[] DeleteRoles { get; set; }
     }
 }

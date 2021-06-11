@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using DateTimeService.Controllers;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +11,14 @@ namespace DateTimeService.Filters
 {
     public class ConnectionResetExceptionFilter : IAsyncExceptionFilter
     {
+
+        private readonly ILogger<DateTimeController> _logger;
+
+        public ConnectionResetExceptionFilter(ILogger<DateTimeController> logger)
+        {
+            _logger = logger;
+        }
+
         public Task OnExceptionAsync(ExceptionContext context)
         {
             
@@ -24,6 +34,7 @@ namespace DateTimeService.Filters
                 context.ExceptionHandled = true;
 
                 
+                _logger.LogInformation("Соединение сброшено");
             }
             return Task.CompletedTask;
         }

@@ -9,38 +9,44 @@ namespace DateTimeService.Models
 {
     public class RequestDataAvailableDateByCodesDTO
     {
-        [Required]
-        public string city_id { get; set; }
-        [Required]
-        public string[] delivery_types { get; set; }
-        [Required]
-        public string[] codes { get; set; }
+        [Required, JsonPropertyName("city_id")]
+        public string CityId { get; set; }
+
+        [Required, JsonPropertyName("delivery_types")]
+        public string[] DeliveryTypes { get; set; }
+
+        [Required, JsonPropertyName("codes")]
+        public string[] Codes { get; set; }
 
     }
 
     public class RequestDataAvailableDateByCodeItemsDTO
     {
-        [Required]
-        public string city_id { get; set; }
-        [Required]
-        public string[] delivery_types { get; set; }
+        [Required, JsonPropertyName("city_id")]
+        public string CityId { get; set; }
+
+        [Required, JsonPropertyName("delivery_types")]
+        public string[] DeliveryTypes { get; set; }
+
         [Required, MinLength(1),JsonPropertyName("codes")]
-        public RequestDataCodeItemDTO[] codeItems { get; set; }
+        public RequestDataCodeItemDTO[] CodeItems { get; set; }
 
     }
 
     public class RequestDataAvailableDate
     {
-        [Required]
-        public string city_id { get; set; }
-        [Required]
-        public string[] delivery_types { get; set; }
+        [Required, JsonPropertyName("city_id")]
+        public string CityId { get; set; }
+
+        [Required, JsonPropertyName("delivery_types")]
+        public string[] DeliveryTypes { get; set; }
+
         [Required, MinLength(1), JsonPropertyName("codeItems")]
-        public RequestDataCodeItem[] codes { get; set; }
+        public RequestDataCodeItem[] Codes { get; set; }
 
         public RequestDataAvailableDate()
         {
-            codes = Array.Empty<RequestDataCodeItem>();
+            Codes = Array.Empty<RequestDataCodeItem>();
         }
     }
 }

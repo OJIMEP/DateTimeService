@@ -59,11 +59,11 @@ namespace DateTimeService
                     }
 
                     var logstringElement = JsonSerializer.Serialize(logElement);
-                    logMessage.message.Add(logstringElement);
+                    logMessage.Message.Add(logstringElement);
                 }
                 else
                 {
-                    logMessage.message.Add(formatter(state, exception));
+                    logMessage.Message.Add(formatter(state, exception));
                 }
                 
 

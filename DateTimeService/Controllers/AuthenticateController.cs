@@ -40,7 +40,7 @@ namespace DateTimeService.Controllers
             {
 
 
-                var response = await _userService.AuthenticateAsync(model, ipAddress());
+                var response = await _userService.AuthenticateAsync(model, IpAddress());
 
                 if (response == null)
                     return BadRequest();
@@ -61,8 +61,8 @@ namespace DateTimeService.Controllers
         [HttpPost("refresh-token")]
         public async Task<IActionResult> RefreshTokenAsync([FromBody] RefreshTokenModel model)
         {
-            var refreshToken = model.refresh_token;
-            var response = await _userService.RefreshTokenAsync(refreshToken, ipAddress());
+            var refreshToken = model.RefreshToken;
+            var response = await _userService.RefreshTokenAsync(refreshToken, IpAddress());
 
             if (response == null)
                 return Unauthorized(new { message = "Invalid token" });
@@ -82,12 +82,12 @@ namespace DateTimeService.Controllers
         public IActionResult RevokeToken([FromBody] RefreshTokenModel model)
         {
             // accept token from request body or cookie
-            var token = model.refresh_token;
+            var token = model.RefreshToken;
 
             if (string.IsNullOrEmpty(token))
                 return BadRequest(new { message = "Token is required" });
 
-            var response = _userService.RevokeToken(token, ipAddress());
+            var response = _userService.RevokeToken(token, IpAddress());
 
             if (!response)
                 return NotFound(new { message = "Token not found" });
@@ -180,7 +180,7 @@ namespace DateTimeService.Controllers
             List<string> successAddRoles = new ();
             List<string> successDeleteRoles = new();
 
-            foreach (var role in model.addRoles)
+            foreach (var role in model.AddRoles)
             {
                 if (await roleManager.RoleExistsAsync(role))
                 {
@@ -189,7 +189,7 @@ namespace DateTimeService.Controllers
                 }
             }
 
-            foreach (var role in model.deleteRoles)
+            foreach (var role in model.DeleteRoles)
             {
                 if (await roleManager.RoleExistsAsync(role))
                 {
@@ -210,7 +210,7 @@ namespace DateTimeService.Controllers
         }
 
 
-        private string ipAddress()
+        private string IpAddress()
         {
             if (Request.Headers.ContainsKey("X-Forwarded-For"))
                 return Request.Headers["X-Forwarded-For"];

@@ -8,46 +8,55 @@ namespace DateTimeService.Models
 {
     public class ResponseAvailableDateDict
     {
-        public Dictionary<string, ResponseAvailableDateDictElement> data { get; set; }
+        [JsonPropertyName("data")]
+        public Dictionary<string, ResponseAvailableDateDictElement> Data { get; set; }
 
 
         public ResponseAvailableDateDict()
         {
-            data = new Dictionary<string, ResponseAvailableDateDictElement>();
+            Data = new Dictionary<string, ResponseAvailableDateDictElement>();
         }
     }
 
     public class ResponseAvailableDateDictElement
     {
-        public string code { get; set; }
+        [JsonPropertyName("code")]
+        public string Code { get; set; }
 
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public string sales_code { get; set; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull), JsonPropertyName("sales_code")]
+        public string SalesCode { get; set; }
 
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public string courier { get; set; }
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public string self { get; set; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull), JsonPropertyName("courier")]
+        public string Courier { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull), JsonPropertyName("self")]
+        public string Self { get; set; }
     }
 
     public class ResponseAvailableDateDictBothDates
     {
-        public Dictionary<string, ResponseAvailableDateDictElementBothDates> data { get; set; }
+        [JsonPropertyName("data")]
+        public Dictionary<string, ResponseAvailableDateDictElementBothDates> Data { get; set; }
        
         public ResponseAvailableDateDictBothDates()
         {
-            data = new Dictionary<string, ResponseAvailableDateDictElementBothDates>();
+            Data = new Dictionary<string, ResponseAvailableDateDictElementBothDates>();
         }
     }
 
     public class ResponseAvailableDateDictElementBothDates
     {
-        public string code { get; set; }
+        [JsonPropertyName("code")]
+        public string Code { get; set; }
 
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public string sales_code { get; set; }
-        public string courier { get; set; }
-        public string self { get; set; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull), JsonPropertyName("sales_code")]
+        public string SalesCode { get; set; }
+        
+        [JsonPropertyName("courier")]
+        public string Courier { get; set; }
+
+        [JsonPropertyName("self")]
+        public string Self { get; set; }
     }
 
 }
