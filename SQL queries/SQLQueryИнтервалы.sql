@@ -900,7 +900,7 @@ SELECT
 		DATEADD(
 			SECOND,
 			CAST(
-				DATEDIFF(SECOND, @P_EmptyDate, ПВЗГрафикРаботы._Fld23617) AS NUMERIC(12)
+				DATEDIFF(SECOND, @P_EmptyDate, isNull(ПВЗИзмененияГрафикаРаботы._Fld27057, ПВЗГрафикРаботы._Fld23617)) AS NUMERIC(12)
 			),
 			date
 		) < #Temp_DateAvailable.DateAvailable 
@@ -909,7 +909,7 @@ SELECT
 		DATEADD(
 			SECOND,
 			CAST(
-				DATEDIFF(SECOND, @P_EmptyDate, ПВЗГрафикРаботы._Fld23617) AS NUMERIC(12)
+				DATEDIFF(SECOND, @P_EmptyDate, isNull(ПВЗИзмененияГрафикаРаботы._Fld27057, ПВЗГрафикРаботы._Fld23617)) AS NUMERIC(12)
 			),
 			date
 		)
@@ -917,7 +917,7 @@ SELECT
 	DATEADD(
         SECOND,
         CAST(
-            DATEDIFF(SECOND, @P_EmptyDate, ПВЗГрафикРаботы._Fld23618) AS NUMERIC(12)
+            DATEDIFF(SECOND, @P_EmptyDate, isNull(ПВЗИзмененияГрафикаРаботы._Fld27058, ПВЗГрафикРаботы._Fld23618)) AS NUMERIC(12)
         ),
         date
     ) As ВремяОкончания
@@ -928,11 +928,17 @@ FROM
 			#Temp_DateAvailable.СкладНазначения = Tdate.СкладНазначения
 		Inner Join dbo._Reference226 Склады ON Склады._IDRRef = #Temp_DateAvailable.СкладНазначения
 			Inner Join _Reference23612 On Склады._Fld23620RRef = _Reference23612._IDRRef
-				Inner Join _Reference23612_VT23613 As ПВЗГрафикРаботы 
+				Left Join _Reference23612_VT23613 As ПВЗГрафикРаботы 
 				On _Reference23612._IDRRef = _Reference23612_IDRRef
 				AND (case when DATEPART ( dw , Tdate.date ) = 1 then 7 else DATEPART ( dw , Tdate.date ) -1 END) = ПВЗГрафикРаботы._Fld23615
 					AND ПВЗГрафикРаботы._Fld25265 = 0x00 --не выходной				
-		WHERE DATEADD(
+		Left Join _Reference23612_VT27054 As ПВЗИзмененияГрафикаРаботы 
+				On _Reference23612._IDRRef = ПВЗИзмененияГрафикаРаботы._Reference23612_IDRRef
+				AND Tdate.date = ПВЗИзмененияГрафикаРаботы._Fld27056
+				AND ПВЗИзмененияГрафикаРаботы._Fld27059 = 0x00 --не выходной
+		WHERE 
+			ПВЗГрафикРаботы._Reference23612_IDRRef is not Null or ПВЗИзмененияГрафикаРаботы._Reference23612_IDRRef is not null
+		AND DATEADD(
 			SECOND,
 			CAST(
             DATEDIFF(SECOND, @P_EmptyDate, ПВЗГрафикРаботы._Fld23618) AS NUMERIC(12)
