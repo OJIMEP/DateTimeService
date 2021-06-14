@@ -27,7 +27,7 @@ DECLARE @P_TimeNow datetime;
 DECLARE @P_EmptyDate datetime;
 DECLARE @P_MaxDate datetime;
 
- SET @P_Article1 = '358649'; --артикулы
+ SET @P_Article1 = '5990263'; --артикулы
  SET @P_Article2 = '424941';
  SET @P_Article3 = '69516';
  SET @P_Article4 = '5962720';
@@ -36,7 +36,7 @@ DECLARE @P_MaxDate datetime;
  SET @P_Article7 = '380386';
  SET @P_Article8 = '358619';
 
- SET @P_Code1 = '00-00444697'; --коды для уценки
+ SET @P_Code1 = null; --коды для уценки
  SET @P_Code2 = '00-00527933';
  SET @P_Code3 = NULL;
  SET @P_Code4 = NULL;
@@ -45,13 +45,13 @@ DECLARE @P_MaxDate datetime;
  SET @P_Code7 = NULL;
  SET @P_Code8 = NULL;
 
- SET @PickupPoint1 = NULL;--'340';
+ SET @PickupPoint1 = '340';
 
  Set @P_AdressCode = '47175';--'4948900';--'47175'--'47175000000'--'3298156' --код адреса
  
-  Set @P_DateTimeNow = '4021-05-26T16:50:00' 
- Set @P_DateTimePeriodBegin = '4021-05-26T00:00:00'
- Set @P_DateTimePeriodEnd = '4021-05-30T00:00:00'
+  Set @P_DateTimeNow = '4021-06-14T16:50:00' 
+ Set @P_DateTimePeriodBegin = '4021-06-14T00:00:00'
+ Set @P_DateTimePeriodEnd = '4021-06-20T00:00:00'
  Set @P_TimeNow = '2001-01-01T16:50:00'
  Set @P_EmptyDate = '2001-01-01T00:00:00'
  Set @P_MaxDate = '5999-11-11T00:00:00'
@@ -124,7 +124,6 @@ From dbo._Reference226 Склады
 Where Склады._Fld19544 = @PickupPoint1
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
-select * from #Temp_GeoData
 
 /*Создание таблицы товаров и ее наполнение данными из БД*/
 Select 
@@ -930,18 +929,22 @@ FROM
 			Inner Join _Reference23612 On Склады._Fld23620RRef = _Reference23612._IDRRef
 				Left Join _Reference23612_VT23613 As ПВЗГрафикРаботы 
 				On _Reference23612._IDRRef = _Reference23612_IDRRef
-				AND (case when DATEPART ( dw , Tdate.date ) = 1 then 7 else DATEPART ( dw , Tdate.date ) -1 END) = ПВЗГрафикРаботы._Fld23615
-					AND ПВЗГрафикРаботы._Fld25265 = 0x00 --не выходной				
+				AND (case when @@DATEFIRST = 1 then DATEPART ( dw , Tdate.date ) when DATEPART ( dw , Tdate.date ) = 1 then 7 else DATEPART ( dw , Tdate.date ) -1 END) = ПВЗГрафикРаботы._Fld23615
 		Left Join _Reference23612_VT27054 As ПВЗИзмененияГрафикаРаботы 
 				On _Reference23612._IDRRef = ПВЗИзмененияГрафикаРаботы._Reference23612_IDRRef
 				AND Tdate.date = ПВЗИзмененияГрафикаРаботы._Fld27056
-				AND ПВЗИзмененияГрафикаРаботы._Fld27059 = 0x00 --не выходной
 		WHERE 
-			ПВЗГрафикРаботы._Reference23612_IDRRef is not Null or ПВЗИзмененияГрафикаРаботы._Reference23612_IDRRef is not null
+			case 
+			when ПВЗИзмененияГрафикаРаботы._Reference23612_IDRRef is not null
+				then ПВЗИзмененияГрафикаРаботы._Fld27059
+			when ПВЗГрафикРаботы._Reference23612_IDRRef is not Null 
+				then ПВЗГрафикРаботы._Fld25265 
+			else 0 --не найдено ни графика ни изменения графика  
+			end = 0x00  -- не выходной
 		AND DATEADD(
 			SECOND,
 			CAST(
-            DATEDIFF(SECOND, @P_EmptyDate, ПВЗГрафикРаботы._Fld23618) AS NUMERIC(12)
+            DATEDIFF(SECOND, @P_EmptyDate,  isNull(ПВЗИзмененияГрафикаРаботы._Fld27058, ПВЗГрафикРаботы._Fld23618)) AS NUMERIC(12)
 			),
 			Tdate.date) > #Temp_DateAvailable.DateAvailable
 OPTION (KEEP PLAN, KEEPFIXED PLAN);

@@ -88,7 +88,7 @@ VALUES
 	--(@P_Article3,@P_Code3,@PickupPoint3,0),
 	--('843414',NULL,NULL,0),
 	--(@P_Article5,NULL,NULL,0)--,
-	('5990263',NULL,NULL,0)--,
+	('5990263',NULL,@PickupPoint1,0)--,
 	--('586455',NULL,NULL,0),
 	--('5990263',NULL,'340',0),
 	----('586455',NULL,'340',0),
@@ -705,14 +705,18 @@ From
 		On Склады._Fld23620RRef = _Reference23612._IDRRef
 	Left Join _Reference23612_VT23613 As ПВЗГрафикРаботы 
 		On _Reference23612._IDRRef = _Reference23612_IDRRef
-			AND (case when DATEPART ( dw , #Temp_Dates.date ) = 1 then 7 else DATEPART ( dw , #Temp_Dates.date ) -1 END) = ПВЗГрафикРаботы._Fld23615
-			AND ПВЗГрафикРаботы._Fld25265 = 0x00 --не выходной
+			AND (case when @@DATEFIRST = 1 then DATEPART ( dw , #Temp_Dates.date ) when DATEPART ( dw , #Temp_Dates.date ) = 1 then 7 else DATEPART ( dw , #Temp_Dates.date ) -1 END) = ПВЗГрафикРаботы._Fld23615
 	Left Join _Reference23612_VT27054 As ПВЗИзмененияГрафикаРаботы 
 		On _Reference23612._IDRRef = ПВЗИзмененияГрафикаРаботы._Reference23612_IDRRef
 			AND #Temp_Dates.date = ПВЗИзмененияГрафикаРаботы._Fld27056
-			AND ПВЗИзмененияГрафикаРаботы._Fld27059 = 0x00 --не выходной
 Where 
-	ПВЗГрафикРаботы._Reference23612_IDRRef is not Null or ПВЗИзмененияГрафикаРаботы._Reference23612_IDRRef is not null
+	case 
+		when ПВЗИзмененияГрафикаРаботы._Reference23612_IDRRef is not null
+			then ПВЗИзмененияГрафикаРаботы._Fld27059
+		when ПВЗГрафикРаботы._Reference23612_IDRRef is not Null 
+			then ПВЗГрафикРаботы._Fld25265 
+		else 0 --не найдено ни графика ни изменения графика  
+	end = 0x00  -- не выходной
 ;			
 
 SELECT
