@@ -73,7 +73,7 @@ DECLARE @Temp_GoodsRaw Table
 (	
 	Article nvarchar(20), 
 	code nvarchar(20), 
-    PickupPoint nvarchar(10),
+    PickupPoint nvarchar(30),
     quantity int
 )
 
@@ -88,25 +88,26 @@ VALUES
 	--(@P_Article3,@P_Code3,@PickupPoint3,0),
 	--('843414',NULL,NULL,0),
 	--(@P_Article5,NULL,NULL,0)--,
-	('5990263',NULL,NULL,0)--,
-	--('586455',NULL,NULL,0),
-	--('5990263',NULL,'340',0),
-	----('586455',NULL,'340',0),
+	--('5990264',NULL,NULL,0),
+	--('586456',NULL,NULL,0),
+	('5990263',NULL,'340,388,460,417,234,2',0),
+	('586455',NULL,'340,388,460,417,2',0)--,
 	--('5990263',NULL,'388',0),
-	----('586455',NULL,'388',0),
+	--('586455',NULL,'388',0),
 	--('5990263',NULL,'460',0),
-	----('586455',NULL,'460',0),
+	--('586455',NULL,'460',0),
 	--('5990263',NULL,'417',0),
-	----('586455',NULL,'417',0),
+	--('586455',NULL,'417',0),
 	--('5990263',NULL,'234',0),
-	----('586455',NULL,'234',0),
-	--('5990263',NULL,'2',0)--,
-	----('586455',NULL,'2',0)--,
+	--('586455',NULL,'234',0),
+	--('5990263',NULL,'2',0),
+	--('586455',NULL,'2',0)--,
 	--(@P5,4),
 	--(@P6,3),
 	--(@P7,2),
 	--(@P8,1)
 	;
+
 
 
 Select
@@ -133,12 +134,22 @@ where Геозона._IDRRef IN (
 	)
 OPTION (KEEP PLAN, KEEPFIXED PLAN)
 
+With Temp_GoodsRawParsed AS
+(
+select 
+	t1.Article, 
+	t1.code, 
+	value AS PickupPoint 
+from @Temp_GoodsRaw t1
+	cross apply 
+		string_split(IsNull(t1.PickupPoint,'-'), ',')
+)
 Select 
 	Номенклатура._IDRRef AS НоменклатураСсылка,
 	Склады._IDRRef AS СкладПВЗСсылка
 INTO #Temp_GoodsBegin
 From
-	@Temp_GoodsRaw T1
+	Temp_GoodsRawParsed T1
 	Inner Join 	dbo._Reference149 Номенклатура With (NOLOCK) 
 		ON T1.code is NULL and T1.Article = Номенклатура._Fld3480
 	Left Join dbo._Reference226 Склады 
@@ -148,7 +159,7 @@ Select
 	Номенклатура._IDRRef,
 	Склады._IDRRef
 From 
-	@Temp_GoodsRaw T1
+	Temp_GoodsRawParsed T1
 	Inner Join 	dbo._Reference149 Номенклатура With (NOLOCK) 
 		ON T1.code is not NULL and T1.code = Номенклатура._Code
 	Left Join dbo._Reference226 Склады 
@@ -189,6 +200,8 @@ From
 		AND (ГруппыПланирования._Fld23301RRef = Номенклатура._Fld3526RRef OR (Номенклатура._Fld3526RRef = 0xAC2CBF86E693F63444670FFEB70264EE AND ГруппыПланирования._Fld23301RRef= 0xAD3F7F5FC4F15DAD4F693CAF8365EC0D) ) --габариты
 		AND ГруппыПланирования._Marked = 0x00
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
+
+select * from #Temp_Goods;
 
 With Temp_ExchangeRates AS (
 SELECT
@@ -709,6 +722,7 @@ From
 			AND ПВЗГрафикРаботы._Fld25265 = 0x00 --не выходной
 ;			
 
+
 SELECT
 	#Temp_ShipmentDatesPickUp.НоменклатураСсылка,
 	#Temp_ShipmentDatesPickUp.article,
@@ -723,7 +737,7 @@ SELECT
 Into #Temp_AvailablePickUp
 FROM
     #Temp_ShipmentDatesPickUp
-		Inner Join #Temp_PickupWorkingHours
+		Inner HASH JOIN #Temp_PickupWorkingHours
 		On #Temp_PickupWorkingHours.СкладНазначения = #Temp_ShipmentDatesPickUp.СкладНазначения
 		And #Temp_PickupWorkingHours.ВремяОкончания > #Temp_ShipmentDatesPickUp.ДатаСоСклада 	 
 Group by
