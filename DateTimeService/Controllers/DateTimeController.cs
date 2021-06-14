@@ -349,18 +349,20 @@ namespace DateTimeService.Controllers
                     dateTimeNowOptimizeString = dateTimeNowOptimizeString = DateMove.Date.ToString("yyyy-MM-ddTHH:mm:ss"); 
                 }
 
+                var pickupWorkingHoursJoinType = _configuration.GetValue<string>("pickupWorkingHoursJoinType");
+
                 cmd.CommandText = queryTextBegin +  string.Format(query, "",
                     dateTimeNowOptimizeString,
                     DateMove.Date.ToString("yyyy-MM-ddTHH:mm:ss"),
                     DateMove.Date.AddDays(Parameters1C.First(x => x.Name.Contains("rsp_КоличествоДнейЗаполненияГрафика")).ValueDouble - 1).ToString("yyyy-MM-ddTHH:mm:ss"),
                     Parameters1C.First(x => x.Name.Contains("КоличествоДнейАнализаЛучшейЦеныПриОтсрочкеЗаказа")).ValueDouble,
-                    Parameters1C.First(x => x.Name.Contains("ПроцентДнейАнализаЛучшейЦеныПриОтсрочкеЗаказа")).ValueDouble);//,
-                                                                                                                           //string.Join(", ", codeParameters));
+                    Parameters1C.First(x => x.Name.Contains("ПроцентДнейАнализаЛучшейЦеныПриОтсрочкеЗаказа")).ValueDouble, 
+                    pickupWorkingHoursJoinType);
 
 
                 //execute the SQLCommand
                 SqlDataReader dr = cmd.ExecuteReader();
-
+                
                 //check if there are records
                 if (dr.HasRows)
                 {
@@ -390,6 +392,7 @@ namespace DateTimeService.Controllers
                 logElement.TimeSQLExecution = sqlCommandExecutionTime;
                 logElement.ResponseContent = JsonSerializer.Serialize(dbResult);
                 logElement.Status = "Ok";
+                logElement.AdditionalData.Add("stats", JsonSerializer.Serialize(stats));
             }
             catch (Exception ex)
             {
@@ -842,17 +845,6 @@ namespace DateTimeService.Controllers
             if (data.Codes.Length > 60) maxCodes = 100;
             if (data.Codes.Length > maxCodes || !optimizeRowsCount) maxCodes = data.Codes.Length;
 
-            foreach (var pickupElem in PickupsList)
-            {
-                var index = PickupsList.IndexOf(pickupElem);
-                cmdGoodsTable.Parameters.Add(string.Format("@PickupPoint{0}", index), SqlDbType.NVarChar, 4);
-                cmdGoodsTable.Parameters[string.Format("@PickupPoint{0}", index)].Value = pickupElem;
-
-                if (String.IsNullOrEmpty(pickupElem))
-                {
-                    cmdGoodsTable.Parameters[string.Format("@PickupPoint{0}", index)].Value = DBNull.Value;
-                }
-            }
 
             for (int codesCounter = 0; codesCounter < maxCodes; codesCounter++)
             {
@@ -867,9 +859,9 @@ namespace DateTimeService.Controllers
                     codesElem = data.Codes[^1];
                 }
 
-                var pickupPointsCounter = 0;
-                var indexNullPickup = PickupsList.IndexOf("");
-                var parameterString = string.Format("(@Article{0}, @Code{0}, @PickupPoint{1}, @Quantity{0})", codesCounter, indexNullPickup);
+      
+                
+                var parameterString = string.Format("(@Article{0}, @Code{0}, NULL, @Quantity{0})", codesCounter);
 
                 
                 //cmdGoodsTable.Parameters.AddWithValue(string.Format("@Article{0}", codesCounter), codesElem.article);
@@ -895,43 +887,16 @@ namespace DateTimeService.Controllers
                     parameters.Clear();
                 }
 
-                foreach (var pickupElem in codesElem.PickupPoints)
+                if (maxPickups>0)
                 {
+                    var PickupParameter = string.Join(",", codesElem.PickupPoints);
 
-                    var index = PickupsList.IndexOf(pickupElem);
-                    var parameterStringPickup = string.Format("(@Article{0}, @Code{0}, @PickupPoint{1}, @Quantity{0})", codesCounter, index);                    
+                    cmdGoodsTable.Parameters.Add(string.Format("@PickupPoint{0}", codesCounter), SqlDbType.NVarChar, 45);
+                    cmdGoodsTable.Parameters[string.Format("@PickupPoint{0}", codesCounter)].Value = PickupParameter;
 
+                    var parameterStringPickup = string.Format("(@Article{0}, @Code{0}, @PickupPoint{0}, @Quantity{0})", codesCounter);
                     parameters.Add(parameterStringPickup);
-
-                    pickupPointsCounter++;
-
-                    if (parameters.Count == insertRowsLimit)
-                    {
-                        resultString += string.Format(Queries.CreateTableGoodsRawInsert, string.Join(", ", parameters));
-
-                        parameters.Clear();
-                    }
-                }
-
-                while (pickupPointsCounter < maxPickups)
-                {
-
-                    var index = PickupsList.IndexOf("");
-                    var parameterStringPickup = string.Format("(@Article{0}, @Code{0}, @PickupPoint{1}, @Quantity{0})", codesCounter, index);
-
-                    parameters.Add(parameterStringPickup);
-
-                    pickupPointsCounter++;
-
-                    if (parameters.Count == insertRowsLimit)
-                    {
-                        resultString += string.Format(Queries.CreateTableGoodsRawInsert, string.Join(", ", parameters));
-
-                        parameters.Clear();
-                    }
-                }
-
-                //codesCounter++;           
+                }           
 
             }
 

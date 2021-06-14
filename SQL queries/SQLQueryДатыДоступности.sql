@@ -62,10 +62,10 @@ SET @PickupPoint6 = '2';
 DECLARE @P_DaysToShow numeric(2);
  Set @P_DaysToShow = 7;
 
- Set @P_DateTimeNow = '4021-06-07T14:00:00' 
- Set @P_DateTimePeriodBegin = '4021-06-07T00:00:00'
- Set @P_DateTimePeriodEnd = '4021-06-11T00:00:00'
- Set @P_TimeNow = '2001-01-01T14:00:00'
+ Set @P_DateTimeNow = '4021-06-08T15:00:00' 
+ Set @P_DateTimePeriodBegin = '4021-06-08T00:00:00'
+ Set @P_DateTimePeriodEnd = '4021-06-12T00:00:00'
+ Set @P_TimeNow = '2001-01-01T15:00:00'
  Set @P_EmptyDate = '2001-01-01T00:00:00'
  Set @P_MaxDate = '5999-11-11T00:00:00'
 
@@ -73,7 +73,7 @@ DECLARE @Temp_GoodsRaw Table
 (	
 	Article nvarchar(20), 
 	code nvarchar(20), 
-    PickupPoint nvarchar(10),
+    PickupPoint nvarchar(30),
     quantity int
 )
 
@@ -82,17 +82,32 @@ INSERT INTO
 		Article, code, PickupPoint, quantity 
 	)
 VALUES
-	(@P_Article1,@P_Code1,@PickupPoint3,0),
-	(@P_Article2,@P_Code2,@PickupPoint2,0),
-	(@P_Article1,@P_Code1,NULL,0),
-	(@P_Article3,@P_Code3,@PickupPoint3,0),
-	('843414',NULL,NULL,0),
-	(@P_Article5,NULL,NULL,0)--,
+	--(@P_Article1,@P_Code1,@PickupPoint3,0),
+	--(@P_Article2,@P_Code2,@PickupPoint2,0),
+	--(@P_Article1,@P_Code1,NULL,0),
+	--(@P_Article3,@P_Code3,@PickupPoint3,0),
+	--('843414',NULL,NULL,0),
+	--(@P_Article5,NULL,NULL,0)--,
+	--('5990264',NULL,NULL,0),
+	--('586456',NULL,NULL,0),
+	('5990263',NULL,'340,388,460,417,234,2',0),
+	('586455',NULL,'340,388,460,417,2',0)--,
+	--('5990263',NULL,'388',0),
+	--('586455',NULL,'388',0),
+	--('5990263',NULL,'460',0),
+	--('586455',NULL,'460',0),
+	--('5990263',NULL,'417',0),
+	--('586455',NULL,'417',0),
+	--('5990263',NULL,'234',0),
+	--('586455',NULL,'234',0),
+	--('5990263',NULL,'2',0),
+	--('586455',NULL,'2',0)--,
 	--(@P5,4),
 	--(@P6,3),
 	--(@P7,2),
 	--(@P8,1)
 	;
+
 
 
 Select
@@ -119,12 +134,22 @@ where Геозона._IDRRef IN (
 	)
 OPTION (KEEP PLAN, KEEPFIXED PLAN)
 
+With Temp_GoodsRawParsed AS
+(
+select 
+	t1.Article, 
+	t1.code, 
+	value AS PickupPoint 
+from @Temp_GoodsRaw t1
+	cross apply 
+		string_split(IsNull(t1.PickupPoint,'-'), ',')
+)
 Select 
 	Номенклатура._IDRRef AS НоменклатураСсылка,
 	Склады._IDRRef AS СкладПВЗСсылка
 INTO #Temp_GoodsBegin
 From
-	@Temp_GoodsRaw T1
+	Temp_GoodsRawParsed T1
 	Inner Join 	dbo._Reference149 Номенклатура With (NOLOCK) 
 		ON T1.code is NULL and T1.Article = Номенклатура._Fld3480
 	Left Join dbo._Reference226 Склады 
@@ -134,7 +159,7 @@ Select
 	Номенклатура._IDRRef,
 	Склады._IDRRef
 From 
-	@Temp_GoodsRaw T1
+	Temp_GoodsRawParsed T1
 	Inner Join 	dbo._Reference149 Номенклатура With (NOLOCK) 
 		ON T1.code is not NULL and T1.code = Номенклатура._Code
 	Left Join dbo._Reference226 Склады 
@@ -175,6 +200,8 @@ From
 		AND (ГруппыПланирования._Fld23301RRef = Номенклатура._Fld3526RRef OR (Номенклатура._Fld3526RRef = 0xAC2CBF86E693F63444670FFEB70264EE AND ГруппыПланирования._Fld23301RRef= 0xAD3F7F5FC4F15DAD4F693CAF8365EC0D) ) --габариты
 		AND ГруппыПланирования._Marked = 0x00
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
+
+select * from #Temp_Goods;
 
 With Temp_ExchangeRates AS (
 SELECT
@@ -236,7 +263,7 @@ HAVING
     (SUM(T2._Fld21412) <> 0.0
     OR SUM(T2._Fld21411) <> 0.0)
 	AND SUM(T2._Fld21412) - SUM(T2._Fld21411) <> 0.0
-OPTION (OPTIMIZE FOR (@P_DateTimeNow='4021-06-07T14:00:00'),KEEP PLAN, KEEPFIXED PLAN);
+OPTION (OPTIMIZE FOR (@P_DateTimeNow='4021-06-08T15:00:00'),KEEP PLAN, KEEPFIXED PLAN);
 
 SELECT Distinct
     T1._Fld23831RRef AS СкладИсточника,
@@ -271,7 +298,7 @@ WHERE
 		AND T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData UNION ALL Select СкладСсылка From #Temp_Goods)
 GROUP BY T1._Fld23831RRef,
 T1._Fld23833RRef
-OPTION (OPTIMIZE FOR (@P_DateTimeNow='4021-06-07T14:00:00'),KEEP PLAN, KEEPFIXED PLAN);
+OPTION (OPTIMIZE FOR (@P_DateTimeNow='4021-06-08T15:00:00'),KEEP PLAN, KEEPFIXED PLAN);
 
 ;
 
@@ -460,7 +487,7 @@ SELECT
 		Into #Temp_T3
         FROM
             #Temp_Sources T4 WITH(NOLOCK)
-            Inner JOIN Temp_ClosestDate T5 WITH(NOLOCK)
+            INNER JOIN Temp_ClosestDate T5 WITH(NOLOCK)
             ON (T4.НоменклатураСсылка = T5.НоменклатураСсылка)
             AND (T4.СкладНазначения = T5.СкладНазначения)
             AND (T4.ТипИсточника = 1)
@@ -620,33 +647,54 @@ GROUP BY
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
 Select 
-	Max(ДатаСоСклада) AS МаксимальнаяДата,
-	Min(ДатаСоСклада) AS МинимальнаяДата,
-	СкладНазначения
+	CAST(CAST(DateAdd(DAY, @P_DaysToShow,Max(ДатаСоСклада))AS date) AS datetime) AS МаксимальнаяДата,
+	CAST(CAST(Min(ДатаСоСклада)AS date) AS datetime) AS МинимальнаяДата
 Into #Temp_PickupDatesGroup
 From 
 	#Temp_ShipmentDatesPickUp
-Group By
-	СкладНазначения
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
 /*Это получение списка дат интервалов ПВЗ*/
-WITH Tdate(date, Склад) AS (    
-    SELECT         
-		CAST(CAST(#Temp_PickupDatesGroup.МинимальнаяДата  AS DATE) AS DATETIME),
-		СкладНазначения
-	From #Temp_PickupDatesGroup
-    UNION
-    ALL
-    SELECT 
-        DateAdd(day, 1, Tdate.date),
-		СкладНазначения
-    FROM
-        Tdate
-		Inner Join #Temp_PickupDatesGroup 
-		ON Tdate.date < DateAdd(DAY, @P_DaysToShow, CAST(CAST(#Temp_PickupDatesGroup.МаксимальнаяДата  AS DATE) AS DATETIME))
-		AND Склад = СкладНазначения
-)
+WITH
+    H1(N)
+    AS
+    (
+        SELECT 1
+        FROM (VALUES
+                (1),
+                (1),
+                (1),
+                (1),
+                (1),
+                (1),
+                (1),
+                (1),
+                (1),
+                (1),
+                (1),
+                (1),
+                (1),
+                (1),
+                (1),
+                (1))H0(N)
+    )
+,
+    cteTALLY(N)
+    AS
+    (
+        SELECT ROW_NUMBER() OVER (ORDER BY (SELECT NULL))
+        FROM H1 a, H1 b, H1 c, H1 d, H1 e, H1 f, H1 g, H1 h
+    )
+SELECT
+	DATEADD(dd,t.N-1,f.МинимальнаяДата) AS Date
+INTO #Temp_Dates
+FROM #Temp_PickupDatesGroup f
+  CROSS APPLY (SELECT TOP (Isnull(DATEDIFF(dd,f.МинимальнаяДата,f.МаксимальнаяДата)+1,1))
+        N
+    FROM cteTally
+    ORDER BY N) t
+	;
+
 Select 
 	DATEADD(
 		SECOND,
@@ -660,17 +708,17 @@ Select
 			DATEDIFF(SECOND, @P_EmptyDate, ПВЗГрафикРаботы._Fld23618) AS NUMERIC(12)
 		),
 		date) AS ВремяОкончания,
-	Tdate.Склад AS СкладНазначения
+	Склады._IDRRef AS СкладНазначения--,
 INTO #Temp_PickupWorkingHours
 From 
-	Tdate
+	#Temp_Dates
 	Inner Join dbo._Reference226 Склады 
-		ON Склады._IDRRef = Tdate.Склад
+		ON Склады._IDRRef IN (Select СкладНазначения From #Temp_ShipmentDatesPickUp)
 	Inner Join _Reference23612 
 		On Склады._Fld23620RRef = _Reference23612._IDRRef
 	Inner Join _Reference23612_VT23613 As ПВЗГрафикРаботы 
 		On _Reference23612._IDRRef = _Reference23612_IDRRef
-			AND (case when DATEPART ( dw , Tdate.date ) = 1 then 7 else DATEPART ( dw , Tdate.date ) -1 END) = ПВЗГрафикРаботы._Fld23615
+			AND (case when DATEPART ( dw , #Temp_Dates.date ) = 1 then 7 else DATEPART ( dw , #Temp_Dates.date ) -1 END) = ПВЗГрафикРаботы._Fld23615
 			AND ПВЗГрафикРаботы._Fld25265 = 0x00 --не выходной
 ;			
 
@@ -689,7 +737,7 @@ SELECT
 Into #Temp_AvailablePickUp
 FROM
     #Temp_ShipmentDatesPickUp
-		Inner Join #Temp_PickupWorkingHours
+		Inner HASH JOIN #Temp_PickupWorkingHours
 		On #Temp_PickupWorkingHours.СкладНазначения = #Temp_ShipmentDatesPickUp.СкладНазначения
 		And #Temp_PickupWorkingHours.ВремяОкончания > #Temp_ShipmentDatesPickUp.ДатаСоСклада 	 
 Group by
@@ -715,8 +763,8 @@ into #Temp_IntervalsAll
 FROM
     dbo._AccumRg25110 T5 With (NOLOCK)
 WHERE
-    T5._Period >= @P_DateTimePeriodBegin --begin +2
-    AND T5._Period <= @P_DateTimePeriodEnd --end
+    T5._Period BETWEEN @P_DateTimePeriodBegin AND @P_DateTimePeriodEnd --begin +2
+    --AND T5._Period <= @P_DateTimePeriodEnd --end
     AND T5._Fld25111RRef in (Select Геозона From #Temp_GeoData) 
 GROUP BY
     T5._Period,
@@ -735,7 +783,7 @@ HAVING
             ) AS NUMERIC(16, 0)
         ) > 0.0
     )
-OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-06-07T00:00:00',@P_DateTimePeriodEnd='4021-06-11T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-06-08T00:00:00',@P_DateTimePeriodEnd='4021-06-12T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
 ;
 
 select
@@ -906,7 +954,7 @@ GROUP BY
 	T1.НоменклатураСсылка,
     T1.article,
 	T1.code
-OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-06-07T00:00:00',@P_DateTimePeriodEnd='4021-06-11T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-06-08T00:00:00',@P_DateTimePeriodEnd='4021-06-12T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
 
 Select 
 	IsNull(#Temp_AvailableCourier.article,#Temp_AvailablePickUp.article) AS article,
@@ -940,3 +988,4 @@ DROP TABLE #Temp_AvailableCourier
 DROP TABLE #Temp_AvailablePickUp
 DROP TABLE #Temp_PickupDatesGroup
 DROP TAble #Temp_PickupWorkingHours
+DROP TAble #Temp_Dates
