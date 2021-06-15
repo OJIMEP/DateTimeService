@@ -12,7 +12,7 @@ namespace DateTimeService.Data
 (	
 	Article nvarchar(20), 
 	code nvarchar(20), 
-    PickupPoint nvarchar(10),
+    PickupPoint nvarchar(45),
     quantity int
 )
 ;";
@@ -1135,7 +1135,7 @@ select Период, Max(Приоритет) AS Приоритет into #Temp_Pl
 WITH T(date) AS (
     /*Это получение списка дат интервалов после даты окончания расчета*/
     SELECT
-        Case When @P_DateTimePeriodEnd > CAST(CAST(#Temp_DateAvailable.DateAvailable  AS DATE) AS DATETIME) Then
+        Case When @P_DateTimePeriodEnd >= CAST(CAST(#Temp_DateAvailable.DateAvailable  AS DATE) AS DATETIME) Then
 		DateAdd(day, 1,
 		@P_DateTimePeriodEnd
 		)
@@ -1241,14 +1241,24 @@ where Геозона._IDRRef IN (
 	INNER JOIN dbo._InfoRg21711 T3 With (NOLOCK)
 	ON T2.Fld25549_ = T3._Fld25549 AND T2.MAXPERIOD_ = T3._Period
 	)
-OPTION (KEEP PLAN, KEEPFIXED PLAN)
+OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
+With Temp_GoodsRawParsed AS
+(
+select 
+	t1.Article, 
+	t1.code, 
+	value AS PickupPoint 
+from #Temp_GoodsRaw t1
+	cross apply 
+		string_split(IsNull(t1.PickupPoint,'-'), ',')
+)
 Select 
 	Номенклатура._IDRRef AS НоменклатураСсылка,
 	Склады._IDRRef AS СкладПВЗСсылка
 INTO #Temp_GoodsBegin
 From
-	#Temp_GoodsRaw T1
+	Temp_GoodsRawParsed T1
 	Inner Join 	dbo._Reference149 Номенклатура With (NOLOCK) 
 		ON T1.code is NULL and T1.Article = Номенклатура._Fld3480
 	Left Join dbo._Reference226 Склады 
@@ -1258,7 +1268,7 @@ Select
 	Номенклатура._IDRRef,
 	Склады._IDRRef
 From 
-	#Temp_GoodsRaw T1
+	Temp_GoodsRawParsed T1
 	Inner Join 	dbo._Reference149 Номенклатура With (NOLOCK) 
 		ON T1.code is not NULL and T1.code = Номенклатура._Code
 	Left Join dbo._Reference226 Склады 
@@ -1843,7 +1853,7 @@ SELECT
 Into #Temp_AvailablePickUp
 FROM
     #Temp_ShipmentDatesPickUp
-		Inner Join #Temp_PickupWorkingHours
+		Inner {6} Join #Temp_PickupWorkingHours
 		On #Temp_PickupWorkingHours.СкладНазначения = #Temp_ShipmentDatesPickUp.СкладНазначения
 		And #Temp_PickupWorkingHours.ВремяОкончания > #Temp_ShipmentDatesPickUp.ДатаСоСклада 	 
 Group by
