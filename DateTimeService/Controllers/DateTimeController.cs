@@ -301,7 +301,9 @@ namespace DateTimeService.Controllers
 
                 //FillGoodsTable(data, conn);
 
-                var queryTextBegin = TextFillGoodsTable(data, cmd, true);
+                List<string> pickups = new();
+
+                var queryTextBegin = TextFillGoodsTable(data, cmd, true, pickups);
 
                 if (_configuration.GetValue<bool>("disableKeepFixedPlan"))
                 {
@@ -310,7 +312,19 @@ namespace DateTimeService.Controllers
                 }
 
                 //define the SqlCommand object
-                
+                List<string> pickupParameters = new();
+                foreach (var pickupPoint in pickups)
+                {
+                    var parameterString = string.Format("@PickupPointAll{0}", pickups.IndexOf(pickupPoint));
+                    pickupParameters.Add(parameterString);
+                    cmd.Parameters.Add(parameterString, SqlDbType.NVarChar, 4);
+                    cmd.Parameters[parameterString].Value = pickupPoint;
+                }
+                if (pickupParameters.Count==0)
+                {
+                    pickupParameters.Add("NULL");
+                }
+
 
                 cmd.Parameters.Add("@P_CityCode", SqlDbType.NVarChar, 10);
                 cmd.Parameters["@P_CityCode"].Value = data.CityId;
@@ -351,7 +365,7 @@ namespace DateTimeService.Controllers
 
                 var pickupWorkingHoursJoinType = _configuration.GetValue<string>("pickupWorkingHoursJoinType");
 
-                cmd.CommandText = queryTextBegin +  string.Format(query, "",
+                cmd.CommandText = queryTextBegin +  string.Format(query, string.Join(",", pickupParameters),
                     dateTimeNowOptimizeString,
                     DateMove.Date.ToString("yyyy-MM-ddTHH:mm:ss"),
                     DateMove.Date.AddDays(Parameters1C.First(x => x.Name.Contains("rsp_КоличествоДнейЗаполненияГрафика")).ValueDouble - 1).ToString("yyyy-MM-ddTHH:mm:ss"),
@@ -805,10 +819,10 @@ namespace DateTimeService.Controllers
                 Codes = data.OrderItems.ToArray()
             };
 
-            return TextFillGoodsTable(convertedData, cmdGoodsTable, optimizeRowsCount);
+            return TextFillGoodsTable(convertedData, cmdGoodsTable, optimizeRowsCount, new());
         }
 
-        private static string TextFillGoodsTable(RequestDataAvailableDate data, SqlCommand cmdGoodsTable, bool optimizeRowsCount)
+        private static string TextFillGoodsTable(RequestDataAvailableDate data, SqlCommand cmdGoodsTable, bool optimizeRowsCount, List<string> PickupsList)
         {
 
           
@@ -817,7 +831,7 @@ namespace DateTimeService.Controllers
             var insertRowsLimit = 900;
 
             var parameters = new List<string>();//string[data.codes.Length];
-            List<string> PickupsList = new();
+            //List<string> PickupsList = new();
 
             var maxCodes = data.Codes.Length;
 
@@ -836,7 +850,7 @@ namespace DateTimeService.Controllers
             //var pickupPointsCounter = 0;
 
             int maxPickups = PickupsList.Count;
-            PickupsList.Add("");
+            //PickupsList.Add("");
             //if (maxPickups > 2) maxPickups = 7;
 
             if (data.Codes.Length > 2) maxCodes = 10;
