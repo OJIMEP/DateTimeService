@@ -1215,9 +1215,14 @@ OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'), 
 
 
         public const string AvailableDate = @"
-{0}
-
-
+Select 
+	Склады._IDRRef AS СкладСсылка,
+	Склады._Fld19544 AS ERPКодСклада
+Into #Temp_PickupPoints
+From 
+	dbo._Reference226 Склады 
+Where Склады._Fld19544 in({0})
+ 
 
 Select
 	IsNull(_Reference114_VT23370._Fld23372RRef,Геозона._Fld23104RRef) As СкладСсылка,
@@ -1255,24 +1260,24 @@ from #Temp_GoodsRaw t1
 )
 Select 
 	Номенклатура._IDRRef AS НоменклатураСсылка,
-	Склады._IDRRef AS СкладПВЗСсылка
+	#Temp_PickupPoints.СкладСсылка AS СкладПВЗСсылка
 INTO #Temp_GoodsBegin
 From
 	Temp_GoodsRawParsed T1
 	Inner Join 	dbo._Reference149 Номенклатура With (NOLOCK) 
 		ON T1.code is NULL and T1.Article = Номенклатура._Fld3480
-	Left Join dbo._Reference226 Склады 
-		ON T1.PickupPoint = Склады._Fld19544
+	Left Join #Temp_PickupPoints  
+		ON T1.PickupPoint = #Temp_PickupPoints.ERPКодСклада
 union
 Select 
 	Номенклатура._IDRRef,
-	Склады._IDRRef
+	#Temp_PickupPoints.СкладСсылка
 From 
 	Temp_GoodsRawParsed T1
 	Inner Join 	dbo._Reference149 Номенклатура With (NOLOCK) 
 		ON T1.code is not NULL and T1.code = Номенклатура._Code
-	Left Join dbo._Reference226 Склады 
-		ON T1.PickupPoint = Склады._Fld19544
+	Left Join #Temp_PickupPoints  
+		ON T1.PickupPoint = #Temp_PickupPoints.ERPКодСклада
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
 Select 
@@ -1383,7 +1388,7 @@ FROM
 	Inner Join #Temp_Remains With (NOLOCK)
 	ON T1._Fld23831RRef = #Temp_Remains.СкладИсточника
 	AND T1._Fld23832 = #Temp_Remains.ДатаСобытия
-	AND T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData UNION ALL Select СкладСсылка From #Temp_Goods)   
+	AND T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData UNION ALL Select СкладСсылка From #Temp_PickupPoints)   
 OPTION (KEEP PLAN, KEEPFIXED PLAN)
 ;
 
@@ -1402,7 +1407,7 @@ WHERE
             #Temp_Remains T2 WITH(NOLOCK)) 
 		AND T1._Fld23832 BETWEEN @P_DateTimeNow AND  DateAdd(DAY,6,@P_DateTimeNow)
 		--AND T1._Fld23832 <= DateAdd(DAY,6,@P_DateTimeNow)
-		AND T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData UNION ALL Select СкладСсылка From #Temp_Goods)
+		AND T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData UNION ALL Select СкладСсылка From #Temp_PickupPoints)
 GROUP BY T1._Fld23831RRef,
 T1._Fld23833RRef
 OPTION (OPTIMIZE FOR (@P_DateTimeNow='{1}'),KEEP PLAN, KEEPFIXED PLAN);
@@ -1999,29 +2004,23 @@ OPTION (KEEP PLAN, KEEPFIXED PLAN);
 With Temp_DeliveryPower AS
 (
 SELECT
-    CAST(
-        SUM(
-            CASE
-                WHEN (МощностиДоставки._RecordKind = 0.0) THEN МощностиДоставки._Fld25107
-                ELSE -(МощностиДоставки._Fld25107)
-            END
-        ) AS NUMERIC(16, 3)
-    ) AS МассаОборот,
-    CAST(
-        SUM(
-            CASE
-                WHEN (МощностиДоставки._RecordKind = 0.0) THEN МощностиДоставки._Fld25108
-                ELSE -(МощностиДоставки._Fld25108)
-            END
-        ) AS NUMERIC(16, 3)
-    ) AS ОбъемОборот,
-    CAST(
-        SUM(
-            CASE
-                WHEN (МощностиДоставки._RecordKind = 0.0) THEN МощностиДоставки._Fld25201
-                ELSE -(МощностиДоставки._Fld25201)
-            END
-        ) AS NUMERIC(16, 2)
+    SUM(
+        CASE
+            WHEN (МощностиДоставки._RecordKind = 0.0) THEN МощностиДоставки._Fld25107
+            ELSE -(МощностиДоставки._Fld25107)
+        END        
+    ) AS МассаОборот,    
+    SUM(
+        CASE
+            WHEN (МощностиДоставки._RecordKind = 0.0) THEN МощностиДоставки._Fld25108
+            ELSE -(МощностиДоставки._Fld25108)
+        END        
+    ) AS ОбъемОборот,    
+    SUM(
+        CASE
+            WHEN (МощностиДоставки._RecordKind = 0.0) THEN МощностиДоставки._Fld25201
+            ELSE -(МощностиДоставки._Fld25201)
+        END        
     ) AS ВремяНаОбслуживаниеОборот,
     CAST(CAST(МощностиДоставки._Period  AS DATE) AS DATETIME) AS Дата
 FROM
@@ -2055,17 +2054,15 @@ FROM
     #Temp_ShipmentDatesDeliveryCourier T1 WITH(NOLOCK)
     Left JOIN Temp_DeliveryPower T2 WITH(NOLOCK)
     Inner JOIN #Temp_Intervals T3 WITH(NOLOCK)
-    ON (T3.Период = T2.Дата) 
-	ON (T2.МассаОборот >= T1.Вес)
-    AND (T2.ОбъемОборот >= T1.Объем)
-    AND (T2.ВремяНаОбслуживаниеОборот >= T1.ВремяНаОбслуживание)
-    AND (
-        T2.Дата >=
-        CAST(CAST(T1.ДатаСоСклада AS DATE) AS DATETIME)
-    )
-    AND (T3.ГруппаПланирования = T1.ГруппаПланирования)
-    AND (T3.ВремяНачала >= T1.ДатаСоСклада)
-    AND T1.PickUp = 0
+		ON T3.Период = T2.Дата
+	ON T2.МассаОборот >= T1.Вес
+    AND T2.ОбъемОборот >= T1.Объем
+    AND T2.ВремяНаОбслуживаниеОборот >= T1.ВремяНаОбслуживание
+    AND T2.Дата >= 
+		CAST(CAST(T1.ДатаСоСклада AS DATE) AS DATETIME)    
+    AND T3.ГруппаПланирования = T1.ГруппаПланирования
+    AND T3.ВремяНачала >= T1.ДатаСоСклада
+	AND T1.PickUp = 0
 GROUP BY
 	T1.НоменклатураСсылка,
     T1.article,
