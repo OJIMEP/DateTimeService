@@ -876,7 +876,7 @@ FROM
 		AND DATEADD(
 			SECOND,
 			CAST(
-            DATEDIFF(SECOND, @P_EmptyDate, ПВЗГрафикРаботы._Fld23618) AS NUMERIC(12)
+            DATEDIFF(SECOND, @P_EmptyDate, isNull(ПВЗИзмененияГрафикаРаботы._Fld27058, ПВЗГрафикРаботы._Fld23618)) AS NUMERIC(12)
 			),
 			Tdate.date) > #Temp_DateAvailable.DateAvailable
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
