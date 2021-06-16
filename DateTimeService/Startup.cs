@@ -95,8 +95,9 @@ namespace DateTimeService
             services.AddSwaggerGen();
 
             services.AddHttpClient<ILogger, HttpLogger>();
-            
 
+            services.AddSingleton<DatabaseManagement>();
+            services.AddSingleton<IHostedService, DatabaseManagementService>();
         }
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory)
