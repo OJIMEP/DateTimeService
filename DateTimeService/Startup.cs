@@ -18,6 +18,7 @@ using Microsoft.OpenApi.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net.Http;
 using System.Text;
 
 namespace DateTimeService
@@ -94,7 +95,14 @@ namespace DateTimeService
 
             services.AddSwaggerGen();
 
+            services.AddHttpClient<DatabaseManagement>("elastic").ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+            }); 
+
             services.AddHttpClient<ILogger, HttpLogger>();
+
+            
 
             services.AddSingleton<DatabaseManagement>();
             services.AddSingleton<IHostedService, DatabaseManagementService>();

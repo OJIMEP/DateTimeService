@@ -10,17 +10,19 @@ namespace DateTimeService.Data
     {
         private readonly DatabaseManagement _databaseManagement;
 
-        public DatabaseManagementService(DatabaseManagement randomStringProvider)
+        public DatabaseManagementService(DatabaseManagement databaseManagement)
         {
-            _databaseManagement = randomStringProvider;
+            _databaseManagement = databaseManagement;
         }
 
         protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                await _databaseManagement.DoSomething(cancellationToken);
-                await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
+                await _databaseManagement.CheckDatabaseStatus(cancellationToken);
+
+                break;
+                //await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
             }
         }
     }
