@@ -2,11 +2,12 @@
 using DateTimeService.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Nest;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
+using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
@@ -58,20 +59,37 @@ namespace DateTimeService.Data
             var elasticPort = _configuration["elasticsearch:port"];
             var elasticLogin = _configuration["elasticsearch:login"];
             var elasticPass = _configuration["elasticsearch:password"];
+            var indexPath = _configuration["elasticsearch:indexName"];
             var authenticationString = elasticLogin + ":" + elasticPass; 
             var base64EncodedAuthenticationString = Convert.ToBase64String(System.Text.ASCIIEncoding.ASCII.GetBytes(authenticationString));
 
-            
+            ElasticResponse elasticResponse = null;
+
             var httpClient = _httpClientFactory.CreateClient("elastic");
-            
-            HttpRequestMessage requestMessage = new(HttpMethod.Get, elasticHost + ":" + elasticPort+ "/logs_microservice*/_search");
+
+            UriBuilder elasticUri = new("https", elasticHost, Int32.Parse(elasticPort), indexPath + "/_search");
+
+            IPHostEntry ipHostInfo = Dns.GetHostEntry(Dns.GetHostName());
+            var serverIP = ipHostInfo.AddressList.Where(s => s.AddressFamily == AddressFamily.InterNetwork).First().ToString();
+            HttpRequestMessage requestMessage = new(HttpMethod.Get, elasticUri.Uri);
             requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", base64EncodedAuthenticationString);
 
             var searchrequest = new ElasticRequest
             {
                 Size = 0
             };
-            searchrequest.Query.Range.Add("@timestamp", new { gt = "now-15m" });
+
+            FilterElement element = new();
+            element.Range = new();
+            element.Range.Add("@timestamp", new { gt = "now-2m" });
+
+            searchrequest.Query.Bool.Filter.Add(element);
+
+            element = new();
+            element.Term = new();
+            element.Term.Add("server_host.keyword", new { value = serverIP });
+            searchrequest.Query.Bool.Filter.Add(element);
+
 
             AggregationClass rootAgg = new();
             rootAgg.Terms = new();
@@ -97,22 +115,90 @@ namespace DateTimeService.Data
             var content = JsonSerializer.Serialize(searchrequest);
             requestMessage.Content = new StringContent(content, Encoding.UTF8, "application/json");
 
+
             var result = "";
+
             try
             {
                 var response = await httpClient.SendAsync(requestMessage, cancellationToken);
 
-                
+                if (response.IsSuccessStatusCode)
+                {
                     result = await response.Content.ReadAsStringAsync(cancellationToken);
+                }
+                else
+                {
+                    var errodData = await response.Content.ReadAsStringAsync(cancellationToken);
+                    var logElement = new ElasticLogElement
+                    {
+                        ErrorDescription = errodData,
+                        Status = "Error",
+                        DatabaseConnection = elasticUri.ToString()
+                    };
+
+                    logElement.AdditionalData.Add("requestContent", content);
+                    var logstringElement = JsonSerializer.Serialize(logElement);
+
+                    _logger.LogError(logstringElement);
+                }
+                    
                
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex);
+                var logElement = new ElasticLogElement
+                {
+                    TimeSQLExecution = 0,
+                    ErrorDescription = ex.Message,
+                    Status = "Error",
+                    DatabaseConnection = elasticUri.ToString()
+                };
+
+                var logstringElement = JsonSerializer.Serialize(logElement);
+
+                _logger.LogError(logstringElement);
             }
 
-            Console.WriteLine(result);
 
+            try
+            {
+                if (!String.IsNullOrEmpty(result))
+                {
+                    elasticResponse = JsonSerializer.Deserialize<ElasticResponse>(result);
+                }
+            }
+            catch (Exception ex)
+            {
+                var logElement = new ElasticLogElement
+                {
+                    TimeSQLExecution = 0,
+                    ErrorDescription = ex.Message,
+                    Status = "Error",
+                    DatabaseConnection = elasticUri.ToString()
+                };
+                logElement.AdditionalData.Add("responseContent", result);
+                var logstringElement = JsonSerializer.Serialize(logElement);
+
+                _logger.LogError(logstringElement);
+            }
+
+            if (elasticResponse == null)
+            {
+                return;
+            }
+
+            foreach (var rootAggregation in elasticResponse.Aggregations)
+            {
+                if (rootAggregation.Key == "load_time_outlier")
+                {
+                    foreach (var bucket in rootAggregation.Value.Buckets)
+                    {
+                        
+                        
+
+                    }
+                }
+            }
         }
     }
 }

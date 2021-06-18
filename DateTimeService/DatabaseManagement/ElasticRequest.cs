@@ -27,14 +27,37 @@ namespace DateTimeService.Models
 
     public class QueryClass
     {
-        [JsonPropertyName("range")]
-        public Dictionary<string, object> Range { get; set; }
+        [JsonPropertyName("bool")]
+        public BoolClass Bool { get; set; }
 
         public QueryClass()
         {
-            Range = new();
+            Bool = new();
         }
     }
+
+    public class BoolClass
+    {
+        [JsonPropertyName("filter")]
+        public List<FilterElement> Filter { get; set; }
+
+        public BoolClass()
+        {
+            Filter = new();
+        }
+    }
+
+    public class FilterElement
+    {
+        [JsonPropertyName("range"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public Dictionary<string, object> Range { get; set; }
+
+        [JsonPropertyName("term"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public Dictionary<string,object> Term { get; set; }
+
+        
+    }
+
 
     public class AggregationClass
     {

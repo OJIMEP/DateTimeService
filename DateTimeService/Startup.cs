@@ -102,7 +102,7 @@ namespace DateTimeService
 
             services.AddHttpClient<ILogger, HttpLogger>();
 
-            
+            DatabaseList.CreateDatabases(Configuration.GetSection("OneSDatabases").Get<List<DatabaseConnectionParameter>>());            
 
             services.AddSingleton<DatabaseManagement>();
             services.AddSingleton<IHostedService, DatabaseManagementService>();

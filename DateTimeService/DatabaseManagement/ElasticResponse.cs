@@ -17,10 +17,15 @@ namespace DateTimeService.Models
         [JsonPropertyName("_shards")]
         public Shards Shards { get; set; }
 
-       
-
+        
         [JsonPropertyName("aggregations")]
-        public Aggregations Aggregations { get; set; }
+        public Dictionary<string, Aggregations> Aggregations { get; set; }
+        public ElasticResponse()
+        {
+            Aggregations = new();
+        }
+
+
     }
 
     // Root myDeserializedClass = JsonSerializer.Deserialize<Root>(myJsonResponse);
@@ -50,39 +55,48 @@ namespace DateTimeService.Models
 
     
 
-    public class Values
-    {
-        [JsonPropertyName("95.0")]
-        public double _950 { get; set; }
-
-        [JsonPropertyName("99.0")]
-        public double _990 { get; set; }
-
-        [JsonPropertyName("99.9")]
-        public double _999 { get; set; }
-    }
-
-    public class LoadTimeOutlierResp
-    {
-        [JsonPropertyName("values")]
-        public Values Values { get; set; }
-    }
-
-    public class WeekAvgResp
-    {
-        [JsonPropertyName("value")]
-        public double Value { get; set; }
-    }
 
     public class Aggregations
     {
-        [JsonPropertyName("load_time_outlier")]
-        public LoadTimeOutlierResp LoadTimeOutlier { get; set; }
+        [JsonPropertyName("doc_count_error_upper_bound")]
+        public int DocCountErrorUpperBound { get; set; }
 
-        [JsonPropertyName("week_avg")]
-        public WeekAvgResp WeekAvg { get; set; }
+        [JsonPropertyName("sum_other_doc_count")]
+        public int SumOtherDocCount { get; set; }
+
+        [JsonPropertyName("buckets")]
+        public List<BucketClass> Buckets { get; set; }
+
+        public Aggregations()
+        {
+            Buckets = new();
+        }
     }
 
-   
+    public class BucketClass
+    {
+        [JsonPropertyName("key")]
+        public string Key { get; set; }
+        
+        [JsonPropertyName("doc_count")]
+        public int DocCount { get; set; }
+
+        [JsonPropertyName("week_avg")]
+        public AggValues WeekAvg { get; set; }
+
+        [JsonPropertyName("time_percentile")]
+        public AggValues TimePercentile { get; set; }
+
+    }
+
+    public class AggValues
+    {
+        [JsonPropertyName("value")]
+        public double Value { get; set; }
+        
+        [JsonPropertyName("values")]
+        public Dictionary<string,double> Values { get; set; }
+
+    }
 
 }
