@@ -21,8 +21,8 @@ namespace DateTimeService.Data
             {
                 await _databaseManagement.CheckDatabaseStatus(cancellationToken);
 
-                break;
-                //await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
+                
+                await Task.Delay(TimeSpan.FromSeconds(30), cancellationToken);
             }
         }
     }

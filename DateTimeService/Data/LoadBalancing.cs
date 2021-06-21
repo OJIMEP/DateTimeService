@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.Diagnostics;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -29,8 +30,8 @@ namespace DateTimeService.Data
         public async Task<SqlConnection> GetDatabaseConnectionAsync()
         {
             //string connString = _configuration.GetConnectionString("1CDataSqlConnection");
-            
-            var connectionParameters = _configuration.GetSection("OneSDatabases").Get<List<DatabaseConnectionParameter>>();
+
+            var connectionParameters = DatabaseList.Databases;//_configuration.GetSection("OneSDatabases").Get<List<DatabaseConnectionParameter>>();
 
             var timeMS = DateTime.Now.Millisecond % 100;
 
@@ -52,7 +53,10 @@ namespace DateTimeService.Data
                     if (firstAvailable && failedConnections.Contains(connParametr.Connection))
                         continue;
 
+                    if (!connParametr.AvailableToUse)
+                        continue;
 
+                    Stopwatch watch = new();
                     percentCounter += connParametr.Priority;
                     if ((timeMS <= percentCounter && connParametr.Priority != 0) || firstAvailable)
                         try
@@ -67,7 +71,8 @@ namespace DateTimeService.Data
                             if (connParametr.Type == "replica_tables")
                                 queryStringCheck = Queries.DatebaseBalancingReplicaTables;
 
-
+                            
+                            watch.Start();
                             //sql connection object
                             conn = new(connParametr.Connection);      
                                                        
@@ -81,7 +86,7 @@ namespace DateTimeService.Data
                             SqlDataReader dr = await cmd.ExecuteReaderAsync();
                             
                             dr.Close();
-
+                            watch.Stop();
 
                             //close connection
                             //conn.Close();
@@ -91,9 +96,14 @@ namespace DateTimeService.Data
                         }
                         catch (Exception ex)
                         {
+                            if (watch.IsRunning)
+                            {
+                                watch.Stop();
+                            }
+
                             var logElement = new ElasticLogElement
                             {
-                                TimeSQLExecution = 0,
+                                LoadBalancingExecution = watch.ElapsedMilliseconds,
                                 ErrorDescription = ex.Message,
                                 Status = "Error",
                                 DatabaseConnection = LoadBalancing.RemoveCredentialsFromConnectionString(connParametr.Connection)

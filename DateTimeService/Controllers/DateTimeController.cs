@@ -822,7 +822,7 @@ namespace DateTimeService.Controllers
             return TextFillGoodsTable(convertedData, cmdGoodsTable, optimizeRowsCount, new());
         }
 
-        private static string TextFillGoodsTable(RequestDataAvailableDate data, SqlCommand cmdGoodsTable, bool optimizeRowsCount, List<string> PickupsList)
+        public static string TextFillGoodsTable(RequestDataAvailableDate data, SqlCommand cmdGoodsTable, bool optimizeRowsCount, List<string> PickupsList)
         {
 
           

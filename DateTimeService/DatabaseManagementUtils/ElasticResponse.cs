@@ -87,6 +87,8 @@ namespace DateTimeService.Models
         [JsonPropertyName("time_percentile")]
         public AggValues TimePercentile { get; set; }
 
+        [JsonPropertyName("load_bal")]
+        public AggValues LoadBalance { get; set; }
     }
 
     public class AggValues

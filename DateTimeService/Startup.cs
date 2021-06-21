@@ -1,6 +1,7 @@
 using DateTimeService.Areas.Identity.Data;
 using DateTimeService.Controllers;
 using DateTimeService.Data;
+using DateTimeService.DatabaseManagementUtils;
 using DateTimeService.Logging;
 using DateTimeService.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -102,7 +103,9 @@ namespace DateTimeService
 
             services.AddHttpClient<ILogger, HttpLogger>();
 
-            DatabaseList.CreateDatabases(Configuration.GetSection("OneSDatabases").Get<List<DatabaseConnectionParameter>>());            
+            //DatabaseList.CreateDatabases(Configuration.GetSection("OneSDatabases").Get<List<DatabaseConnectionParameter>>());            
+
+            services.AddSingleton<IHostedService, ReloadDatabasesFromFileService>();
 
             services.AddSingleton<DatabaseManagement>();
             services.AddSingleton<IHostedService, DatabaseManagementService>();
