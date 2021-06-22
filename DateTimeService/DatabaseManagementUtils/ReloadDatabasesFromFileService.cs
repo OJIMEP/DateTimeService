@@ -1,5 +1,7 @@
-﻿using DateTimeService.Data;
+﻿using DateTimeService.Controllers;
+using DateTimeService.Data;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,10 +14,12 @@ namespace DateTimeService.DatabaseManagementUtils
     {
 
         private readonly IConfiguration _configuration;
+        private readonly ILogger<DateTimeController> _logger;
 
-        public ReloadDatabasesFromFileService(IConfiguration configuration)
+        public ReloadDatabasesFromFileService(ILogger<DateTimeController> logger, IConfiguration configuration)
         {
             _configuration = configuration;
+            _logger = logger;
         }
 
         protected override async Task ExecuteAsync(CancellationToken cancellationToken)
@@ -23,7 +27,7 @@ namespace DateTimeService.DatabaseManagementUtils
             while (!cancellationToken.IsCancellationRequested)
             {
 
-                await DatabaseList.CreateUpdateDatabases(_configuration.GetSection("OneSDatabases").Get<List<DatabaseConnectionParameter>>());
+                await DatabaseList.CreateUpdateDatabases(_configuration.GetSection("OneSDatabases").Get<List<DatabaseConnectionParameter>>(),_logger);
                 
                 await Task.Delay(TimeSpan.FromSeconds(11), cancellationToken);
             }

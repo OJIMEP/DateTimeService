@@ -1,7 +1,10 @@
-﻿using DateTimeService.Models;
+﻿using DateTimeService.Controllers;
+using DateTimeService.Models;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace DateTimeService.Data
@@ -18,11 +21,12 @@ namespace DateTimeService.Data
         {
             Databases = new();
         }
-        public static Task CreateUpdateDatabases(List<DatabaseConnectionParameter> connectionParameters)
+        public static Task CreateUpdateDatabases(List<DatabaseConnectionParameter> connectionParameters, ILogger<DateTimeController> _logger)
         {
 
             if (LastReadFromFile == default || DateTimeOffset.Now - LastReadFromFile > TimeSpan.FromSeconds(5))
             {
+                
                 lock (locker)
                 {
                     List<DatabaseInfo> databasesInFile = new();
@@ -37,10 +41,20 @@ namespace DateTimeService.Data
                         {
                             Databases.Add(db);
                             databasesInFile.Add(db);
+                            LogUpdatedChanges(db, _logger, "Added database");
                         }
                         else
                         {
+                            if (currentItem.Priority != db.Priority)
+                            {
+                                LogUpdatedChanges(db, _logger, "Priority change");
+                            }
+                            if (currentItem.Type != db.Type)
+                            {
+                                LogUpdatedChanges(db, _logger, "Type change");
+                            }
                             currentItem.Priority = db.Priority;
+                            currentItem.Type = db.Type;
                             databasesInFile.Add(currentItem);
                         }
                     }
@@ -56,10 +70,16 @@ namespace DateTimeService.Data
                     foreach (var item in databasesToDelete)
                     {
                         Databases.Remove(item);
+                        LogUpdatedChanges(item, _logger, "Deleted database");
                     }
 
                     LastReadFromFile = DateTimeOffset.Now;
                 }
+               
+                   
+                
+                
+
             }
 
             return Task.CompletedTask;
@@ -76,6 +96,22 @@ namespace DateTimeService.Data
             }
 
             return Task.CompletedTask;
+        }
+
+        public static void LogUpdatedChanges(DatabaseInfo database, ILogger<DateTimeController> _logger, string updateDesc)
+        {
+            var logElement = new ElasticLogElement
+            {
+                LoadBalancingExecution = 0,
+                ErrorDescription = "Database list updated",
+                Status = "Ok",
+                DatabaseConnection = database.ConnectionWithoutCredentials
+            };
+
+            logElement.AdditionalData.Add("UpdateCause", updateDesc);
+            var logstringElement = JsonSerializer.Serialize(logElement);
+
+            _logger.LogInformation(logstringElement);
         }
     }
 }

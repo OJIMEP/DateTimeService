@@ -47,7 +47,7 @@ namespace DateTimeService.Data
             var indexPath = _configuration["elasticsearch:indexName"];
             var authenticationString = elasticLogin + ":" + elasticPass;
             var base64EncodedAuthenticationString = Convert.ToBase64String(Encoding.UTF8.GetBytes(authenticationString));
-
+            var analyzeInterval = "now-1m";
             var clearCacheCriterias = _configuration.GetSection("ClearCacheCriterias").Get<List<ClearCacheCriteria>>();
 
             ElasticResponse elasticResponse = null;
@@ -68,7 +68,7 @@ namespace DateTimeService.Data
 
             FilterElement element = new();
             element.Range = new();
-            element.Range.Add("@timestamp", new { gt = "now-2m" });
+            element.Range.Add("@timestamp", new { gt = analyzeInterval });
 
             searchrequest.Query.Bool.Filter.Add(element);
 
@@ -185,7 +185,8 @@ namespace DateTimeService.Data
                 {
                     foreach (var bucket in rootAggregation.Value.Buckets)
                     {
-                        var recordsByMinute = bucket.DocCount / 2;
+                        var minutesInBucket = int.Parse(analyzeInterval.Replace("now-", "").Replace("m", ""));
+                        var recordsByMinute = bucket.DocCount / minutesInBucket;
                         var database = DatabaseList.Databases.FirstOrDefault(s => s.ConnectionWithoutCredentials == bucket.Key);
                         var criteria = clearCacheCriterias.FirstOrDefault(s => recordsByMinute >= s.RecordCountBegin && recordsByMinute <= s.RecordCountEnd && s.CriteriaType == "RecordCount");
                         var criteriaMaxTime = clearCacheCriterias.FirstOrDefault(s => s.CriteriaType == "MaximumResponseTime");
@@ -201,7 +202,7 @@ namespace DateTimeService.Data
 
                         if (percentile95rate > criteria.Percentile_95 
                             && database.Type != "main" 
-                            && (database.LastFreeProcCacheCommand == default || DateTimeOffset.Now - database.LastFreeProcCacheCommand > TimeSpan.FromSeconds(60)))
+                            && (database.LastFreeProcCacheCommand == default || DateTimeOffset.Now - database.LastFreeProcCacheCommand > TimeSpan.FromSeconds(90)))
                         {
 
                             try
