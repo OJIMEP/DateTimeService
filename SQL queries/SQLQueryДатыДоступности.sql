@@ -63,10 +63,10 @@ SET @PickupPoint6 = '2';
 DECLARE @P_DaysToShow numeric(2);
  Set @P_DaysToShow = 7;
 
- Set @P_DateTimeNow = '4021-06-15T15:56:00' 
- Set @P_DateTimePeriodBegin = '4021-06-15T00:00:00'
- Set @P_DateTimePeriodEnd = '4021-06-19T00:00:00'
- Set @P_TimeNow = '2001-01-01T15:56:00'
+ Set @P_DateTimeNow = '4021-06-23T16:50:00' 
+ Set @P_DateTimePeriodBegin = '4021-06-23T00:00:00'
+ Set @P_DateTimePeriodEnd = '4021-06-27T00:00:00'
+ Set @P_TimeNow = '2001-01-01T16:50:00'
  Set @P_EmptyDate = '2001-01-01T00:00:00'
  Set @P_MaxDate = '5999-11-11T00:00:00'
 
@@ -274,6 +274,10 @@ from @Temp_GoodsRaw t1
 )
 Select 
 	Номенклатура._IDRRef AS НоменклатураСсылка,
+	Номенклатура._Code AS code,
+	Номенклатура._Fld3480 AS article,
+	Номенклатура._Fld3489RRef AS ЕдиницаИзмерения,
+	Номенклатура._Fld3526RRef AS Габариты,
 	#Temp_PickupPoints.СкладСсылка AS СкладПВЗСсылка
 INTO #Temp_GoodsBegin
 From
@@ -285,6 +289,10 @@ From
 union
 Select 
 	Номенклатура._IDRRef,
+	Номенклатура._Code,
+	Номенклатура._Fld3480,
+	Номенклатура._Fld3489RRef,
+	Номенклатура._Fld3526RRef,
 	#Temp_PickupPoints.СкладСсылка
 From 
 	Temp_GoodsRawParsed T1
@@ -295,10 +303,10 @@ From
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
 Select 
-	Номенклатура._IDRRef AS НоменклатураСсылка,
-	Номенклатура._Fld3480 AS article,
-	Номенклатура._Code AS code,
-	#Temp_GoodsBegin.СкладПВЗСсылка AS СкладСсылка,
+	Номенклатура.НоменклатураСсылка AS НоменклатураСсылка,
+	Номенклатура.article AS article,
+	Номенклатура.code AS code,
+	Номенклатура.СкладПВЗСсылка AS СкладСсылка,
 	Упаковки._IDRRef AS УпаковкаСсылка,
 	1 As Количество,
 	Упаковки._Fld6000 AS Вес,
@@ -309,14 +317,13 @@ Select
 	IsNull(ГруппыПланирования._Fld25519, @P_EmptyDate) AS ГруппаПланированияДобавляемоеВремя
 INTO #Temp_Goods
 From 
-	dbo._Reference149 Номенклатура With (NOLOCK)
-	inner join #Temp_GoodsBegin on Номенклатура._IDRRef = #Temp_GoodsBegin.НоменклатураСсылка
+	#Temp_GoodsBegin Номенклатура
 	Inner Join dbo._Reference256 Упаковки With (NOLOCK)
 		On 
 		Упаковки._OwnerID_TYPE = 0x08  
 		AND Упаковки.[_OwnerID_RTRef] = 0x00000095
-		AND Номенклатура._IDRRef = Упаковки._OwnerID_RRRef		
-		And Упаковки._Fld6003RRef = Номенклатура._Fld3489RRef
+		AND Номенклатура.НоменклатураСсылка = Упаковки._OwnerID_RRRef		
+		And Упаковки._Fld6003RRef = Номенклатура.ЕдиницаИзмерения
 		AND Упаковки._Marked = 0x00
 	Left Join dbo._Reference23294 ГруппыПланирования With (NOLOCK)
 		Inner Join dbo._Reference23294_VT23309 With (NOLOCK)
@@ -325,7 +332,7 @@ From
 		On 
 		ГруппыПланирования._Fld23302RRef IN (Select СкладСсылка From #Temp_GeoData) --склад
 		AND ГруппыПланирования._Fld25141 = 0x01--участвует в расчете мощности
-		AND (ГруппыПланирования._Fld23301RRef = Номенклатура._Fld3526RRef OR (Номенклатура._Fld3526RRef = 0xAC2CBF86E693F63444670FFEB70264EE AND ГруппыПланирования._Fld23301RRef= 0xAD3F7F5FC4F15DAD4F693CAF8365EC0D) ) --габариты
+		AND (ГруппыПланирования._Fld23301RRef = Номенклатура.Габариты OR (Номенклатура.Габариты = 0xAC2CBF86E693F63444670FFEB70264EE AND ГруппыПланирования._Fld23301RRef= 0xAD3F7F5FC4F15DAD4F693CAF8365EC0D) ) --габариты
 		AND ГруппыПланирования._Marked = 0x00
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
