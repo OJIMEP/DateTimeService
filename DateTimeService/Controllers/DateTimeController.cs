@@ -468,12 +468,22 @@ namespace DateTimeService.Controllers
                     }
                 }
             }
-            catch(Exception ex)
+            catch (ArgumentException ex)
+            {
+                logElement.TimeSQLExecution = sqlCommandExecutionTime;
+                logElement.ErrorDescription = "Duplicated keys in dictionary";
+                logElement.Status = "Error";
+                logElement.AdditionalData.Add("Key", ex.Message);
+            }
+            catch (Exception ex)
             {
                 logElement.TimeSQLExecution = sqlCommandExecutionTime;
                 logElement.ErrorDescription = ex.Message;
                 logElement.Status = "Error";
             }
+            
+            
+
 
             
 
