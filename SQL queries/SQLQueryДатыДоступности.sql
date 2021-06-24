@@ -63,10 +63,10 @@ SET @PickupPoint6 = '2';
 DECLARE @P_DaysToShow numeric(2);
  Set @P_DaysToShow = 7;
 
- Set @P_DateTimeNow = '4021-06-23T16:50:00' 
- Set @P_DateTimePeriodBegin = '4021-06-23T00:00:00'
- Set @P_DateTimePeriodEnd = '4021-06-27T00:00:00'
- Set @P_TimeNow = '2001-01-01T16:50:00'
+ Set @P_DateTimeNow = '4021-06-24T11:30:00' 
+ Set @P_DateTimePeriodBegin = '4021-06-24T00:00:00'
+ Set @P_DateTimePeriodEnd = '4021-06-28T00:00:00'
+ Set @P_TimeNow = '2001-01-01T11:30:00'
  Set @P_EmptyDate = '2001-01-01T00:00:00'
  Set @P_MaxDate = '5999-11-11T00:00:00'
 

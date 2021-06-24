@@ -63,10 +63,10 @@ SET @PickupPoint6 = '2';
 DECLARE @P_DaysToShow numeric(2);
  Set @P_DaysToShow = 7;
 
- Set @P_DateTimeNow = '4021-06-23T16:50:00' 
- Set @P_DateTimePeriodBegin = '4021-06-23T00:00:00'
- Set @P_DateTimePeriodEnd = '4021-06-27T00:00:00'
- Set @P_TimeNow = '2001-01-01T16:50:00'
+ Set @P_DateTimeNow = '4021-06-24T11:30:00' 
+ Set @P_DateTimePeriodBegin = '4021-06-24T00:00:00'
+ Set @P_DateTimePeriodEnd = '4021-06-28T00:00:00'
+ Set @P_TimeNow = '2001-01-01T11:30:00'
  Set @P_EmptyDate = '2001-01-01T00:00:00'
  Set @P_MaxDate = '5999-11-11T00:00:00'
 
@@ -277,7 +277,10 @@ Select
 	Номенклатура._Fld3480 AS article,
 	Номенклатура._Fld3489RRef AS ЕдиницаИзмерения,
 	Номенклатура._Fld3526RRef AS Габариты,
-	#Temp_PickupPoints.СкладСсылка AS СкладПВЗСсылка
+	#Temp_PickupPoints.СкладСсылка AS СкладПВЗСсылка,
+	Упаковки._IDRRef AS УпаковкаСсылка,
+	Упаковки._Fld6000 AS Вес,
+	Упаковки._Fld6006 AS Объем
 INTO #Temp_GoodsBegin
 From
 	Temp_GoodsRawParsed T1
@@ -285,6 +288,14 @@ From
 		ON T1.code is NULL and T1.Article = Номенклатура._Fld3480
 	Left Join #Temp_PickupPoints  
 		ON T1.PickupPoint = #Temp_PickupPoints.ERPКодСклада
+	Inner Join dbo._Reference256 Упаковки With (NOLOCK)
+		On 
+		Упаковки._OwnerID_TYPE = 0x08  
+		AND Упаковки.[_OwnerID_RTRef] = 0x00000095
+		AND 
+		Номенклатура._IDRRef = Упаковки._OwnerID_RRRef		
+		And Упаковки._Fld6003RRef = Номенклатура._Fld3489RRef
+		AND Упаковки._Marked = 0x00
 union
 Select 
 	Номенклатура._IDRRef,
@@ -292,13 +303,24 @@ Select
 	Номенклатура._Fld3480,
 	Номенклатура._Fld3489RRef,
 	Номенклатура._Fld3526RRef,
-	#Temp_PickupPoints.СкладСсылка
+	#Temp_PickupPoints.СкладСсылка,
+	Упаковки._IDRRef AS УпаковкаСсылка,
+	Упаковки._Fld6000 AS Вес,
+	Упаковки._Fld6006 AS Объем
 From 
 	Temp_GoodsRawParsed T1
 	Inner Join 	dbo._Reference149 Номенклатура With (NOLOCK) 
 		ON T1.code is not NULL and T1.code = Номенклатура._Code
 	Left Join #Temp_PickupPoints  
 		ON T1.PickupPoint = #Temp_PickupPoints.ERPКодСклада
+	Inner Join dbo._Reference256 Упаковки With (NOLOCK)
+		On 
+		Упаковки._OwnerID_TYPE = 0x08  
+		AND Упаковки.[_OwnerID_RTRef] = 0x00000095
+		AND 
+		Номенклатура._IDRRef = Упаковки._OwnerID_RRRef		
+		And Упаковки._Fld6003RRef = Номенклатура._Fld3489RRef
+		AND Упаковки._Marked = 0x00
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
 Select 
@@ -306,10 +328,10 @@ Select
 	Номенклатура.article AS article,
 	Номенклатура.code AS code,
 	Номенклатура.СкладПВЗСсылка AS СкладСсылка,
-	Упаковки._IDRRef AS УпаковкаСсылка,
+	Номенклатура.УпаковкаСсылка AS УпаковкаСсылка,--Упаковки._IDRRef AS УпаковкаСсылка,
 	1 As Количество,
-	Упаковки._Fld6000 AS Вес,
-	Упаковки._Fld6006 AS Объем,
+	Номенклатура.Вес AS Вес,--Упаковки._Fld6000 AS Вес,
+	Номенклатура.Объем AS Объем,--Упаковки._Fld6006 AS Объем,
 	10 AS ВремяНаОбслуживание,
 	IsNull(ГруппыПланирования._IDRRef, 0x00000000000000000000000000000000) AS ГруппаПланирования,
 	IsNull(ГруппыПланирования._Description, '') AS ГруппаПланированияНаименование,
@@ -317,13 +339,14 @@ Select
 INTO #Temp_Goods
 From 
 	#Temp_GoodsBegin Номенклатура
-	Inner Join dbo._Reference256 Упаковки With (NOLOCK)
-		On 
-		Упаковки._OwnerID_TYPE = 0x08  
-		AND Упаковки.[_OwnerID_RTRef] = 0x00000095
-		AND Номенклатура.НоменклатураСсылка = Упаковки._OwnerID_RRRef		
-		And Упаковки._Fld6003RRef = Номенклатура.ЕдиницаИзмерения
-		AND Упаковки._Marked = 0x00
+	--Inner Join dbo._Reference256 Упаковки With (NOLOCK)
+	--	On 
+	--	Упаковки._OwnerID_TYPE = 0x08  
+	--	AND Упаковки.[_OwnerID_RTRef] = 0x00000095
+	--	AND 
+	--	Номенклатура.НоменклатураСсылка = Упаковки._OwnerID_RRRef		
+	--	And Упаковки._Fld6003RRef = Номенклатура.ЕдиницаИзмерения
+	--	AND Упаковки._Marked = 0x00
 	Left Join dbo._Reference23294 ГруппыПланирования With (NOLOCK)
 		Inner Join dbo._Reference23294_VT23309 With (NOLOCK)
 			on ГруппыПланирования._IDRRef = _Reference23294_VT23309._Reference23294_IDRRef
@@ -335,9 +358,71 @@ From
 		AND ГруппыПланирования._Marked = 0x00
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
+With Temp_ExchangeRates AS (
+SELECT
+	T1._Period AS Период,
+	T1._Fld14558RRef AS Валюта,
+	T1._Fld14559 AS Курс,
+	T1._Fld14560 AS Кратность
+FROM _InfoRgSL26678 T1 With (NOLOCK)
+	)
+SELECT
+    T2._Fld21408RRef AS НоменклатураСсылка,
+    T2._Fld21410_TYPE AS Источник_TYPE,
+	T2._Fld21410_RTRef AS Источник_RTRef,
+	T2._Fld21410_RRRef AS Источник_RRRef,
+	Цены._Fld21410_TYPE AS Регистратор_TYPE,
+    Цены._Fld21410_RTRef AS Регистратор_RTRef,
+    Цены._Fld21410_RRRef AS Регистратор_RRRef,
+    T2._Fld23568RRef AS СкладИсточника,
+    T2._Fld21424 AS ДатаСобытия,
+    SUM(T2._Fld21411) - SUM(T2._Fld21412) AS Количество
+Into #Temp_Remains
+FROM
+    dbo._AccumRgT21444 T2 With (NOLOCK)
+	Left Join _AccumRg21407 Цены With (NOLOCK)
+		Inner Join Temp_ExchangeRates With (NOLOCK)
+			On Цены._Fld21443RRef = Temp_ExchangeRates.Валюта 
+		On T2._Fld21408RRef = Цены._Fld21408RRef
+		AND T2._Fld21410_RTRef = 0x00000153
+		AND Цены._Fld21410_RTRef = 0x00000153 --Цены.Регистратор ССЫЛКА Документ.мегапрайсРегистрацияПрайса
+        AND T2._Fld21410_RRRef = Цены._Fld21410_RRRef
+		And Цены._Fld21442<>0 AND (Цены._Fld21442 * Temp_ExchangeRates.Курс / Temp_ExchangeRates.Кратность >= Цены._Fld21982 OR Цены._Fld21411 >= Цены._Fld21616)
+		And Цены._Fld21408RRef IN(SELECT
+                НоменклатураСсылка
+            FROM
+                #Temp_Goods)
+WHERE
+    T2._Period = '5999-11-01 00:00:00'
+    AND (
+        (
+            (T2._Fld21424 = '2001-01-01 00:00:00')
+            OR (Cast(T2._Fld21424 AS datetime)>= @P_DateTimeNow)
+        )
+        AND T2._Fld21408RRef IN (
+            SELECT
+                TNomen.НоменклатураСсылка
+            FROM
+                #Temp_Goods TNomen WITH(NOLOCK))) AND (T2._Fld21412 <> 0 OR T2._Fld21411 <> 0)
+GROUP BY
+    T2._Fld21408RRef,
+    T2._Fld21410_TYPE,
+    T2._Fld21410_RTRef,
+    T2._Fld21410_RRRef,
+	Цены._Fld21410_TYPE,
+	Цены._Fld21410_RTRef,
+	Цены._Fld21410_RRRef,
+    T2._Fld23568RRef,
+    T2._Fld21424
+HAVING
+    (SUM(T2._Fld21412) <> 0.0
+    OR SUM(T2._Fld21411) <> 0.0)
+	AND SUM(T2._Fld21412) - SUM(T2._Fld21411) <> 0.0
+OPTION (OPTIMIZE FOR (@P_DateTimeNow='4021-06-24T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
 
 Drop table #Temp_GoodsRaw
 Drop table #Temp_PickupPoints
 Drop table #Temp_GeoData
 Drop table #Temp_GoodsBegin
 Drop table #Temp_Goods
+Drop table #Temp_Remains
