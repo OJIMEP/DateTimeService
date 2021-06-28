@@ -430,6 +430,9 @@ use [triovist]
 exec sp_addarticle @publication = @publ_name, @article = N'_Reference23612_VT23613', @source_owner = N'dbo', @source_object = N'_Reference23612_VT23613', @type = N'logbased', @description = N'', @creation_script = N'', @pre_creation_cmd = N'drop', @schema_option = 0x000000000803508F, @identityrangemanagementoption = N'none', @destination_table = N'_Reference23612_VT23613', @destination_owner = N'dbo', @status = 24, @vertical_partition = N'false', @ins_cmd = N'CALL [sp_MSins_dbo_Reference23612_VT23613]', @del_cmd = N'CALL [sp_MSdel_dbo_Reference23612_VT23613]', @upd_cmd = N'SCALL [sp_MSupd_dbo_Reference23612_VT23613]'
 --GO
 use [triovist]
+exec sp_addarticle @publication = @publ_name, @article = N'_Reference23612_VT27054', @source_owner = N'dbo', @source_object = N'_Reference23612_VT27054', @type = N'logbased', @description = N'', @creation_script = N'', @pre_creation_cmd = N'drop', @schema_option = 0x000000000803508F, @identityrangemanagementoption = N'none', @destination_table = N'_Reference23612_VT27054', @destination_owner = N'dbo', @status = 24, @vertical_partition = N'false', @ins_cmd = N'CALL [sp_MSins_dbo_Reference23612_VT27054]', @del_cmd = N'CALL [sp_MSdel_dbo_Reference23612_VT27054]', @upd_cmd = N'SCALL [sp_MSupd_dbo_Reference23612_VT27054]'
+GO
+use [triovist]
 exec sp_addarticle @publication = @publ_name, @article = N'_Reference256', @source_owner = N'dbo', @source_object = N'_Reference256', @type = N'logbased', @description = N'', @creation_script = N'', @pre_creation_cmd = N'drop', @schema_option = 0x000000000803508F, @identityrangemanagementoption = N'none', @destination_table = N'_Reference256', @destination_owner = N'dbo', @status = 24, @vertical_partition = N'true', @ins_cmd = N'CALL [sp_MSins_dbo_Reference256]', @del_cmd = N'CALL [sp_MSdel_dbo_Reference256]', @upd_cmd = N'SCALL [sp_MSupd_dbo_Reference256]'
 
 -- Adding the article's partition column(s)
@@ -526,3 +529,7 @@ exec sp_addsubscription @publication = @publ_name, @subscriber = @subscr_server,
 exec sp_addpushsubscription_agent @publication = @publ_name, @subscriber = @subscr_server, @subscriber_db = @subscr_db, @job_login = @login, @job_password = @pass, @subscriber_security_mode = 0, @subscriber_login = N'sa', @subscriber_password = N'examplePass', @frequency_type = 64, @frequency_interval = 1, @frequency_relative_interval = 1, @frequency_recurrence_factor = 0, @frequency_subday = 4, @frequency_subday_interval = 5, @active_start_time_of_day = 0, @active_end_time_of_day = 235959, @active_start_date = 0, @active_end_date = 0, @dts_package_location = N'Distributor'
 --GO
 
+use [triovist]
+exec sp_addsubscription @publication = @publ_name, @subscriber = N'SERVER-1C-SQL-1', @destination_db = N'triovist_repl', @subscription_type = N'Push', @sync_type = N'automatic', @article = N'all', @update_mode = N'read only', @subscriber_type = 0
+exec sp_addpushsubscription_agent @publication = @publ_name, @subscriber = N'SERVER-1C-SQL-1', @subscriber_db = N'triovist_repl', @job_login = @login, @job_password = @pass, @subscriber_security_mode = 0, @subscriber_login = N'sa', @subscriber_password = N'examplePass', @frequency_type = 64, @frequency_interval = 1, @frequency_relative_interval = 1, @frequency_recurrence_factor = 0, @frequency_subday = 4, @frequency_subday_interval = 5, @active_start_time_of_day = 0, @active_end_time_of_day = 235959, @active_start_date = 0, @active_end_date = 0, @dts_package_location = N'Distributor'
+GO
