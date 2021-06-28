@@ -63,10 +63,10 @@ SET @PickupPoint6 = '2';
 DECLARE @P_DaysToShow numeric(2);
  Set @P_DaysToShow = 7;
 
- Set @P_DateTimeNow = '4021-06-24T11:30:00' 
+ Set @P_DateTimeNow = '4021-06-24T15:20:00' 
  Set @P_DateTimePeriodBegin = '4021-06-24T00:00:00'
  Set @P_DateTimePeriodEnd = '4021-06-28T00:00:00'
- Set @P_TimeNow = '2001-01-01T11:30:00'
+ Set @P_TimeNow = '2001-01-01T15:20:00'
  Set @P_EmptyDate = '2001-01-01T00:00:00'
  Set @P_MaxDate = '5999-11-11T00:00:00'
 
@@ -420,9 +420,59 @@ HAVING
 	AND SUM(T2._Fld21412) - SUM(T2._Fld21411) <> 0.0
 OPTION (OPTIMIZE FOR (@P_DateTimeNow='4021-06-24T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
 
+SELECT Distinct
+    T1._Fld23831RRef AS —клад»сточника,
+    T1._Fld23832 AS ƒата—обыти€,
+    T1._Fld23834 AS ƒатаѕрибыти€,
+    T1._Fld23833RRef AS —кладЌазначени€
+Into #Temp_WarehouseDates
+FROM
+    dbo._InfoRg23830 T1 With (NOLOCK)
+	Inner Join #Temp_Remains With (NOLOCK)
+	ON T1._Fld23831RRef = #Temp_Remains.—клад»сточника
+	AND T1._Fld23832 = #Temp_Remains.ƒата—обыти€
+	AND T1._Fld23833RRef IN (Select —клад—сылка From #Temp_GeoData UNION ALL Select —клад—сылка From #Temp_PickupPoints)
+OPTION (KEEP PLAN, KEEPFIXED PLAN)
+;
+
+
+Select —клад—сылка 
+Into #Temp_Warehouses
+From #Temp_GeoData 
+UNION ALL 
+Select —клад—сылка 
+From #Temp_PickupPoints
+
+
+SELECT
+	T1._Fld23831RRef AS —клад»сточника,
+	T1._Fld23833RRef AS —кладЌазначени€,
+	MIN(T1._Fld23834) AS ƒатаѕрибыти€ 
+Into #Temp_MinimumWarehouseDates
+FROM
+    dbo._InfoRg23830 T1 With (NOLOCK)
+	Inner Join #Temp_Warehouses ON T1._Fld23833RRef = #Temp_Warehouses.—клад—сылка 
+	Inner Join #Temp_Remains ON T1._Fld23831RRef = #Temp_Remains.—клад»сточника AND T1._Fld23832 BETWEEN @P_DateTimeNow AND DateAdd(DAY,6,@P_DateTimeNow)
+--WHERE
+--T1._Fld23833RRef IN (Select —клад—сылка From #Temp_GeoData UNION ALL Select —клад—сылка From #Temp_PickupPoints)
+    
+		--AND
+		--T1._Fld23832 BETWEEN @P_DateTimeNow AND DateAdd(DAY,6,@P_DateTimeNow)
+		--AND T1._Fld23831RRef IN (
+  --      SELECT
+  --          T2.—клад»сточника AS —клад»сточника
+  --      FROM
+  --          #Temp_Remains T2 WITH(NOLOCK)) 
+GROUP BY T1._Fld23831RRef,
+T1._Fld23833RRef
+OPTION (OPTIMIZE FOR (@P_DateTimeNow='4021-06-24T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
+
 Drop table #Temp_GoodsRaw
 Drop table #Temp_PickupPoints
 Drop table #Temp_GeoData
 Drop table #Temp_GoodsBegin
 Drop table #Temp_Goods
 Drop table #Temp_Remains
+Drop Table #Temp_WarehouseDates
+Drop Table #Temp_MinimumWarehouseDates
+Drop Table #Temp_Warehouses
