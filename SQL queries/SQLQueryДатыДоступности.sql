@@ -825,13 +825,13 @@ Select
 	DATEADD(
 		SECOND,
 		CAST(
-			DATEDIFF(SECOND, @P_EmptyDate, ПВЗГрафикРаботы._Fld23617) AS NUMERIC(12)
+			DATEDIFF(SECOND, @P_EmptyDate, isNull(ПВЗИзмененияГрафикаРаботы._Fld27057, ПВЗГрафикРаботы._Fld23617)) AS NUMERIC(12)
 		),
 		date) AS ВремяНачала,
 	DATEADD(
 		SECOND,
 		CAST(
-			DATEDIFF(SECOND, @P_EmptyDate, ПВЗГрафикРаботы._Fld23618) AS NUMERIC(12)
+			DATEDIFF(SECOND, @P_EmptyDate, isNull(ПВЗИзмененияГрафикаРаботы._Fld27058, ПВЗГрафикРаботы._Fld23618)) AS NUMERIC(12)
 		),
 		date) AS ВремяОкончания,
 	Склады._IDRRef AS СкладНазначения--,
@@ -842,10 +842,20 @@ From
 		ON Склады._IDRRef IN (Select СкладНазначения From #Temp_ShipmentDatesPickUp)
 	Inner Join _Reference23612 
 		On Склады._Fld23620RRef = _Reference23612._IDRRef
-	Inner Join _Reference23612_VT23613 As ПВЗГрафикРаботы 
+	Left Join _Reference23612_VT23613 As ПВЗГрафикРаботы 
 		On _Reference23612._IDRRef = _Reference23612_IDRRef
-			AND (case when DATEPART ( dw , #Temp_Dates.date ) = 1 then 7 else DATEPART ( dw , #Temp_Dates.date ) -1 END) = ПВЗГрафикРаботы._Fld23615
-			AND ПВЗГрафикРаботы._Fld25265 = 0x00 --не выходной
+			AND (case when @@DATEFIRST = 1 then DATEPART ( dw , #Temp_Dates.date ) when DATEPART ( dw , #Temp_Dates.date ) = 1 then 7 else DATEPART ( dw , #Temp_Dates.date ) -1 END) = ПВЗГрафикРаботы._Fld23615
+	Left Join _Reference23612_VT27054 As ПВЗИзмененияГрафикаРаботы 
+		On _Reference23612._IDRRef = ПВЗИзмененияГрафикаРаботы._Reference23612_IDRRef
+			AND #Temp_Dates.date = ПВЗИзмененияГрафикаРаботы._Fld27056
+Where 
+	case 
+		when ПВЗИзмененияГрафикаРаботы._Reference23612_IDRRef is not null
+			then ПВЗИзмененияГрафикаРаботы._Fld27059
+		when ПВЗГрафикРаботы._Reference23612_IDRRef is not Null 
+			then ПВЗГрафикРаботы._Fld25265 
+		else 0 --не найдено ни графика ни изменения графика  
+	end = 0x00  -- не выходной
 ;			
 
 SELECT
@@ -1008,22 +1018,22 @@ OPTION (KEEP PLAN, KEEPFIXED PLAN);
 With Temp_DeliveryPower AS
 (
 SELECT   
-    SUM(
-        CASE
-            WHEN (МощностиДоставки._RecordKind = 0.0) THEN МощностиДоставки._Fld25107
-            ELSE -(МощностиДоставки._Fld25107)
+        SUM(
+            CASE
+                WHEN (МощностиДоставки._RecordKind = 0.0) THEN МощностиДоставки._Fld25107
+                ELSE -(МощностиДоставки._Fld25107)
         END        
     ) AS МассаОборот,    
-    SUM(
-        CASE
-            WHEN (МощностиДоставки._RecordKind = 0.0) THEN МощностиДоставки._Fld25108
-            ELSE -(МощностиДоставки._Fld25108)
+        SUM(
+            CASE
+                WHEN (МощностиДоставки._RecordKind = 0.0) THEN МощностиДоставки._Fld25108
+                ELSE -(МощностиДоставки._Fld25108)
         END        
     ) AS ОбъемОборот,    
-    SUM(
-        CASE
-            WHEN (МощностиДоставки._RecordKind = 0.0) THEN МощностиДоставки._Fld25201
-            ELSE -(МощностиДоставки._Fld25201)
+        SUM(
+            CASE
+                WHEN (МощностиДоставки._RecordKind = 0.0) THEN МощностиДоставки._Fld25201
+                ELSE -(МощностиДоставки._Fld25201)
         END        
     ) AS ВремяНаОбслуживаниеОборот,
     CAST(CAST(МощностиДоставки._Period  AS DATE) AS DATETIME) AS Дата
@@ -1105,5 +1115,4 @@ DROP TABLE #Temp_AvailableCourier
 DROP TABLE #Temp_AvailablePickUp
 DROP TABLE #Temp_PickupDatesGroup
 DROP TAble #Temp_PickupWorkingHours
-DROP TAble #Temp_Dates
-DROP Table #Temp_PickupPoints
+DROP TAble #Temp_DatesDROP Table #Temp_PickupPoints
