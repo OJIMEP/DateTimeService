@@ -31,10 +31,10 @@ DECLARE @P_MaxDate datetime;
  SET @P_Article2 = '424941';
  SET @P_Article3 = '69516';
  SET @P_Article4 = '5962720';
- SET @P_Article5 = '6167903';
- SET @P_Article6 = '6167903';
- SET @P_Article7 = '380386';
- SET @P_Article8 = '358619';
+ SET @P_Article5 = '6310229';
+ SET @P_Article6 = '6045211';
+ SET @P_Article7 = '5944337';
+ SET @P_Article8 = '5657497';
 
  SET @P_Code1 = '00-00444697'; --коды для уценки
  SET @P_Code2 = '00-00527933';
@@ -47,12 +47,12 @@ DECLARE @P_MaxDate datetime;
 
  SET @PickupPoint1 = NULL;--'340';
 
- Set @P_AdressCode = '47175';--'4948900';--'47175'--'47175000000'--'3298156' --код адреса
+ Set @P_AdressCode = '54966';--'4948900';--'47175'--'47175000000'--'3298156' --код адреса
  
-  Set @P_DateTimeNow = '4021-05-28T11:50:00' 
- Set @P_DateTimePeriodBegin = '4021-05-28T00:00:00'
- Set @P_DateTimePeriodEnd = '4021-06-01T00:00:00'
- Set @P_TimeNow = '2001-01-01T11:50:00'
+  Set @P_DateTimeNow = '4021-06-11T18:02:00' 
+ Set @P_DateTimePeriodBegin = '4021-06-11T00:00:00'
+ Set @P_DateTimePeriodEnd = '4021-06-15T00:00:00'
+ Set @P_TimeNow = '2001-01-01T18:02:00'
  Set @P_EmptyDate = '2001-01-01T00:00:00'
  Set @P_MaxDate = '5999-11-11T00:00:00'
 
@@ -82,15 +82,15 @@ INSERT INTO
 		Article, code, PickupPoint, quantity 
 	)
 VALUES
-	--(@P_Article1,@P_Code1,NULL,1),
-	--(@P_Article2,@P_Code2,NULL,1),
-	--(@P_Article1,@P_Code1,NULL,1),
-	(@P_Article3,@P_Code3,NULL,1)--,
+	--(@P_Article1,@P_Code1,NULL,0),
+	--(@P_Article2,@P_Code2,NULL,0),
+	--(@P_Article1,@P_Code1,NULL,0),
+	--(@P_Article3,@P_Code3,NULL,1)--,
 	--('843414',NULL,NULL,1)
-	--(@P3,3),
-	--(@P5,4),
-	--(@P6,3),
-	--(@P7,2),
+	(@P_Article5,NULL,NULL,1),
+	(@P_Article6,NULL,NULL,1),
+	(@P_Article7,NULL,NULL,1),
+	(@P_Article8,NULL,NULL,1)--,
 	--(@P8,1)
 	;
 
@@ -550,7 +550,7 @@ HAVING
     (SUM(T2._Fld21412) <> 0.0
     OR SUM(T2._Fld21411) <> 0.0)
 	AND SUM(T2._Fld21412) - SUM(T2._Fld21411) <> 0.0
-OPTION (OPTIMIZE FOR (@P_DateTimeNow='4021-05-28T11:00:00'),KEEP PLAN, KEEPFIXED PLAN);
+OPTION (OPTIMIZE FOR (@P_DateTimeNow='4021-06-11T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
 
 SELECT Distinct
     T1._Fld23831RRef AS СкладИсточника,
@@ -584,7 +584,7 @@ WHERE
 		AND T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData UNION ALL Select СкладСсылка From #Temp_PickupPoints)
 GROUP BY T1._Fld23831RRef,
 T1._Fld23833RRef
-OPTION (OPTIMIZE FOR (@P_DateTimeNow='4021-05-28T11:00:00'),KEEP PLAN, KEEPFIXED PLAN);
+OPTION (OPTIMIZE FOR (@P_DateTimeNow='4021-06-11T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
 
 
 SELECT
@@ -900,7 +900,7 @@ SELECT
 		DATEADD(
 			SECOND,
 			CAST(
-				DATEDIFF(SECOND, @P_EmptyDate, ПВЗГрафикРаботы._Fld23617) AS NUMERIC(12)
+				DATEDIFF(SECOND, @P_EmptyDate, isNull(ПВЗИзмененияГрафикаРаботы._Fld27057, ПВЗГрафикРаботы._Fld23617)) AS NUMERIC(12)
 			),
 			date
 		) < #Temp_DateAvailable.DateAvailable 
@@ -909,7 +909,7 @@ SELECT
 		DATEADD(
 			SECOND,
 			CAST(
-				DATEDIFF(SECOND, @P_EmptyDate, ПВЗГрафикРаботы._Fld23617) AS NUMERIC(12)
+				DATEDIFF(SECOND, @P_EmptyDate, isNull(ПВЗИзмененияГрафикаРаботы._Fld27057, ПВЗГрафикРаботы._Fld23617)) AS NUMERIC(12)
 			),
 			date
 		)
@@ -917,7 +917,7 @@ SELECT
 	DATEADD(
         SECOND,
         CAST(
-            DATEDIFF(SECOND, @P_EmptyDate, ПВЗГрафикРаботы._Fld23618) AS NUMERIC(12)
+            DATEDIFF(SECOND, @P_EmptyDate, isNull(ПВЗИзмененияГрафикаРаботы._Fld27058, ПВЗГрафикРаботы._Fld23618)) AS NUMERIC(12)
         ),
         date
     ) As ВремяОкончания
@@ -928,14 +928,24 @@ FROM
 			#Temp_DateAvailable.СкладНазначения = Tdate.СкладНазначения
 		Inner Join dbo._Reference226 Склады ON Склады._IDRRef = #Temp_DateAvailable.СкладНазначения
 			Inner Join _Reference23612 On Склады._Fld23620RRef = _Reference23612._IDRRef
-				Inner Join _Reference23612_VT23613 As ПВЗГрафикРаботы 
+				Left Join _Reference23612_VT23613 As ПВЗГрафикРаботы 
 				On _Reference23612._IDRRef = _Reference23612_IDRRef
-				AND (case when DATEPART ( dw , Tdate.date ) = 1 then 7 else DATEPART ( dw , Tdate.date ) -1 END) = ПВЗГрафикРаботы._Fld23615
-					AND ПВЗГрафикРаботы._Fld25265 = 0x00 --не выходной				
-		WHERE DATEADD(
+				AND (case when @@DATEFIRST = 1 then DATEPART ( dw , Tdate.date ) when DATEPART ( dw , Tdate.date ) = 1 then 7 else DATEPART ( dw , Tdate.date ) -1 END) = ПВЗГрафикРаботы._Fld23615
+		Left Join _Reference23612_VT27054 As ПВЗИзмененияГрафикаРаботы 
+				On _Reference23612._IDRRef = ПВЗИзмененияГрафикаРаботы._Reference23612_IDRRef
+				AND Tdate.date = ПВЗИзмененияГрафикаРаботы._Fld27056
+		WHERE 
+			case 
+			when ПВЗИзмененияГрафикаРаботы._Reference23612_IDRRef is not null
+				then ПВЗИзмененияГрафикаРаботы._Fld27059
+			when ПВЗГрафикРаботы._Reference23612_IDRRef is not Null 
+				then ПВЗГрафикРаботы._Fld25265 
+			else 0 --не найдено ни графика ни изменения графика  
+			end = 0x00  -- не выходной
+		AND DATEADD(
 			SECOND,
 			CAST(
-            DATEDIFF(SECOND, @P_EmptyDate, ПВЗГрафикРаботы._Fld23618) AS NUMERIC(12)
+            DATEDIFF(SECOND, @P_EmptyDate,  isNull(ПВЗИзмененияГрафикаРаботы._Fld27058, ПВЗГрафикРаботы._Fld23618)) AS NUMERIC(12)
 			),
 			Tdate.date) > #Temp_DateAvailable.DateAvailable
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
@@ -1003,7 +1013,7 @@ Having
                 ELSE -(МощностиДоставки._Fld25201)
             END
         ) > #Temp_TimeService.ВремяВыполнения	
-OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-05-28T00:00:00',@P_DateTimePeriodEnd='4021-06-01T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-06-11T00:00:00',@P_DateTimePeriodEnd='4021-06-15T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
 
 /*Тут начинаются интервалы, которые рассчитанные*/
 Select Distinct
@@ -1085,7 +1095,7 @@ HAVING
             ) AS NUMERIC(16, 0)
         ) > 0.0
     )
-OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-05-28T00:00:00',@P_DateTimePeriodEnd='4021-06-01T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-06-11T00:00:00',@P_DateTimePeriodEnd='4021-06-15T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
 ;
 
 select
@@ -1128,7 +1138,7 @@ Group By
 	#Temp_IntervalsAll.Геозона,
 	--T2._Fld25137,
 	#Temp_IntervalsAll.Приоритет
-OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-05-28T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-06-11T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
 ;
 
 INsert into #Temp_Intervals
@@ -1171,7 +1181,7 @@ Group By
 	#Temp_IntervalsAll.ГруппаПланирования,
 	#Temp_IntervalsAll.Геозона,
 	#Temp_IntervalsAll.Приоритет
-OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-05-28T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-06-11T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
 ;
 
 INsert into #Temp_Intervals
@@ -1210,7 +1220,7 @@ Group By
 	#Temp_IntervalsAll.ГруппаПланирования,
 	#Temp_IntervalsAll.Геозона,
 	#Temp_IntervalsAll.Приоритет
-OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-05-28T00:00:00',@P_DateTimePeriodEnd='4021-06-01T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-06-11T00:00:00',@P_DateTimePeriodEnd='4021-06-15T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
 
 select Период, Max(Приоритет) AS Приоритет into #Temp_PlanningGroupPriority from #Temp_Intervals Group by Период;
 /*Выше закончились рассчитанные интервалы*/
@@ -1218,7 +1228,7 @@ select Период, Max(Приоритет) AS Приоритет into #Temp_Pl
 WITH T(date) AS (
     /*Это получение списка дат интервалов после даты окончания расчета*/
     SELECT
-        Case When @P_DateTimePeriodEnd > CAST(CAST(#Temp_DateAvailable.DateAvailable  AS DATE) AS DATETIME) Then
+        Case When @P_DateTimePeriodEnd >= CAST(CAST(#Temp_DateAvailable.DateAvailable  AS DATE) AS DATETIME) Then
 		DateAdd(day, 1,
 		@P_DateTimePeriodEnd
 		)
@@ -1293,7 +1303,7 @@ Select
 	0
 From #Temp_AvailablePickUp
 Order by ВремяНачала
-OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-05-28T00:00:00',@P_DateTimePeriodEnd='4021-06-01T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-06-11T00:00:00',@P_DateTimePeriodEnd='4021-06-15T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
 
 Drop table #Temp_GeoData
 Drop table #Temp_Goods

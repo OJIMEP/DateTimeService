@@ -12,7 +12,7 @@ namespace DateTimeService.Data
 (	
 	Article nvarchar(20), 
 	code nvarchar(20), 
-    PickupPoint nvarchar(10),
+    PickupPoint nvarchar(45),
     quantity int
 )
 ;";
@@ -831,7 +831,7 @@ SELECT
 		DATEADD(
 			SECOND,
 			CAST(
-				DATEDIFF(SECOND, @P_EmptyDate, ПВЗГрафикРаботы._Fld23617) AS NUMERIC(12)
+				DATEDIFF(SECOND, @P_EmptyDate, isNull(ПВЗИзмененияГрафикаРаботы._Fld27057, ПВЗГрафикРаботы._Fld23617)) AS NUMERIC(12)
 			),
 			date
 		) < #Temp_DateAvailable.DateAvailable 
@@ -840,7 +840,7 @@ SELECT
 		DATEADD(
 			SECOND,
 			CAST(
-				DATEDIFF(SECOND, @P_EmptyDate, ПВЗГрафикРаботы._Fld23617) AS NUMERIC(12)
+				DATEDIFF(SECOND, @P_EmptyDate, isNull(ПВЗИзмененияГрафикаРаботы._Fld27057, ПВЗГрафикРаботы._Fld23617)) AS NUMERIC(12)
 			),
 			date
 		)
@@ -848,7 +848,7 @@ SELECT
 	DATEADD(
         SECOND,
         CAST(
-            DATEDIFF(SECOND, @P_EmptyDate, ПВЗГрафикРаботы._Fld23618) AS NUMERIC(12)
+            DATEDIFF(SECOND, @P_EmptyDate, isNull(ПВЗИзмененияГрафикаРаботы._Fld27058, ПВЗГрафикРаботы._Fld23618)) AS NUMERIC(12)
         ),
         date
     ) As ВремяОкончания
@@ -859,14 +859,24 @@ FROM
 			#Temp_DateAvailable.СкладНазначения = Tdate.СкладНазначения
 		Inner Join dbo._Reference226 Склады ON Склады._IDRRef = #Temp_DateAvailable.СкладНазначения
 			Inner Join _Reference23612 On Склады._Fld23620RRef = _Reference23612._IDRRef
-				Inner Join _Reference23612_VT23613 As ПВЗГрафикРаботы 
+				Left Join _Reference23612_VT23613 As ПВЗГрафикРаботы 
 				On _Reference23612._IDRRef = _Reference23612_IDRRef
-				AND (case when DATEPART ( dw , Tdate.date ) = 1 then 7 else DATEPART ( dw , Tdate.date ) -1 END) = ПВЗГрафикРаботы._Fld23615
-					AND ПВЗГрафикРаботы._Fld25265 = 0x00 --не выходной				
-		WHERE DATEADD(
+				AND (case when @@DATEFIRST = 1 then DATEPART ( dw , Tdate.date ) when DATEPART ( dw , Tdate.date ) = 1 then 7 else DATEPART ( dw , Tdate.date ) -1 END) = ПВЗГрафикРаботы._Fld23615
+		Left Join _Reference23612_VT27054 As ПВЗИзмененияГрафикаРаботы 
+				On _Reference23612._IDRRef = ПВЗИзмененияГрафикаРаботы._Reference23612_IDRRef
+				AND Tdate.date = ПВЗИзмененияГрафикаРаботы._Fld27056
+		WHERE 
+			case 
+			when ПВЗИзмененияГрафикаРаботы._Reference23612_IDRRef is not null
+				then ПВЗИзмененияГрафикаРаботы._Fld27059
+			when ПВЗГрафикРаботы._Reference23612_IDRRef is not Null 
+				then ПВЗГрафикРаботы._Fld25265 
+			else 0 --не найдено ни графика ни изменения графика  
+			end = 0x00  -- не выходной
+		AND DATEADD(
 			SECOND,
 			CAST(
-            DATEDIFF(SECOND, @P_EmptyDate, ПВЗГрафикРаботы._Fld23618) AS NUMERIC(12)
+            DATEDIFF(SECOND, @P_EmptyDate, isNull(ПВЗИзмененияГрафикаРаботы._Fld27058, ПВЗГрафикРаботы._Fld23618)) AS NUMERIC(12)
 			),
 			Tdate.date) > #Temp_DateAvailable.DateAvailable
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
@@ -1145,7 +1155,7 @@ select Период, Max(Приоритет) AS Приоритет into #Temp_Pl
 WITH T(date) AS (
     /*Это получение списка дат интервалов после даты окончания расчета*/
     SELECT
-        Case When @P_DateTimePeriodEnd > CAST(CAST(#Temp_DateAvailable.DateAvailable  AS DATE) AS DATETIME) Then
+        Case When @P_DateTimePeriodEnd >= CAST(CAST(#Temp_DateAvailable.DateAvailable  AS DATE) AS DATETIME) Then
 		DateAdd(day, 1,
 		@P_DateTimePeriodEnd
 		)
@@ -1225,7 +1235,14 @@ OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'), 
 
 
         public const string AvailableDate = @"
-{0}
+Select 
+	Склады._IDRRef AS СкладСсылка,
+	Склады._Fld19544 AS ERPКодСклада
+Into #Temp_PickupPoints
+From 
+	dbo._Reference226 Склады 
+Where Склады._Fld19544 in({0})
+ 
 
 Select
 	IsNull(_Reference114_VT23370._Fld23372RRef,Геозона._Fld23104RRef) As СкладСсылка,
@@ -1249,28 +1266,38 @@ where Геозона._IDRRef IN (
 	INNER JOIN dbo._InfoRg21711 T3 With (NOLOCK)
 	ON T2.Fld25549_ = T3._Fld25549 AND T2.MAXPERIOD_ = T3._Period
 	)
-OPTION (KEEP PLAN, KEEPFIXED PLAN)
+OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
+With Temp_GoodsRawParsed AS
+(
+select 
+	t1.Article, 
+	t1.code, 
+	value AS PickupPoint 
+from #Temp_GoodsRaw t1
+	cross apply 
+		string_split(IsNull(t1.PickupPoint,'-'), ',')
+)
 Select 
 	Номенклатура._IDRRef AS НоменклатураСсылка,
-	Склады._IDRRef AS СкладПВЗСсылка
+	#Temp_PickupPoints.СкладСсылка AS СкладПВЗСсылка
 INTO #Temp_GoodsBegin
 From
-	#Temp_GoodsRaw T1
+	Temp_GoodsRawParsed T1
 	Inner Join 	dbo._Reference149 Номенклатура With (NOLOCK) 
 		ON T1.code is NULL and T1.Article = Номенклатура._Fld3480
-	Left Join dbo._Reference226 Склады 
-		ON T1.PickupPoint = Склады._Fld19544
+	Left Join #Temp_PickupPoints  
+		ON T1.PickupPoint = #Temp_PickupPoints.ERPКодСклада
 union
 Select 
 	Номенклатура._IDRRef,
-	Склады._IDRRef
+	#Temp_PickupPoints.СкладСсылка
 From 
-	#Temp_GoodsRaw T1
+	Temp_GoodsRawParsed T1
 	Inner Join 	dbo._Reference149 Номенклатура With (NOLOCK) 
 		ON T1.code is not NULL and T1.code = Номенклатура._Code
-	Left Join dbo._Reference226 Склады 
-		ON T1.PickupPoint = Склады._Fld19544
+	Left Join #Temp_PickupPoints  
+		ON T1.PickupPoint = #Temp_PickupPoints.ERPКодСклада
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
 Select 
@@ -1367,7 +1394,7 @@ GROUP BY
 HAVING
     (SUM(T2._Fld21412) <> 0.0
     OR SUM(T2._Fld21411) <> 0.0)
-	AND SUM(T2._Fld21412) - SUM(T2._Fld21411) <> 0.0
+	AND SUM(T2._Fld21411) - SUM(T2._Fld21412) > 0.0
 OPTION (OPTIMIZE FOR (@P_DateTimeNow='{1}'),KEEP PLAN, KEEPFIXED PLAN);
 
 SELECT Distinct
@@ -1381,7 +1408,7 @@ FROM
 	Inner Join #Temp_Remains With (NOLOCK)
 	ON T1._Fld23831RRef = #Temp_Remains.СкладИсточника
 	AND T1._Fld23832 = #Temp_Remains.ДатаСобытия
-	AND T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData UNION ALL Select СкладСсылка From #Temp_Goods)   
+	AND T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData UNION ALL Select СкладСсылка From #Temp_PickupPoints)   
 OPTION (KEEP PLAN, KEEPFIXED PLAN)
 ;
 
@@ -1398,9 +1425,9 @@ WHERE
             T2.СкладИсточника AS СкладИсточника
         FROM
             #Temp_Remains T2 WITH(NOLOCK)) 
-		AND T1._Fld23832 >= @P_DateTimeNow
-		AND T1._Fld23832 <= DateAdd(DAY,6,@P_DateTimeNow)
-		AND T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData UNION ALL Select СкладСсылка From #Temp_Goods)
+		AND T1._Fld23832 BETWEEN @P_DateTimeNow AND  DateAdd(DAY,6,@P_DateTimeNow)
+		--AND T1._Fld23832 <= DateAdd(DAY,6,@P_DateTimeNow)
+		AND T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData UNION ALL Select СкладСсылка From #Temp_PickupPoints)
 GROUP BY T1._Fld23831RRef,
 T1._Fld23833RRef
 OPTION (OPTIMIZE FOR (@P_DateTimeNow='{1}'),KEEP PLAN, KEEPFIXED PLAN);
@@ -1592,7 +1619,7 @@ SELECT
 		Into #Temp_T3
         FROM
             #Temp_Sources T4 WITH(NOLOCK)
-            LEFT OUTER JOIN Temp_ClosestDate T5 WITH(NOLOCK)
+            INNER JOIN Temp_ClosestDate T5 WITH(NOLOCK)
             ON (T4.НоменклатураСсылка = T5.НоменклатураСсылка)
             AND (T4.СкладНазначения = T5.СкладНазначения)
             AND (T4.ТипИсточника = 1)
@@ -1752,60 +1779,90 @@ GROUP BY
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
 Select 
-	Max(ДатаСоСклада) AS МаксимальнаяДата,
-	Min(ДатаСоСклада) AS МинимальнаяДата,
-	СкладНазначения
+	CAST(CAST(DateAdd(DAY, @P_DaysToShow,Max(ДатаСоСклада))AS date) AS datetime) AS МаксимальнаяДата,
+	CAST(CAST(Min(ДатаСоСклада)AS date) AS datetime) AS МинимальнаяДата
 Into #Temp_PickupDatesGroup
 From 
 	#Temp_ShipmentDatesPickUp
-Group By
-	СкладНазначения
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
 /*Это получение списка дат интервалов ПВЗ*/
-WITH Tdate(date, Склад) AS (    
-    SELECT         
-		CAST(CAST(#Temp_PickupDatesGroup.МинимальнаяДата  AS DATE) AS DATETIME),
-		СкладНазначения
-	From #Temp_PickupDatesGroup
-    UNION
-    ALL
-    SELECT 
-        DateAdd(day, 1, Tdate.date),
-		СкладНазначения
-    FROM
-        Tdate
-		Inner Join #Temp_PickupDatesGroup 
-		ON Tdate.date < DateAdd(DAY, @P_DaysToShow, CAST(CAST(#Temp_PickupDatesGroup.МаксимальнаяДата  AS DATE) AS DATETIME))
-		AND Склад = СкладНазначения
-)
+WITH
+    H1(N)
+    AS
+    (
+        SELECT 1
+        FROM (VALUES
+                (1),
+                (1),
+                (1),
+                (1),
+                (1),
+                (1),
+                (1),
+                (1),
+                (1),
+                (1),
+                (1),
+                (1),
+                (1),
+                (1),
+                (1),
+                (1))H0(N)
+    )
+,
+    cteTALLY(N)
+    AS
+    (
+        SELECT ROW_NUMBER() OVER (ORDER BY (SELECT NULL))
+        FROM H1 a, H1 b, H1 c, H1 d, H1 e, H1 f, H1 g, H1 h
+    )
+SELECT
+	DATEADD(dd,t.N-1,f.МинимальнаяДата) AS Date
+INTO #Temp_Dates
+FROM #Temp_PickupDatesGroup f
+  CROSS APPLY (SELECT TOP (Isnull(DATEDIFF(dd,f.МинимальнаяДата,f.МаксимальнаяДата)+1,1))
+        N
+    FROM cteTally
+    ORDER BY N) t
+	;
+
 Select 
 	DATEADD(
 		SECOND,
 		CAST(
-			DATEDIFF(SECOND, @P_EmptyDate, ПВЗГрафикРаботы._Fld23617) AS NUMERIC(12)
+			DATEDIFF(SECOND, @P_EmptyDate, isNull(ПВЗИзмененияГрафикаРаботы._Fld27057, ПВЗГрафикРаботы._Fld23617)) AS NUMERIC(12)
 		),
 		date) AS ВремяНачала,
 	DATEADD(
 		SECOND,
 		CAST(
-			DATEDIFF(SECOND, @P_EmptyDate, ПВЗГрафикРаботы._Fld23618) AS NUMERIC(12)
+			DATEDIFF(SECOND, @P_EmptyDate, isNull(ПВЗИзмененияГрафикаРаботы._Fld27058, ПВЗГрафикРаботы._Fld23618)) AS NUMERIC(12)
 		),
 		date) AS ВремяОкончания,
-	Tdate.Склад AS СкладНазначения
+	Склады._IDRRef AS СкладНазначения--,
 INTO #Temp_PickupWorkingHours
 From 
-	Tdate
+	#Temp_Dates
 	Inner Join dbo._Reference226 Склады 
-		ON Склады._IDRRef = Tdate.Склад
+		ON Склады._IDRRef IN (Select СкладНазначения From #Temp_ShipmentDatesPickUp)
 	Inner Join _Reference23612 
 		On Склады._Fld23620RRef = _Reference23612._IDRRef
-	Inner Join _Reference23612_VT23613 As ПВЗГрафикРаботы 
+	Left Join _Reference23612_VT23613 As ПВЗГрафикРаботы 
 		On _Reference23612._IDRRef = _Reference23612_IDRRef
-			AND (case when DATEPART ( dw , Tdate.date ) = 1 then 7 else DATEPART ( dw , Tdate.date ) -1 END) = ПВЗГрафикРаботы._Fld23615
-			AND ПВЗГрафикРаботы._Fld25265 = 0x00 --не выходной
-;			
-
+			AND (case when @@DATEFIRST = 1 then DATEPART ( dw , #Temp_Dates.date ) when DATEPART ( dw , #Temp_Dates.date ) = 1 then 7 else DATEPART ( dw , #Temp_Dates.date ) -1 END) = ПВЗГрафикРаботы._Fld23615
+	Left Join _Reference23612_VT27054 As ПВЗИзмененияГрафикаРаботы 
+		On _Reference23612._IDRRef = ПВЗИзмененияГрафикаРаботы._Reference23612_IDRRef
+			AND #Temp_Dates.date = ПВЗИзмененияГрафикаРаботы._Fld27056
+Where
+	case 
+		when ПВЗИзмененияГрафикаРаботы._Reference23612_IDRRef is not null
+			then ПВЗИзмененияГрафикаРаботы._Fld27059
+		when ПВЗГрафикРаботы._Reference23612_IDRRef is not Null 
+			then ПВЗГрафикРаботы._Fld25265 
+		else 0 --не найдено ни графика ни изменения графика  
+	end = 0x00  -- не выходной
+;	
 
 SELECT
 	#Temp_ShipmentDatesPickUp.НоменклатураСсылка,
@@ -1821,7 +1878,7 @@ SELECT
 Into #Temp_AvailablePickUp
 FROM
     #Temp_ShipmentDatesPickUp
-		Inner Join #Temp_PickupWorkingHours
+		Inner {6} Join #Temp_PickupWorkingHours
 		On #Temp_PickupWorkingHours.СкладНазначения = #Temp_ShipmentDatesPickUp.СкладНазначения
 		And #Temp_PickupWorkingHours.ВремяОкончания > #Temp_ShipmentDatesPickUp.ДатаСоСклада 	 
 Group by
@@ -1967,29 +2024,23 @@ OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'), 
 With Temp_DeliveryPower AS
 (
 SELECT
-    CAST(
-        SUM(
-            CASE
-                WHEN (МощностиДоставки._RecordKind = 0.0) THEN МощностиДоставки._Fld25107
-                ELSE -(МощностиДоставки._Fld25107)
-            END
-        ) AS NUMERIC(16, 3)
-    ) AS МассаОборот,
-    CAST(
-        SUM(
-            CASE
-                WHEN (МощностиДоставки._RecordKind = 0.0) THEN МощностиДоставки._Fld25108
-                ELSE -(МощностиДоставки._Fld25108)
-            END
-        ) AS NUMERIC(16, 3)
-    ) AS ОбъемОборот,
-    CAST(
-        SUM(
-            CASE
-                WHEN (МощностиДоставки._RecordKind = 0.0) THEN МощностиДоставки._Fld25201
-                ELSE -(МощностиДоставки._Fld25201)
-            END
-        ) AS NUMERIC(16, 2)
+    SUM(
+        CASE
+            WHEN (МощностиДоставки._RecordKind = 0.0) THEN МощностиДоставки._Fld25107
+            ELSE -(МощностиДоставки._Fld25107)
+        END        
+    ) AS МассаОборот,    
+    SUM(
+        CASE
+            WHEN (МощностиДоставки._RecordKind = 0.0) THEN МощностиДоставки._Fld25108
+            ELSE -(МощностиДоставки._Fld25108)
+        END        
+    ) AS ОбъемОборот,    
+    SUM(
+        CASE
+            WHEN (МощностиДоставки._RecordKind = 0.0) THEN МощностиДоставки._Fld25201
+            ELSE -(МощностиДоставки._Fld25201)
+        END        
     ) AS ВремяНаОбслуживаниеОборот,
     CAST(CAST(МощностиДоставки._Period  AS DATE) AS DATETIME) AS Дата
 FROM
@@ -2023,17 +2074,15 @@ FROM
     #Temp_ShipmentDatesDeliveryCourier T1 WITH(NOLOCK)
     Left JOIN Temp_DeliveryPower T2 WITH(NOLOCK)
     Inner JOIN #Temp_Intervals T3 WITH(NOLOCK)
-    ON (T3.Период = T2.Дата) 
-	ON (T2.МассаОборот >= T1.Вес)
-    AND (T2.ОбъемОборот >= T1.Объем)
-    AND (T2.ВремяНаОбслуживаниеОборот >= T1.ВремяНаОбслуживание)
-    AND (
-        T2.Дата >=
-        CAST(CAST(T1.ДатаСоСклада AS DATE) AS DATETIME)
-    )
-    AND (T3.ГруппаПланирования = T1.ГруппаПланирования)
-    AND (T3.ВремяНачала >= T1.ДатаСоСклада)
-    AND T1.PickUp = 0
+		ON T3.Период = T2.Дата
+	ON T2.МассаОборот >= T1.Вес
+    AND T2.ОбъемОборот >= T1.Объем
+    AND T2.ВремяНаОбслуживаниеОборот >= T1.ВремяНаОбслуживание
+    AND T2.Дата >= 
+		CAST(CAST(T1.ДатаСоСклада AS DATE) AS DATETIME)    
+    AND T3.ГруппаПланирования = T1.ГруппаПланирования
+    AND T3.ВремяНачала >= T1.ДатаСоСклада
+	AND T1.PickUp = 0
 GROUP BY
 	T1.НоменклатураСсылка,
     T1.article,

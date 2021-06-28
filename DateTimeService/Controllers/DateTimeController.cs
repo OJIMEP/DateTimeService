@@ -170,7 +170,9 @@ namespace DateTimeService.Controllers
         [HttpPost]
         public async Task<IActionResult> AvailableDateAsync([FromBody] RequestDataAvailableDateByCodeItemsDTO inputDataJson)
         {
-                        
+
+            OkObjectResult result;
+
             var data = _mapper.Map<RequestDataAvailableDate>(inputDataJson);
 
             Stopwatch stopwatchExecution = new();
@@ -277,7 +279,9 @@ namespace DateTimeService.Controllers
 
                 //FillGoodsTable(data, conn);
 
-                var queryTextBegin = TextFillGoodsTable(data, cmd, true);
+                List<string> pickups = new();
+
+                var queryTextBegin = TextFillGoodsTable(data, cmd, true, pickups);
 
                 if (_configuration.GetValue<bool>("disableKeepFixedPlan"))
                 {
@@ -286,7 +290,19 @@ namespace DateTimeService.Controllers
                 }
 
                 //define the SqlCommand object
-                
+                List<string> pickupParameters = new();
+                foreach (var pickupPoint in pickups)
+                {
+                    var parameterString = string.Format("@PickupPointAll{0}", pickups.IndexOf(pickupPoint));
+                    pickupParameters.Add(parameterString);
+                    cmd.Parameters.Add(parameterString, SqlDbType.NVarChar, 4);
+                    cmd.Parameters[parameterString].Value = pickupPoint;
+                }
+                if (pickupParameters.Count==0)
+                {
+                    pickupParameters.Add("NULL");
+                }
+
 
                 cmd.Parameters.Add("@P_CityCode", SqlDbType.NVarChar, 10);
                 cmd.Parameters["@P_CityCode"].Value = data.city_id;
@@ -325,18 +341,20 @@ namespace DateTimeService.Controllers
                     dateTimeNowOptimizeString = dateTimeNowOptimizeString = DateMove.Date.ToString("yyyy-MM-ddTHH:mm:ss"); 
                 }
 
-                cmd.CommandText = queryTextBegin +  string.Format(query, "",
+                var pickupWorkingHoursJoinType = _configuration.GetValue<string>("pickupWorkingHoursJoinType");
+
+                cmd.CommandText = queryTextBegin +  string.Format(query, string.Join(",", pickupParameters),
                     dateTimeNowOptimizeString,
                     DateMove.Date.ToString("yyyy-MM-ddTHH:mm:ss"),
                     DateMove.Date.AddDays(Parameters1C.First(x => x.Name.Contains("rsp_КоличествоДнейЗаполненияГрафика")).ValueDouble - 1).ToString("yyyy-MM-ddTHH:mm:ss"),
                     Parameters1C.First(x => x.Name.Contains("КоличествоДнейАнализаЛучшейЦеныПриОтсрочкеЗаказа")).ValueDouble,
-                    Parameters1C.First(x => x.Name.Contains("ПроцентДнейАнализаЛучшейЦеныПриОтсрочкеЗаказа")).ValueDouble);//,
-                                                                                                                           //string.Join(", ", codeParameters));
+                    Parameters1C.First(x => x.Name.Contains("ПроцентДнейАнализаЛучшейЦеныПриОтсрочкеЗаказа")).ValueDouble, 
+                    pickupWorkingHoursJoinType);
 
 
                 //execute the SQLCommand
                 SqlDataReader dr = cmd.ExecuteReader();
-
+                
                 //check if there are records
                 if (dr.HasRows)
                 {
@@ -366,6 +384,7 @@ namespace DateTimeService.Controllers
                 logElement.TimeSQLExecution = sqlCommandExecutionTime;
                 logElement.ResponseContent = JsonSerializer.Serialize(dbResult);
                 logElement.Status = "Ok";
+                logElement.AdditionalData.Add("stats", JsonSerializer.Serialize(stats));
             }
             catch (Exception ex)
             {
@@ -393,6 +412,7 @@ namespace DateTimeService.Controllers
                         courier = null,
                         self = null
                     };
+                  
 
                     int dbResultIndex = -1;
                     if (String.IsNullOrEmpty(codeItem.code))
@@ -407,10 +427,10 @@ namespace DateTimeService.Controllers
                     if (dbResultIndex == -1)
                         continue;
 
-                    resultElement.courier = data.delivery_types.Contains("courier")
+                    resultElement.courier = data.delivery_types.Contains("courier") && dbResult.courier[dbResultIndex].Year != 3999
                         ? dbResult.courier[dbResultIndex].Date.ToString("yyyy-MM-ddTHH:mm:ss")
                         : null;
-                    resultElement.self = data.delivery_types.Contains("self")
+                    resultElement.self = data.delivery_types.Contains("self") && dbResult.self[dbResultIndex].Year != 3999
                         ? dbResult.self[dbResultIndex].Date.ToString("yyyy-MM-ddTHH:mm:ss")
                         : null;
 
@@ -430,8 +450,33 @@ namespace DateTimeService.Controllers
                 logElement.ErrorDescription = ex.Message;
                 logElement.Status = "Error";
             }
+
             
-            
+
+            if (data.delivery_types.Contains("self") && data.delivery_types.Contains("courier"))
+            {
+                var resultBoth = new ResponseAvailableDateDictBothDates();
+
+                foreach(var item in resultDict.data)
+                {
+                    var newItem = new ResponseAvailableDateDictElementBothDates
+                    {
+                        code = item.Value.code,
+                        sales_code = item.Value.sales_code,
+                        courier = item.Value.courier,
+                        self = item.Value.self
+                    };
+
+                    resultBoth.data.Add(item.Key, newItem);
+                }
+
+                result = Ok(resultBoth);
+            }
+            else
+            {
+                result = Ok(resultDict);
+            }
+
             watch.Stop();
             logElement.TimeSQLExecutionFact = watch.ElapsedMilliseconds;
 
@@ -442,7 +487,7 @@ namespace DateTimeService.Controllers
 
             _logger.LogInformation(logstringElement);
 
-            return Ok(resultDict);
+            return result;
         }
 
 
@@ -838,10 +883,10 @@ namespace DateTimeService.Controllers
                 codes = data.orderItems.ToArray()
             };
 
-            return TextFillGoodsTable(convertedData, cmdGoodsTable, optimizeRowsCount);
+            return TextFillGoodsTable(convertedData, cmdGoodsTable, optimizeRowsCount, new());
         }
 
-        private static string TextFillGoodsTable(RequestDataAvailableDate data, SqlCommand cmdGoodsTable, bool optimizeRowsCount)
+        private static string TextFillGoodsTable(RequestDataAvailableDate data, SqlCommand cmdGoodsTable, bool optimizeRowsCount, List<string> PickupsList)
         {
 
           
@@ -850,7 +895,7 @@ namespace DateTimeService.Controllers
             var insertRowsLimit = 900;
 
             var parameters = new List<string>();//string[data.codes.Length];
-            List<string> PickupsList = new();
+            //List<string> PickupsList = new();
 
             var maxCodes = data.codes.Length;
 
@@ -869,7 +914,7 @@ namespace DateTimeService.Controllers
             //var pickupPointsCounter = 0;
 
             int maxPickups = PickupsList.Count;
-            PickupsList.Add("");
+            //PickupsList.Add("");
             //if (maxPickups > 2) maxPickups = 7;
 
             if (data.codes.Length > 2) maxCodes = 10;
@@ -878,17 +923,6 @@ namespace DateTimeService.Controllers
             if (data.codes.Length > 60) maxCodes = 100;
             if (data.codes.Length > maxCodes || !optimizeRowsCount) maxCodes = data.codes.Length;
 
-            foreach (var pickupElem in PickupsList)
-            {
-                var index = PickupsList.IndexOf(pickupElem);
-                cmdGoodsTable.Parameters.Add(string.Format("@PickupPoint{0}", index), SqlDbType.NVarChar, 4);
-                cmdGoodsTable.Parameters[string.Format("@PickupPoint{0}", index)].Value = pickupElem;
-
-                if (String.IsNullOrEmpty(pickupElem))
-                {
-                    cmdGoodsTable.Parameters[string.Format("@PickupPoint{0}", index)].Value = DBNull.Value;
-                }
-            }
 
             for (int codesCounter = 0; codesCounter < maxCodes; codesCounter++)
             {
@@ -903,9 +937,9 @@ namespace DateTimeService.Controllers
                     codesElem = data.codes[data.codes.Length-1];
                 }
 
-                var pickupPointsCounter = 0;
-                var indexNullPickup = PickupsList.IndexOf("");
-                var parameterString = string.Format("(@Article{0}, @Code{0}, @PickupPoint{1}, @Quantity{0})", codesCounter, indexNullPickup);
+      
+                
+                var parameterString = string.Format("(@Article{0}, @Code{0}, NULL, @Quantity{0})", codesCounter);
 
                 
                 //cmdGoodsTable.Parameters.AddWithValue(string.Format("@Article{0}", codesCounter), codesElem.article);
@@ -931,43 +965,16 @@ namespace DateTimeService.Controllers
                     parameters.Clear();
                 }
 
-                foreach (var pickupElem in codesElem.PickupPoints)
+                if (maxPickups>0)
                 {
+                    var PickupParameter = string.Join(",", codesElem.PickupPoints);
 
-                    var index = PickupsList.IndexOf(pickupElem);
-                    var parameterStringPickup = string.Format("(@Article{0}, @Code{0}, @PickupPoint{1}, @Quantity{0})", codesCounter, index);                    
+                    cmdGoodsTable.Parameters.Add(string.Format("@PickupPoint{0}", codesCounter), SqlDbType.NVarChar, 45);
+                    cmdGoodsTable.Parameters[string.Format("@PickupPoint{0}", codesCounter)].Value = PickupParameter;
 
+                    var parameterStringPickup = string.Format("(@Article{0}, @Code{0}, @PickupPoint{0}, @Quantity{0})", codesCounter);
                     parameters.Add(parameterStringPickup);
-
-                    pickupPointsCounter++;
-
-                    if (parameters.Count == insertRowsLimit)
-                    {
-                        resultString += string.Format(Queries.CreateTableGoodsRawInsert, string.Join(", ", parameters));
-
-                        parameters.Clear();
-                    }
-                }
-
-                while (pickupPointsCounter < maxPickups)
-                {
-
-                    var index = PickupsList.IndexOf("");
-                    var parameterStringPickup = string.Format("(@Article{0}, @Code{0}, @PickupPoint{1}, @Quantity{0})", codesCounter, index);
-
-                    parameters.Add(parameterStringPickup);
-
-                    pickupPointsCounter++;
-
-                    if (parameters.Count == insertRowsLimit)
-                    {
-                        resultString += string.Format(Queries.CreateTableGoodsRawInsert, string.Join(", ", parameters));
-
-                        parameters.Clear();
-                    }
-                }
-
-                //codesCounter++;           
+                }           
 
             }
 
