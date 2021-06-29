@@ -480,7 +480,7 @@ GROUP BY
 HAVING
     (SUM(T2._Fld21412) <> 0.0
     OR SUM(T2._Fld21411) <> 0.0)
-	AND SUM(T2._Fld21412) - SUM(T2._Fld21411) <> 0.0
+	AND SUM(T2._Fld21411) - SUM(T2._Fld21412) > 0.0
 OPTION (OPTIMIZE FOR (@P_DateTimeNow='{1}'),KEEP PLAN, KEEPFIXED PLAN);
 
 SELECT Distinct
@@ -947,7 +947,7 @@ Having
 OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'),KEEP PLAN, KEEPFIXED PLAN);
 
 /*Тут начинаются интервалы, которые рассчитанные*/
-Select
+Select Distinct
 	Case 
 		When DATEPART(MINUTE,ГрафикПланирования._Fld23333) > 0 
 		Then DATEADD(HOUR,1,ГрафикПланирования._Fld23333) 
@@ -990,15 +990,11 @@ SELECT
                     ELSE -(T5._Fld25113)
                 END
             ) AS КоличествоЗаказовЗаИнтервалВремени
-into #Temp_IntervalsAll
+into #Temp_IntervalsAll_old
 FROM
     dbo._AccumRg25110 T5 With (NOLOCK)
 	INNER JOIN #Temp_PlanningGroups T2 With (NOLOCK) ON (T5._Fld25112RRef = T2.ГруппаПланирования)
 	AND T2.Склад IN (select СкладНазначения From #Temp_DateAvailable)
-    INNER JOIN #Temp_CourierDepartureDates With (NOLOCK) 
-		ON T5._Fld25112RRef = #Temp_CourierDepartureDates.ГруппаПланирования
-		AND T5._Period = #Temp_CourierDepartureDates.Дата
-		AND DATEPART(HOUR,#Temp_CourierDepartureDates.ВремяВыезда) <= DATEPART(HOUR,T5._Fld25202)
 WHERE
     T5._Period >= @P_DateTimePeriodBegin --begin +2
     AND T5._Period <= @P_DateTimePeriodEnd --end
@@ -1024,6 +1020,25 @@ HAVING
     )
 OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'), KEEP PLAN, KEEPFIXED PLAN);
 ;
+
+Select Distinct
+	ВременныеИнтервалы.Период AS Период,
+	ВременныеИнтервалы.Геозона AS Геозона,
+	ВременныеИнтервалы.ГруппаПланирования AS ГруппаПланирования,
+	ВременныеИнтервалы.ВремяНачалаНачальное AS ВремяНачалаНачальное,
+	ВременныеИнтервалы.ВремяОкончанияНачальное AS ВремяОкончанияНачальное,
+	ВременныеИнтервалы.КоличествоЗаказовЗаИнтервалВремени AS КоличествоЗаказовЗаИнтервалВремени,
+	ВременныеИнтервалы.ВремяНачала AS ВремяНачала,
+	ВременныеИнтервалы.ВремяОкончания AS ВремяОкончания,
+	ВременныеИнтервалы.Приоритет
+Into #Temp_IntervalsAll
+From
+	#Temp_IntervalsAll_old AS ВременныеИнтервалы
+		Inner Join #Temp_CourierDepartureDates AS ВТ_ГрафикПланирования
+		ON DATEPART(HOUR, ВТ_ГрафикПланирования.ВремяВыезда) <= DATEPART(HOUR, ВременныеИнтервалы.ВремяНачалаНачальное)
+		AND ВременныеИнтервалы.ГруппаПланирования = ВТ_ГрафикПланирования.ГруппаПланирования
+	    AND ВременныеИнтервалы.Период = ВТ_ГрафикПланирования.Дата
+OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
 select
 DATEADD(
