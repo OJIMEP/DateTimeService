@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
 namespace DateTimeService.Models
 {
@@ -53,9 +51,9 @@ namespace DateTimeService.Models
         public Dictionary<string, object> Range { get; set; }
 
         [JsonPropertyName("term"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public Dictionary<string,object> Term { get; set; }
+        public Dictionary<string, object> Term { get; set; }
 
-        
+
     }
 
 

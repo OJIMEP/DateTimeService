@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Diagnostics;
-using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -13,7 +12,7 @@ namespace DateTimeService.Data
 {
     public interface ILoadBalancing
     {
-        Task<SqlConnection> GetDatabaseConnectionAsync();
+        Task<SqlConnection> GetDatabaseConnectionAsync(string databaseType);
     }
 
     public class LoadBalancing : ILoadBalancing
@@ -27,7 +26,7 @@ namespace DateTimeService.Data
             _logger = logger;
         }
 
-        public async Task<SqlConnection> GetDatabaseConnectionAsync()
+        public async Task<SqlConnection> GetDatabaseConnectionAsync(string databaseType)
         {
             //string connString = _configuration.GetConnectionString("1CDataSqlConnection");
 
@@ -71,11 +70,11 @@ namespace DateTimeService.Data
                             if (connParametr.Type == "replica_tables")
                                 queryStringCheck = Queries.DatebaseBalancingReplicaTables;
 
-                            
+
                             watch.Start();
                             //sql connection object
-                            conn = new(connParametr.Connection);      
-                                                       
+                            conn = new(connParametr.Connection);
+
 
                             conn.Open();
 
@@ -84,7 +83,7 @@ namespace DateTimeService.Data
                             cmd.CommandTimeout = 1;
 
                             SqlDataReader dr = await cmd.ExecuteReaderAsync();
-                            
+
                             dr.Close();
                             watch.Stop();
 
@@ -92,6 +91,7 @@ namespace DateTimeService.Data
                             //conn.Close();
                             resultConnection = conn;
                             result = connParametr.Connection;
+                            databaseType = connParametr.Type;
                             break;
                         }
                         catch (Exception ex)
@@ -112,8 +112,8 @@ namespace DateTimeService.Data
                             var logstringElement = JsonSerializer.Serialize(logElement);
 
                             _logger.LogInformation(logstringElement);
-                            
-                            if (conn != null && conn.State != System.Data.ConnectionState.Closed )
+
+                            if (conn != null && conn.State != System.Data.ConnectionState.Closed)
                             {
                                 conn.Close();
                             }
@@ -138,8 +138,8 @@ namespace DateTimeService.Data
 
             foreach (var item in connStringParts)
             {
-                if (!item.Contains("Uid") && !item.Contains("User") && !item.Contains("Pwd") && !item.Contains("Password") && item.Length>0)
-                    resultString += (item+";");
+                if (!item.Contains("Uid") && !item.Contains("User") && !item.Contains("Pwd") && !item.Contains("Password") && item.Length > 0)
+                    resultString += (item + ";");
             }
 
             return resultString;
@@ -157,6 +157,6 @@ namespace DateTimeService.Data
 
     }
 
-  
+
 
 }

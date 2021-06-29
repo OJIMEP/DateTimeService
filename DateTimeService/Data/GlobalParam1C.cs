@@ -5,14 +5,13 @@ using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace DateTimeService.Data
 {
     public class GlobalParam1C
     {
         public string Name { get; set; }
-        public double ValueDouble { get; set; }        
+        public double ValueDouble { get; set; }
         public double DefaultDouble { get; set; }
 
 
@@ -20,7 +19,7 @@ namespace DateTimeService.Data
         {
 
             bool querySuccessful = false;
-            
+
             try
             {
                 //sql connection object
@@ -34,7 +33,7 @@ namespace DateTimeService.Data
   where [_Fld22354] IN({0})";
 
                 SqlCommand cmd = new(queryParametrs, conn);
-                
+
                 cmd.CommandTimeout = 1;
 
                 var parameters = new string[names.Count];
@@ -90,5 +89,5 @@ namespace DateTimeService.Data
         }
     }
 
-    
+
 }

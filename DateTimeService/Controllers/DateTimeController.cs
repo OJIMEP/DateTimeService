@@ -1,6 +1,6 @@
-﻿using DateTimeService.Areas.Identity.Data;
+﻿using AutoMapper;
+using DateTimeService.Areas.Identity.Data;
 using DateTimeService.Data;
-using DateTimeService.Logging;
 using DateTimeService.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -13,12 +13,8 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Linq;
-using System.Net.Http;
-using System.Net.Sockets;
-using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using AutoMapper;
 
 namespace DateTimeService.Controllers
 {
@@ -49,13 +45,10 @@ namespace DateTimeService.Controllers
         public async Task<ObjectResult> MaxAvailableCountAsync(IEnumerable<RequestDataMaxAvailableCount> nomenclatures)
         {
 
-            //string connString = _configuration.GetConnectionString("1CDataSqlConnection");
 
-            //string connString = await _loadBalacing.GetDatabaseConnectionAsync();
+            var conn = await _loadBalacing.GetDatabaseConnectionAsync("");
 
-            var conn = await _loadBalacing.GetDatabaseConnectionAsync();
-
-            //string connString = @"Server=localhost;Database=DevBase_cut_v3;Uid=sa;Pwd=; Trusted_Connection = False;";
+          
 
             var result = new List<ResponseMaxAvailableCount>();
             var logElement = new ElasticLogElement
@@ -74,9 +67,7 @@ namespace DateTimeService.Controllers
 
             try
             {
-                //sql connection object
-                //using SqlConnection conn = new(connString);
-
+                
                 conn.StatisticsEnabled = true;
 
                 string query = @"SELECT
@@ -118,8 +109,7 @@ namespace DateTimeService.Controllers
 
                 cmd.CommandText = string.Format(query, string.Join(", ", parameters));
 
-                //open connection
-                //conn.Open();
+               
 
                 //execute the SQLCommand
                 SqlDataReader dr = cmd.ExecuteReader();
@@ -145,8 +135,7 @@ namespace DateTimeService.Controllers
                 //close data reader
                 dr.Close();
 
-                //close connection
-                //conn.Close();
+                
 
                 logElement.TimeSQLExecution = sqlCommandExecutionTime;
                 logElement.ResponseContent = JsonSerializer.Serialize(result);
@@ -178,7 +167,7 @@ namespace DateTimeService.Controllers
             OkObjectResult result;
 
             var data = _mapper.Map<RequestDataAvailableDate>(inputDataJson);
-
+            string databaseType = "";
             Stopwatch stopwatchExecution = new();
             stopwatchExecution.Start();
 
@@ -199,7 +188,7 @@ namespace DateTimeService.Controllers
             try
             {
                 //connString = await _loadBalacing.GetDatabaseConnectionAsync();
-                conn = await _loadBalacing.GetDatabaseConnectionAsync();
+                conn = await _loadBalacing.GetDatabaseConnectionAsync(databaseType);
             }
             catch (Exception ex)
             {
@@ -212,9 +201,9 @@ namespace DateTimeService.Controllers
                 return StatusCode(503);
             }
             watch.Stop();
-            //string connString = @"Server=localhost;Database=DevBase_cut_v3;Uid=sa;Pwd=; Trusted_Connection = False;";
+           
 
-            if(conn == null)
+            if (conn == null)
             {
                 logElementLoadBal.TimeSQLExecution = 0;
                 logElementLoadBal.ErrorDescription = "Не найдено доступное соединение к БД";
@@ -242,9 +231,9 @@ namespace DateTimeService.Controllers
                 LoadBalancingExecution = watch.ElapsedMilliseconds
             };
 
-            logElement.AdditionalData.Add("Referer",Request.Headers["Referer"].ToString());
+            logElement.AdditionalData.Add("Referer", Request.Headers["Referer"].ToString());
             logElement.AdditionalData.Add("User-Agent", Request.Headers["User-Agent"].ToString());
-            logElement.AdditionalData.Add("RemoteIpAddress", Request.HttpContext.Connection.RemoteIpAddress.ToString()); 
+            logElement.AdditionalData.Add("RemoteIpAddress", Request.HttpContext.Connection.RemoteIpAddress.ToString());
 
 
             watch.Reset();
@@ -299,8 +288,7 @@ namespace DateTimeService.Controllers
 
                 SqlCommand cmd = new(query, conn);
 
-                //FillGoodsTable(data, conn);
-
+                
                 List<string> pickups = new();
 
                 var queryTextBegin = TextFillGoodsTable(data, cmd, true, pickups);
@@ -320,7 +308,7 @@ namespace DateTimeService.Controllers
                     cmd.Parameters.Add(parameterString, SqlDbType.NVarChar, 4);
                     cmd.Parameters[parameterString].Value = pickupPoint;
                 }
-                if (pickupParameters.Count==0)
+                if (pickupParameters.Count == 0)
                 {
                     pickupParameters.Add("NULL");
                 }
@@ -360,23 +348,29 @@ namespace DateTimeService.Controllers
                 }
                 else
                 {
-                    dateTimeNowOptimizeString = dateTimeNowOptimizeString = DateMove.Date.ToString("yyyy-MM-ddTHH:mm:ss"); 
+                    dateTimeNowOptimizeString = dateTimeNowOptimizeString = DateMove.Date.ToString("yyyy-MM-ddTHH:mm:ss");
                 }
 
                 var pickupWorkingHoursJoinType = _configuration.GetValue<string>("pickupWorkingHoursJoinType");
 
-                cmd.CommandText = queryTextBegin +  string.Format(query, string.Join(",", pickupParameters),
+                string useIndexHint = _configuration.GetValue<string>("useIndexHintWarehouseDates");// @", INDEX([_InfoRg23830_Custom2])";
+                if (databaseType == "replica_tables")
+                {
+                    useIndexHint = "";
+                }
+
+                cmd.CommandText = queryTextBegin + string.Format(query, string.Join(",", pickupParameters),
                     dateTimeNowOptimizeString,
                     DateMove.Date.ToString("yyyy-MM-ddTHH:mm:ss"),
                     DateMove.Date.AddDays(Parameters1C.First(x => x.Name.Contains("rsp_КоличествоДнейЗаполненияГрафика")).ValueDouble - 1).ToString("yyyy-MM-ddTHH:mm:ss"),
                     Parameters1C.First(x => x.Name.Contains("КоличествоДнейАнализаЛучшейЦеныПриОтсрочкеЗаказа")).ValueDouble,
-                    Parameters1C.First(x => x.Name.Contains("ПроцентДнейАнализаЛучшейЦеныПриОтсрочкеЗаказа")).ValueDouble, 
-                    pickupWorkingHoursJoinType);
+                    Parameters1C.First(x => x.Name.Contains("ПроцентДнейАнализаЛучшейЦеныПриОтсрочкеЗаказа")).ValueDouble,
+                    pickupWorkingHoursJoinType, useIndexHint);
 
 
                 //execute the SQLCommand
                 SqlDataReader dr = cmd.ExecuteReader();
-                
+
                 //check if there are records
                 if (dr.HasRows)
                 {
@@ -436,7 +430,7 @@ namespace DateTimeService.Controllers
                         Courier = null,
                         Self = null
                     };
-                  
+
 
                     int dbResultIndex = -1;
                     if (String.IsNullOrEmpty(codeItem.Code))
@@ -481,17 +475,14 @@ namespace DateTimeService.Controllers
                 logElement.ErrorDescription = ex.Message;
                 logElement.Status = "Error";
             }
-            
-            
 
 
-            
 
             if (data.DeliveryTypes.Contains("self") && data.DeliveryTypes.Contains("courier"))
             {
                 var resultBoth = new ResponseAvailableDateDictBothDates();
 
-                foreach(var item in resultDict.Data)
+                foreach (var item in resultDict.Data)
                 {
                     var newItem = new ResponseAvailableDateDictElementBothDates
                     {
@@ -552,7 +543,7 @@ namespace DateTimeService.Controllers
             try
             {
                 //connString = await _loadBalacing.GetDatabaseConnectionAsync();
-                conn = await _loadBalacing.GetDatabaseConnectionAsync();
+                conn = await _loadBalacing.GetDatabaseConnectionAsync("");
             }
             catch (Exception ex)
             {
@@ -565,10 +556,6 @@ namespace DateTimeService.Controllers
                 return StatusCode(500);
             }
             watch.Stop();
-
-            //string connString = _configuration.GetConnectionString("1CDataSqlConnection");
-
-            //string connString = @"Server=localhost;Database=DevBase_cut_v3;Uid=sa;Pwd=; Trusted_Connection = False;";
 
             ResponseIntervalList result = new();
 
@@ -638,8 +625,10 @@ namespace DateTimeService.Controllers
             else
             {
                 alwaysCheckGeozone = _configuration.GetValue<bool>("alwaysCheckGeozone");
-
-                adressExists = _geoZones.AdressExists(conn, data.AddressId);
+                if (!alwaysCheckGeozone)
+                {
+                    adressExists = _geoZones.AdressExists(conn, data.AddressId);
+                }                
             }
 
             if (!adressExists || alwaysCheckGeozone)
@@ -683,11 +672,7 @@ namespace DateTimeService.Controllers
 
                     SqlCommand cmd = new(query, conn);
 
-                    //FillGoodsTable(data, conn);
-
                     var queryTextBegin = TextFillGoodsTable(data, cmd, false);
-
-                    
 
                     if (_configuration.GetValue<bool>("disableKeepFixedPlan"))
                     {
@@ -700,13 +685,10 @@ namespace DateTimeService.Controllers
                     var EmptyDate = new DateTime(2001, 1, 1, 0, 0, 0);
                     var MaxDate = new DateTime(5999, 11, 11, 0, 0, 0);
 
-                    //define the SqlCommand object
-                    //SqlCommand cmd = new(query, conn);
-
                     cmd.Parameters.Add("@P_AdressCode", SqlDbType.NVarChar, 20);
                     cmd.Parameters["@P_AdressCode"].Value = data.AddressId != null ? data.AddressId : DBNull.Value;
 
-                    cmd.Parameters.Add("@PickupPoint1", SqlDbType.NVarChar,5);
+                    cmd.Parameters.Add("@PickupPoint1", SqlDbType.NVarChar, 5);
                     cmd.Parameters["@PickupPoint1"].Value = data.PickupPoint != null ? data.PickupPoint : DBNull.Value;
 
                     cmd.Parameters.Add("@P_Credit", SqlDbType.Int);
@@ -758,7 +740,7 @@ namespace DateTimeService.Controllers
                         Parameters1C.First(x => x.Name.Contains("КоличествоДнейАнализаЛучшейЦеныПриОтсрочкеЗаказа")).ValueDouble,
                         Parameters1C.First(x => x.Name.Contains("ПроцентДнейАнализаЛучшейЦеныПриОтсрочкеЗаказа")).ValueDouble);
 
-                    
+
 
                     //execute the SQLCommand
                     SqlDataReader dr = cmd.ExecuteReader();
@@ -820,7 +802,7 @@ namespace DateTimeService.Controllers
 
             return Ok(result);
         }
-        
+
 
         private static string TextFillGoodsTable(RequestIntervalList data, SqlCommand cmdGoodsTable, bool optimizeRowsCount)
         {
@@ -835,13 +817,11 @@ namespace DateTimeService.Controllers
         public static string TextFillGoodsTable(RequestDataAvailableDate data, SqlCommand cmdGoodsTable, bool optimizeRowsCount, List<string> PickupsList)
         {
 
-          
             var resultString = Queries.CreateTableGoodsRawCreate;
 
             var insertRowsLimit = 900;
 
-            var parameters = new List<string>();//string[data.codes.Length];
-            //List<string> PickupsList = new();
+            var parameters = new List<string>();
 
             var maxCodes = data.Codes.Length;
 
@@ -852,16 +832,11 @@ namespace DateTimeService.Controllers
                     if (!PickupsList.Contains(item))
                     {
                         PickupsList.Add(item);
-                    }                    
+                    }
                 }
             }
 
-            //var codesCounter = 0;
-            //var pickupPointsCounter = 0;
-
             int maxPickups = PickupsList.Count;
-            //PickupsList.Add("");
-            //if (maxPickups > 2) maxPickups = 7;
 
             if (data.Codes.Length > 2) maxCodes = 10;
             if (data.Codes.Length > 10) maxCodes = 30;
@@ -874,7 +849,7 @@ namespace DateTimeService.Controllers
             {
 
                 RequestDataCodeItem codesElem;
-                if (codesCounter< data.Codes.Length)
+                if (codesCounter < data.Codes.Length)
                 {
                     codesElem = data.Codes[codesCounter];
                 }
@@ -883,11 +858,11 @@ namespace DateTimeService.Controllers
                     codesElem = data.Codes[^1];
                 }
 
-      
-                
+
+
                 var parameterString = string.Format("(@Article{0}, @Code{0}, NULL, @Quantity{0})", codesCounter);
 
-                
+
                 //cmdGoodsTable.Parameters.AddWithValue(string.Format("@Article{0}", codesCounter), codesElem.article);
                 cmdGoodsTable.Parameters.Add(string.Format("@Article{0}", codesCounter), SqlDbType.NVarChar, 11);
                 cmdGoodsTable.Parameters[string.Format("@Article{0}", codesCounter)].Value = codesElem.Article;
@@ -911,7 +886,7 @@ namespace DateTimeService.Controllers
                     parameters.Clear();
                 }
 
-                if (maxPickups>0)
+                if (maxPickups > 0)
                 {
                     var PickupParameter = string.Join(",", codesElem.PickupPoints);
 
@@ -920,7 +895,7 @@ namespace DateTimeService.Controllers
 
                     var parameterStringPickup = string.Format("(@Article{0}, @Code{0}, @PickupPoint{0}, @Quantity{0})", codesCounter);
                     parameters.Add(parameterStringPickup);
-                }           
+                }
 
             }
 
@@ -931,7 +906,7 @@ namespace DateTimeService.Controllers
                 parameters.Clear();
             }
 
-            return resultString;//string.Format(queryGoods, string.Join(", ", parameters));
+            return resultString;
 
         }
 

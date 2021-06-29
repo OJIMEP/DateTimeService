@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -21,7 +19,7 @@ namespace DateTimeService.Data
             {
                 await _databaseManagement.CheckDatabaseStatus(cancellationToken);
 
-                
+
                 await Task.Delay(TimeSpan.FromSeconds(30), cancellationToken);
             }
         }

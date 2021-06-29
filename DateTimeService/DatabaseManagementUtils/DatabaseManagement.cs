@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -39,7 +40,7 @@ namespace DateTimeService.Data
             {
                 return;
             }
-            
+
             var elasticHost = _configuration["elasticsearch:host"];
             var elasticPort = _configuration["elasticsearch:port"];
             var elasticLogin = _configuration["elasticsearch:login"];
@@ -194,14 +195,14 @@ namespace DateTimeService.Data
 
                         var checkAvailability = false;
 
-                        if (database == default || criteria == default || percentile95rate != default)
+                        if (database == default || criteria == default || percentile95rate == default)
                         {
                             continue;
                         }
 
 
-                        if (percentile95rate > criteria.Percentile_95 
-                            && database.Type != "main" 
+                        if (percentile95rate > criteria.Percentile_95
+                            && database.Type != "main"
                             && (database.LastFreeProcCacheCommand == default || DateTimeOffset.Now - database.LastFreeProcCacheCommand > TimeSpan.FromSeconds(90)))
                         {
 
@@ -219,7 +220,7 @@ namespace DateTimeService.Data
                                 conn.Close();
 
                                 database.LastFreeProcCacheCommand = DateTimeOffset.Now;
-                                
+
                                 var logElement = new ElasticLogElement
                                 {
                                     LoadBalancingExecution = 0,
@@ -253,7 +254,7 @@ namespace DateTimeService.Data
 
                         if (checkAvailability)
                         {
-                            var checkResult = await CheckDatabaseAvailability(database.Connection, cancellationToken);
+                            var checkResult = await CheckDatabaseAvailability(database.Connection, cancellationToken, (int)criteriaMaxTime.Percentile_95);
 
                             database.AvailableToUse = checkResult;
 
@@ -282,7 +283,7 @@ namespace DateTimeService.Data
                                 Status = "Error",
                                 DatabaseConnection = database.ConnectionWithoutCredentials
                             };
-                            
+
                             var logstringElement = JsonSerializer.Serialize(logElement);
 
                             _logger.LogInformation(logstringElement);
@@ -304,6 +305,23 @@ namespace DateTimeService.Data
 
                             _logger.LogInformation(logstringElement);
                         }
+
+                        if (recordsByMinute >= 100 && bucket.WeekAvg.Value > criteriaMaxTime.Percentile_95)
+                        {
+                            database.AvailableToUse = false;
+
+                            var logElement = new ElasticLogElement
+                            {
+                                LoadBalancingExecution = 0,
+                                ErrorDescription = "Database disabled due to big execution time",
+                                Status = "Error",
+                                DatabaseConnection = database.ConnectionWithoutCredentials
+                            };
+
+                            var logstringElement = JsonSerializer.Serialize(logElement);
+
+                            _logger.LogInformation(logstringElement);
+                        }
                         database.LastCheckAvailability = DateTimeOffset.Now;
                         database.LastCheckPerfomance = DateTimeOffset.Now;
                     }
@@ -317,9 +335,9 @@ namespace DateTimeService.Data
 
                     var checkResult = await CheckDatabaseAvailability(item.Connection, cancellationToken);
 
-                    
+
                     item.AvailableToUse = checkResult;
-                    
+
 
                     item.LastCheckAvailability = DateTimeOffset.Now;
 
@@ -340,10 +358,12 @@ namespace DateTimeService.Data
 
         }
 
-        public async Task<bool> CheckDatabaseAvailability(string connstring, CancellationToken cancellationToken)
+        public async Task<bool> CheckDatabaseAvailability(string connstring, CancellationToken cancellationToken, int executionLimit = 3000)
         {
             int result;
 
+            Stopwatch watch = new();
+            watch.Start();
             try
             {
                 using SqlConnection conn = new(connstring);
@@ -431,7 +451,7 @@ namespace DateTimeService.Data
                 cmd.Parameters.Add("@P_DaysToShow", SqlDbType.Int);
                 cmd.Parameters["@P_DaysToShow"].Value = 7;
 
-                cmd.CommandTimeout = 5;
+                cmd.CommandTimeout = 3;
 
 
                 var dateTimeNowOptimizeString = "";
@@ -446,13 +466,15 @@ namespace DateTimeService.Data
 
                 var pickupWorkingHoursJoinType = _configuration.GetValue<string>("pickupWorkingHoursJoinType");
 
+               
+
                 cmd.CommandText = queryTextBegin + string.Format(query, string.Join(",", pickupParameters),
                     dateTimeNowOptimizeString,
                     DateMove.Date.ToString("yyyy-MM-ddTHH:mm:ss"),
                     DateMove.Date.AddDays(Parameters1C.First(x => x.Name.Contains("rsp_КоличествоДнейЗаполненияГрафика")).ValueDouble - 1).ToString("yyyy-MM-ddTHH:mm:ss"),
                     Parameters1C.First(x => x.Name.Contains("КоличествоДнейАнализаЛучшейЦеныПриОтсрочкеЗаказа")).ValueDouble,
                     Parameters1C.First(x => x.Name.Contains("ПроцентДнейАнализаЛучшейЦеныПриОтсрочкеЗаказа")).ValueDouble,
-                    pickupWorkingHoursJoinType);
+                    pickupWorkingHoursJoinType, "");
 
 
                 //execute the SQLCommand
@@ -475,6 +497,13 @@ namespace DateTimeService.Data
                 _logger.LogInformation(logstringElement);
 
             }
+            watch.Stop();
+
+            if (watch.ElapsedMilliseconds > executionLimit)
+            {
+                result = -1;
+            }
+
 
             return result >= 0;
         }

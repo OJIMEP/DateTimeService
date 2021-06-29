@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
 namespace DateTimeService.Models
 {
@@ -37,7 +34,7 @@ namespace DateTimeService.Models
     {
         [JsonPropertyName("data")]
         public Dictionary<string, ResponseAvailableDateDictElementBothDates> Data { get; set; }
-       
+
         public ResponseAvailableDateDictBothDates()
         {
             Data = new Dictionary<string, ResponseAvailableDateDictElementBothDates>();
@@ -51,7 +48,7 @@ namespace DateTimeService.Models
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull), JsonPropertyName("sales_code")]
         public string SalesCode { get; set; }
-        
+
         [JsonPropertyName("courier")]
         public string Courier { get; set; }
 

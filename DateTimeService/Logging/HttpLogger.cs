@@ -1,7 +1,6 @@
 ﻿using DateTimeService.Logging;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Sockets;
 using System.Text;
@@ -65,18 +64,18 @@ namespace DateTimeService
                 {
                     logMessage.Message.Add(formatter(state, exception));
                 }
-                
+
 
                 var resultLog = JsonSerializer.Serialize(logMessage);
 
                 Byte[] sendBytes = Encoding.UTF8.GetBytes(resultLog);
-                
+
                 try
                 {
                     if (sendBytes.Length > 60000)
                     {
                         var result = await httpClient.PostAsync(new Uri("http://" + logsHost + ":" + logsPortHttp.ToString("D")), new StringContent(resultLog, Encoding.UTF8, "application/json"));
-                    }                        
+                    }
                     else
                         await udpClient.SendAsync(sendBytes, sendBytes.Length);
                 }
@@ -87,7 +86,7 @@ namespace DateTimeService
 
 
             }
-        
+
         }
     }
 }

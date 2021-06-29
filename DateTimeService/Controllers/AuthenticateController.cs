@@ -4,13 +4,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace DateTimeService.Controllers
@@ -29,7 +24,7 @@ namespace DateTimeService.Controllers
             this.roleManager = roleManager;
             this._userService = userService;
         }
-        
+
 
         [HttpPost]
         [Route("login")]
@@ -52,7 +47,7 @@ namespace DateTimeService.Controllers
                     token = response.JwtToken,
                     expiration = response.JwtValidTo,
                     refresh = response.RefreshToken,
-                    expiration_refresh = response.RefreshValidTo 
+                    expiration_refresh = response.RefreshValidTo
                 });
             }
             return Unauthorized();
@@ -158,7 +153,7 @@ namespace DateTimeService.Controllers
             var user = await userManager.FindByNameAsync(model.Username);
             if (user == null || !await userManager.CheckPasswordAsync(user, model.OldPassword))
                 return StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Error", Message = "User not found or wrong old password" });
-            
+
             var result = await userManager.ChangePasswordAsync(user, model.OldPassword, model.NewPassword);
 
             if (!result.Succeeded)
@@ -177,7 +172,7 @@ namespace DateTimeService.Controllers
             if (user == null)
                 return StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Error", Message = "User not found" });
 
-            List<string> successAddRoles = new ();
+            List<string> successAddRoles = new();
             List<string> successDeleteRoles = new();
 
             foreach (var role in model.AddRoles)
@@ -198,7 +193,7 @@ namespace DateTimeService.Controllers
                 }
             }
 
-            return Ok(new Response { Status = "Success", Message = "Added roles: "+string.Join(", ",successAddRoles) + ", deleted roles: " + string.Join(", ", successDeleteRoles) });
+            return Ok(new Response { Status = "Success", Message = "Added roles: " + string.Join(", ", successAddRoles) + ", deleted roles: " + string.Join(", ", successDeleteRoles) });
         }
 
         [Authorize(Roles = UserRoles.Admin)]

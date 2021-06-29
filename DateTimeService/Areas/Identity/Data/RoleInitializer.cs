@@ -1,9 +1,8 @@
 ﻿using DateTimeService.Data;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using System.Threading.Tasks;
-using System.Linq;
-using Microsoft.EntityFrameworkCore;
 
 namespace DateTimeService.Areas.Identity.Data
 {

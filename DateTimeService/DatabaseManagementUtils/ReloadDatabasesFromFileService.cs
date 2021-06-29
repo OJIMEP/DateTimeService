@@ -4,7 +4,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -27,8 +26,8 @@ namespace DateTimeService.DatabaseManagementUtils
             while (!cancellationToken.IsCancellationRequested)
             {
 
-                await DatabaseList.CreateUpdateDatabases(_configuration.GetSection("OneSDatabases").Get<List<DatabaseConnectionParameter>>(),_logger);
-                
+                await DatabaseList.CreateUpdateDatabases(_configuration.GetSection("OneSDatabases").Get<List<DatabaseConnectionParameter>>(), _logger);
+
                 await Task.Delay(TimeSpan.FromSeconds(11), cancellationToken);
             }
         }

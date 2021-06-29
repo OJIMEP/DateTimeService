@@ -26,7 +26,7 @@ namespace DateTimeService.Data
 
             if (LastReadFromFile == default || DateTimeOffset.Now - LastReadFromFile > TimeSpan.FromSeconds(5))
             {
-                
+
                 lock (locker)
                 {
                     List<DatabaseInfo> databasesInFile = new();
@@ -75,10 +75,10 @@ namespace DateTimeService.Data
 
                     LastReadFromFile = DateTimeOffset.Now;
                 }
-               
-                   
-                
-                
+
+
+
+
 
             }
 
@@ -89,7 +89,7 @@ namespace DateTimeService.Data
         {
             lock (locker)
             {
-                foreach (var item in Databases.Where(s=>s.Connection == connectionString))
+                foreach (var item in Databases.Where(s => s.Connection == connectionString))
                 {
                     item.AvailableToUse = false;
                 }

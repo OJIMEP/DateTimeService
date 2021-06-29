@@ -2,10 +2,8 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Globalization;
-using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -116,9 +114,9 @@ namespace DateTimeService.Data
             result.X_coordinates = 0;
             result.Y_coordinates = 0;
             result.AvailableToUse = false;
-            
+
             var client = _httpClientFactory.CreateClient();
-           
+
             client.Timeout = new TimeSpan(0, 0, 1);
             client.DefaultRequestHeaders.Add("Accept", "application/vnd.api+json");
             //client.DefaultRequestHeaders.Add("Content-Type", "application/vnd.api+json");
@@ -138,15 +136,18 @@ namespace DateTimeService.Data
             try
             {
                 var response = await client.SendAsync(request);
-                var responseString = await response.Content.ReadAsStringAsync();
-                var locationsResponse = JsonSerializer.Deserialize<LocationsResponse>(responseString);
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseString = await response.Content.ReadAsStringAsync();
+                    var locationsResponse = JsonSerializer.Deserialize<LocationsResponse>(responseString);
 
-                IFormatProvider formatter = new NumberFormatInfo { NumberDecimalSeparator = "." };
-                result.X_coordinates = Double.Parse(locationsResponse.Data.Attributes.X_coordinate, formatter);
-                result.Y_coordinates = Double.Parse(locationsResponse.Data.Attributes.Y_coordinate, formatter);
-                result.AvailableToUse = true;
+                    IFormatProvider formatter = new NumberFormatInfo { NumberDecimalSeparator = "." };
+                    result.X_coordinates = Double.Parse(locationsResponse.Data.Attributes.X_coordinate, formatter);
+                    result.Y_coordinates = Double.Parse(locationsResponse.Data.Attributes.Y_coordinate, formatter);
+                    result.AvailableToUse = true;
+                }                
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 var logElement = new ElasticLogElement
                 {
@@ -193,7 +194,7 @@ namespace DateTimeService.Data
 
             request.Content = new StringContent(content, Encoding.UTF8, "text/xml");
 
-            var authenticationString = login + ":" + pass; 
+            var authenticationString = login + ":" + pass;
             var base64EncodedAuthenticationString = Convert.ToBase64String(Encoding.ASCII.GetBytes(authenticationString));
 
             var client = new HttpClient();
@@ -222,7 +223,7 @@ namespace DateTimeService.Data
                 var logstringElement = JsonSerializer.Serialize(logElement);
 
                 _logger.LogInformation(logstringElement);
-                              
+
             }
             return result;
         }

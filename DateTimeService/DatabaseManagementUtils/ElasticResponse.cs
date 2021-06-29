@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
 namespace DateTimeService.Models
 {
@@ -17,7 +14,7 @@ namespace DateTimeService.Models
         [JsonPropertyName("_shards")]
         public Shards Shards { get; set; }
 
-        
+
         [JsonPropertyName("aggregations")]
         public Dictionary<string, Aggregations> Aggregations { get; set; }
         public ElasticResponse()
@@ -53,7 +50,7 @@ namespace DateTimeService.Models
         public string Relation { get; set; }
     }
 
-    
+
 
 
     public class Aggregations
@@ -77,7 +74,7 @@ namespace DateTimeService.Models
     {
         [JsonPropertyName("key")]
         public string Key { get; set; }
-        
+
         [JsonPropertyName("doc_count")]
         public int DocCount { get; set; }
 
@@ -95,9 +92,9 @@ namespace DateTimeService.Models
     {
         [JsonPropertyName("value")]
         public double Value { get; set; }
-        
+
         [JsonPropertyName("values")]
-        public Dictionary<string,double> Values { get; set; }
+        public Dictionary<string, double> Values { get; set; }
 
     }
 

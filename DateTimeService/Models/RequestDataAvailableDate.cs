@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
 namespace DateTimeService.Models
 {
@@ -31,7 +29,7 @@ namespace DateTimeService.Models
         [Required, MinLength(1), JsonPropertyName("codes")]
         public RequestDataCodeItemDTO[] CodeItems { get; set; }
 
-        
+
     }
 
     public class RequestDataAvailableDate

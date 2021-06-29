@@ -34,7 +34,7 @@ namespace DateTimeService
                     logger.LogError(ex, "An error occurred while migrating the database.");
                 }
 
-                
+
                 try
                 {
                     var userManager = services.GetRequiredService<UserManager<DateTimeServiceUser>>();

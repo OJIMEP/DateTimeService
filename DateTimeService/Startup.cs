@@ -1,9 +1,7 @@
 using DateTimeService.Areas.Identity.Data;
-using DateTimeService.Controllers;
 using DateTimeService.Data;
 using DateTimeService.DatabaseManagementUtils;
 using DateTimeService.Logging;
-using DateTimeService.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -15,10 +13,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Net.Http;
 using System.Text;
 
@@ -88,7 +84,7 @@ namespace DateTimeService
 
             services.AddScoped<IUserService, UserService>();
 
-            services.AddScoped<ILoadBalancing, LoadBalancing>();            
+            services.AddScoped<ILoadBalancing, LoadBalancing>();
 
             services.AddHttpClient<IGeoZones, GeoZones>();
 
@@ -99,7 +95,7 @@ namespace DateTimeService
             services.AddHttpClient<DatabaseManagement>("elastic").ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
             {
                 ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
-            }); 
+            });
 
             services.AddHttpClient<ILogger, HttpLogger>();
 
@@ -123,11 +119,11 @@ namespace DateTimeService
             //app.UseCors(builder => builder.AllowAnyHeader().AllowAnyMethod().SetIsOriginAllowedToAllowWildcardSubdomains().WithOrigins("https://*.21vek.by", "https://localhost*", "https://*.swagger.io"));
             app.UseCors(builder => builder.AllowAnyHeader().AllowAnyMethod().SetIsOriginAllowedToAllowWildcardSubdomains().WithOrigins(Configuration.GetSection("CorsOrigins").Get<List<string>>().ToArray()));
 
-            
+
 
             app.UseStaticFiles();
             app.UseSwagger();
-            
+
 
             if (env.IsDevelopment())
             {
@@ -141,11 +137,11 @@ namespace DateTimeService
                 app.UseHsts();
             }
 
-            app.UseHttpsRedirection();            
+            app.UseHttpsRedirection();
 
             app.UseRouting();
 
-            
+
 
             app.UseAuthentication();
             app.UseAuthorization();
@@ -153,9 +149,9 @@ namespace DateTimeService
             //loggerFactory = LoggerFactory.Create(builder => builder.ClearProviders());
 
             loggerFactory.AddHttp(Configuration["loggerHost"], Configuration.GetValue<int>("loggerPortUdp"), Configuration.GetValue<int>("loggerPortHttp"));
-            var logger = loggerFactory.CreateLogger("HttpLogger");           
+            var logger = loggerFactory.CreateLogger("HttpLogger");
 
-            
+
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();

@@ -95,7 +95,7 @@ namespace DateTimeService.Areas.Identity.Data
 
             var jwtTokenString = new JwtSecurityTokenHandler().WriteToken(jwtToken);
 
-            return new AuthenticateResponse(user, jwtTokenString, newRefreshToken.Token,jwtToken.ValidTo,newRefreshToken.Expires);
+            return new AuthenticateResponse(user, jwtTokenString, newRefreshToken.Token, jwtToken.ValidTo, newRefreshToken.Expires);
         }
 
         public bool RevokeToken(string token, string ipAddress)

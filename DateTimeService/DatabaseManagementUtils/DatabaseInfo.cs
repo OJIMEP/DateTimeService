@@ -1,14 +1,11 @@
 ﻿using DateTimeService.Data;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace DateTimeService.Models
 {
     public class DatabaseInfo : DatabaseConnectionParameter
     {
-        
+
         public string ConnectionWithoutCredentials { get; set; }
 
         public bool AvailableToUse { get; set; }

@@ -340,14 +340,6 @@ Select
 INTO #Temp_Goods
 From 
 	#Temp_GoodsBegin Номенклатура
-	--Inner Join dbo._Reference256 Упаковки With (NOLOCK)
-	--	On 
-	--	Упаковки._OwnerID_TYPE = 0x08  
-	--	AND Упаковки.[_OwnerID_RTRef] = 0x00000095
-	--	AND 
-	--	Номенклатура.НоменклатураСсылка = Упаковки._OwnerID_RRRef		
-	--	And Упаковки._Fld6003RRef = Номенклатура.ЕдиницаИзмерения
-	--	AND Упаковки._Marked = 0x00
 	Left Join dbo._Reference23294 ГруппыПланирования With (NOLOCK)
 		Inner Join dbo._Reference23294_VT23309 With (NOLOCK)
 			on ГруппыПланирования._IDRRef = _Reference23294_VT23309._Reference23294_IDRRef
@@ -435,7 +427,6 @@ FROM
 	AND T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData UNION ALL Select СкладСсылка From #Temp_PickupPoints)
 OPTION (KEEP PLAN, KEEPFIXED PLAN)
 ;
-
 
 SELECT
 	T1._Fld23831RRef AS СкладИсточника,
@@ -918,7 +909,6 @@ FROM
     dbo._AccumRg25110 T5 With (NOLOCK)
 WHERE
     T5._Period BETWEEN @P_DateTimePeriodBegin AND @P_DateTimePeriodEnd --begin +2
-    --AND T5._Period <= @P_DateTimePeriodEnd --end
     AND T5._Fld25111RRef in (Select Геозона From #Temp_GeoData) 
 GROUP BY
     T5._Period,

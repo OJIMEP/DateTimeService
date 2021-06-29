@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using AutoMapper;
+﻿using AutoMapper;
+using System;
 
 namespace DateTimeService.Models
 {
-    public class CodeResolver: IValueResolver<RequestDataCodeItemDTO, RequestDataCodeItem, string>
+    public class CodeResolver : IValueResolver<RequestDataCodeItemDTO, RequestDataCodeItem, string>
     {
         public string Resolve(RequestDataCodeItemDTO source, RequestDataCodeItem destination, String destMember, ResolutionContext context)
         {
