@@ -5,26 +5,25 @@ using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace DateTimeService.Data
 {
     public class GlobalParam1C
     {
         public string Name { get; set; }
-        public double ValueDouble { get; set; }        
+        public double ValueDouble { get; set; }
         public double DefaultDouble { get; set; }
 
 
-        public static Boolean FillValues(string connString, List<GlobalParam1C> names, ILogger<DateTimeController> _logger)
+        public static Boolean FillValues(SqlConnection conn, List<GlobalParam1C> names, ILogger<DateTimeController> _logger)
         {
 
             bool querySuccessful = false;
-            
+
             try
             {
                 //sql connection object
-                using SqlConnection conn = new(connString);
+                //using SqlConnection conn = new(connString);
 
 
 
@@ -34,7 +33,7 @@ namespace DateTimeService.Data
   where [_Fld22354] IN({0})";
 
                 SqlCommand cmd = new(queryParametrs, conn);
-                
+
                 cmd.CommandTimeout = 1;
 
                 var parameters = new string[names.Count];
@@ -46,7 +45,7 @@ namespace DateTimeService.Data
 
                 cmd.CommandText = string.Format(queryParametrs, string.Join(", ", parameters));
 
-                conn.Open();
+                //conn.Open();
 
                 //execute the SQLCommand
                 SqlDataReader drParametrs = cmd.ExecuteReader();
@@ -66,7 +65,7 @@ namespace DateTimeService.Data
                 drParametrs.Close();
 
                 //close connection
-                conn.Close();
+                //conn.Close();
 
             }
             catch (Exception ex)
@@ -76,7 +75,7 @@ namespace DateTimeService.Data
                     TimeSQLExecution = 0,
                     ErrorDescription = ex.Message,
                     Status = "Error",
-                    DatabaseConnection = LoadBalancing.RemoveCredentialsFromConnectionString(connString)
+                    DatabaseConnection = LoadBalancing.RemoveCredentialsFromConnectionString(conn.ConnectionString)
                 };
 
                 var logstringElement = JsonSerializer.Serialize(logElement);
@@ -90,5 +89,5 @@ namespace DateTimeService.Data
         }
     }
 
-    
+
 }

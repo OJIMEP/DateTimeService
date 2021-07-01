@@ -15,7 +15,7 @@ namespace DateTimeService
         }
         public ILogger CreateLogger(string categoryName)
         {
-            return new HttpLogger(host,port, portHttp);
+            return new HttpLogger(host, port, portHttp);
         }
 
         public void Dispose()

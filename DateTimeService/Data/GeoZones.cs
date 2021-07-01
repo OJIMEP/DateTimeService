@@ -2,14 +2,13 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Globalization;
-using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 
@@ -19,7 +18,7 @@ namespace DateTimeService.Data
     {
         Task<string> GetGeoZoneID(AdressCoords coords);
         Task<AdressCoords> GetAddressCoordinates(string address_id);
-        Boolean AdressExists(string connString, string _addressId);
+        Boolean AdressExists(SqlConnection conn, string _addressId);
     }
 
     public class AdressCoords
@@ -43,7 +42,7 @@ namespace DateTimeService.Data
         }
 
 
-        public Boolean AdressExists(string connString, string _addressId)
+        public Boolean AdressExists(SqlConnection conn, string _addressId)
         {
 
             bool result = false;
@@ -51,7 +50,7 @@ namespace DateTimeService.Data
             try
             {
                 //sql connection object
-                using SqlConnection conn = new(connString);
+                //using SqlConnection conn = new(connString);
 
 
 
@@ -70,7 +69,7 @@ namespace DateTimeService.Data
 
                 cmd.CommandText = queryParametrs;
 
-                conn.Open();
+                //conn.Open();
 
                 //execute the SQLCommand
                 SqlDataReader drParametrs = cmd.ExecuteReader();
@@ -85,7 +84,7 @@ namespace DateTimeService.Data
                 drParametrs.Close();
 
                 //close connection
-                conn.Close();
+                //conn.Close();
 
             }
             catch (Exception ex)
@@ -95,7 +94,7 @@ namespace DateTimeService.Data
                     TimeSQLExecution = 0,
                     ErrorDescription = ex.Message,
                     Status = "Error",
-                    DatabaseConnection = LoadBalancing.RemoveCredentialsFromConnectionString(connString)
+                    DatabaseConnection = LoadBalancing.RemoveCredentialsFromConnectionString(conn.ConnectionString)
                 };
 
                 var logstringElement = JsonSerializer.Serialize(logElement);
@@ -115,9 +114,9 @@ namespace DateTimeService.Data
             result.X_coordinates = 0;
             result.Y_coordinates = 0;
             result.AvailableToUse = false;
-            
+
             var client = _httpClientFactory.CreateClient();
-           
+
             client.Timeout = new TimeSpan(0, 0, 1);
             client.DefaultRequestHeaders.Add("Accept", "application/vnd.api+json");
             //client.DefaultRequestHeaders.Add("Content-Type", "application/vnd.api+json");
@@ -137,15 +136,18 @@ namespace DateTimeService.Data
             try
             {
                 var response = await client.SendAsync(request);
-                var responseString = await response.Content.ReadAsStringAsync();
-                var locationsResponse = JsonSerializer.Deserialize<LocationsResponse>(responseString);
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseString = await response.Content.ReadAsStringAsync();
+                    var locationsResponse = JsonSerializer.Deserialize<LocationsResponse>(responseString);
 
-                IFormatProvider formatter = new NumberFormatInfo { NumberDecimalSeparator = "." };
-                result.X_coordinates = Double.Parse(locationsResponse.data.attributes.x_coordinate, formatter);
-                result.Y_coordinates = Double.Parse(locationsResponse.data.attributes.y_coordinate, formatter);
-                result.AvailableToUse = true;
+                    IFormatProvider formatter = new NumberFormatInfo { NumberDecimalSeparator = "." };
+                    result.X_coordinates = Double.Parse(locationsResponse.Data.Attributes.X_coordinate, formatter);
+                    result.Y_coordinates = Double.Parse(locationsResponse.Data.Attributes.Y_coordinate, formatter);
+                    result.AvailableToUse = true;
+                }                
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 var logElement = new ElasticLogElement
                 {
@@ -192,7 +194,7 @@ namespace DateTimeService.Data
 
             request.Content = new StringContent(content, Encoding.UTF8, "text/xml");
 
-            var authenticationString = login + ":" + pass; 
+            var authenticationString = login + ":" + pass;
             var base64EncodedAuthenticationString = Convert.ToBase64String(Encoding.ASCII.GetBytes(authenticationString));
 
             var client = new HttpClient();
@@ -221,7 +223,7 @@ namespace DateTimeService.Data
                 var logstringElement = JsonSerializer.Serialize(logElement);
 
                 _logger.LogInformation(logstringElement);
-                              
+
             }
             return result;
         }
@@ -230,37 +232,23 @@ namespace DateTimeService.Data
 
     public class LocationsResponse
     {
-        public LocationsResponseElem data { get; set; }
+        [JsonPropertyName("data")]
+        public LocationsResponseElem Data { get; set; }
     }
     public class LocationsResponseElem
     {
-        public LocationsResponseElemAttrib attributes { get; set; }        
-        public string type { get; set; }
-        public string id { get; set; }
+        [JsonPropertyName("attributes")]
+        public LocationsResponseElemAttrib Attributes { get; set; }
+        [JsonPropertyName("type")]
+        public string Type { get; set; }
+        [JsonPropertyName("id")]
+        public string Id { get; set; }
     }
     public class LocationsResponseElemAttrib
     {
-        public string x_coordinate { get; set; }
-        public string y_coordinate { get; set; }
+        [JsonPropertyName("x_coordinate")]
+        public string X_coordinate { get; set; }
+        [JsonPropertyName("y_coordinate")]
+        public string Y_coordinate { get; set; }
     }
-
-    public class BTSResponse
-    {
-        [XmlElement(Namespace = "http://www.cpandl.com")]
-        public string ItemName;
-        [XmlElement(Namespace = "http://www.cpandl.com")]
-        public string Description;
-        [XmlElement(Namespace = "http://www.cohowinery.com")]
-        public decimal UnitPrice;
-        [XmlElement(Namespace = "http://www.cpandl.com")]
-        public int Quantity;
-        [XmlElement(Namespace = "http://www.cohowinery.com")]
-        public decimal LineTotal;
-        // A custom method used to calculate price per item.
-        public void Calculate()
-        {
-            LineTotal = UnitPrice * Quantity;
-        }
-    }
-
 }

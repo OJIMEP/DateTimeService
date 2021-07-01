@@ -1,27 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using AutoMapper;
+﻿using AutoMapper;
 
 namespace DateTimeService.Models
 {
-    public class MapperProfile:Profile
+    public class MapperProfile : Profile
     {
         public MapperProfile()
         {
             CreateMap<RequestIntervalListDTO, RequestIntervalList>();
             CreateMap<RequestDataAvailableDateByCodeItemsDTO, RequestDataAvailableDate>()
-                .ForMember(dest => dest.codes, opt => opt.MapFrom(src => src.codeItems));
+                .ForMember(dest => dest.Codes, opt => opt.MapFrom(src => src.CodeItems));
             CreateMap<RequestDataAvailableDateByCodesDTO, RequestDataAvailableDate>()
-                .ForMember(dest => dest.codes,
+                .ForMember(dest => dest.Codes,
                 opt => { opt.MapFrom<CodesToCodeItemsResolver>(); });
 
             CreateMap<RequestDataCodeItemDTO, RequestDataCodeItem>()
-                .ForMember(dest => dest.code,
+                .ForMember(dest => dest.Code,
                     opt => { opt.MapFrom<CodeResolver>(); })
-                .ForMember(dest => dest.article,
-                    opt => { opt.MapFrom(src => src.code); });
+                .ForMember(dest => dest.Article,
+                    opt => { opt.MapFrom(src => src.Code); });
         }
     }
 }
