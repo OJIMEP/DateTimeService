@@ -1,8 +1,7 @@
 using DateTimeService.Areas.Identity.Data;
-using DateTimeService.Controllers;
 using DateTimeService.Data;
+using DateTimeService.DatabaseManagementUtils;
 using DateTimeService.Logging;
-using DateTimeService.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -14,10 +13,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
 using System;
 using System.Collections.Generic;
-using System.IO;
+using System.Net.Http;
 using System.Text;
 
 namespace DateTimeService
@@ -86,7 +84,7 @@ namespace DateTimeService
 
             services.AddScoped<IUserService, UserService>();
 
-            services.AddScoped<ILoadBalancing, LoadBalancing>();            
+            services.AddScoped<ILoadBalancing, LoadBalancing>();
 
             services.AddHttpClient<IGeoZones, GeoZones>();
 
@@ -94,9 +92,19 @@ namespace DateTimeService
 
             services.AddSwaggerGen();
 
-            services.AddHttpClient<ILogger, HttpLogger>();
-            
+            services.AddHttpClient<DatabaseManagement>("elastic").ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+            });
 
+            services.AddHttpClient<ILogger, HttpLogger>();
+
+            //DatabaseList.CreateDatabases(Configuration.GetSection("OneSDatabases").Get<List<DatabaseConnectionParameter>>());            
+
+            services.AddSingleton<IHostedService, ReloadDatabasesFromFileService>();
+
+            services.AddSingleton<DatabaseManagement>();
+            services.AddSingleton<IHostedService, DatabaseManagementService>();
         }
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory)
@@ -111,11 +119,11 @@ namespace DateTimeService
             //app.UseCors(builder => builder.AllowAnyHeader().AllowAnyMethod().SetIsOriginAllowedToAllowWildcardSubdomains().WithOrigins("https://*.21vek.by", "https://localhost*", "https://*.swagger.io"));
             app.UseCors(builder => builder.AllowAnyHeader().AllowAnyMethod().SetIsOriginAllowedToAllowWildcardSubdomains().WithOrigins(Configuration.GetSection("CorsOrigins").Get<List<string>>().ToArray()));
 
-            
+
 
             app.UseStaticFiles();
             app.UseSwagger();
-            
+
 
             if (env.IsDevelopment())
             {
@@ -129,11 +137,11 @@ namespace DateTimeService
                 app.UseHsts();
             }
 
-            app.UseHttpsRedirection();            
+            app.UseHttpsRedirection();
 
             app.UseRouting();
 
-            
+
 
             app.UseAuthentication();
             app.UseAuthorization();
@@ -141,9 +149,9 @@ namespace DateTimeService
             //loggerFactory = LoggerFactory.Create(builder => builder.ClearProviders());
 
             loggerFactory.AddHttp(Configuration["loggerHost"], Configuration.GetValue<int>("loggerPortUdp"), Configuration.GetValue<int>("loggerPortHttp"));
-            var logger = loggerFactory.CreateLogger("HttpLogger");           
+            var logger = loggerFactory.CreateLogger("HttpLogger");
 
-            
+
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();

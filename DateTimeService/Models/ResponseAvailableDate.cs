@@ -1,23 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Text.Json.Serialization;
 
 namespace DateTimeService.Models
 {
     public class ResponseAvailableDate
     {
-        public List<string> article { get; set; }
-        public List<string> code { get; set; }
-        public List<DateTimeOffset> courier { get; set; }
-        public List<DateTimeOffset> self { get; set; }
+        [JsonPropertyName("article")]
+        public List<string> Article { get; set; }
+
+        [JsonPropertyName("code")]
+        public List<string> Code { get; set; }
+
+        [JsonPropertyName("courier")]
+        public List<DateTimeOffset> Courier { get; set; }
+
+        [JsonPropertyName("self")]
+        public List<DateTimeOffset> Self { get; set; }
 
         public ResponseAvailableDate()
         {
-            article = new List<string>();
-            code = new List<string>();
-            courier = new List<DateTimeOffset>();
-            self = new List<DateTimeOffset>();
+            Article = new List<string>();
+            Code = new List<string>();
+            Courier = new List<DateTimeOffset>();
+            Self = new List<DateTimeOffset>();
         }
 
 

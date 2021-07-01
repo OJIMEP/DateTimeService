@@ -1,17 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace DateTimeService.Logging
 {
     public class ElasticLogMessage
     {
-        public List<string> message { get; set; }
+        [JsonPropertyName("message")]
+        public List<string> Message { get; set; }
 
         public ElasticLogMessage()
         {
-            message = new List<string>();
+            Message = new List<string>();
         }
     }
 }

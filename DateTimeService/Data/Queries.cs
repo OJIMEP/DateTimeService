@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace DateTimeService.Data
+﻿namespace DateTimeService.Data
 {
     public class Queries
     {
@@ -1260,7 +1255,14 @@ from #Temp_GoodsRaw t1
 )
 Select 
 	Номенклатура._IDRRef AS НоменклатураСсылка,
-	#Temp_PickupPoints.СкладСсылка AS СкладПВЗСсылка
+	Номенклатура._Code AS code,
+	Номенклатура._Fld3480 AS article,
+	Номенклатура._Fld3489RRef AS ЕдиницаИзмерения,
+	Номенклатура._Fld3526RRef AS Габариты,
+	#Temp_PickupPoints.СкладСсылка AS СкладПВЗСсылка,
+	Упаковки._IDRRef AS УпаковкаСсылка,
+	Упаковки._Fld6000 AS Вес,
+	Упаковки._Fld6006 AS Объем
 INTO #Temp_GoodsBegin
 From
 	Temp_GoodsRawParsed T1
@@ -1268,27 +1270,50 @@ From
 		ON T1.code is NULL and T1.Article = Номенклатура._Fld3480
 	Left Join #Temp_PickupPoints  
 		ON T1.PickupPoint = #Temp_PickupPoints.ERPКодСклада
+        Inner Join dbo._Reference256 Упаковки With (NOLOCK)
+		On 
+		Упаковки._OwnerID_TYPE = 0x08  
+		AND Упаковки.[_OwnerID_RTRef] = 0x00000095
+		AND 
+		Номенклатура._IDRRef = Упаковки._OwnerID_RRRef		
+		And Упаковки._Fld6003RRef = Номенклатура._Fld3489RRef
+		AND Упаковки._Marked = 0x00
 union
 Select 
 	Номенклатура._IDRRef,
-	#Temp_PickupPoints.СкладСсылка
+	Номенклатура._Code,
+	Номенклатура._Fld3480,
+	Номенклатура._Fld3489RRef,
+	Номенклатура._Fld3526RRef,
+	#Temp_PickupPoints.СкладСсылка,
+	Упаковки._IDRRef AS УпаковкаСсылка,
+	Упаковки._Fld6000 AS Вес,
+	Упаковки._Fld6006 AS Объем
 From 
 	Temp_GoodsRawParsed T1
 	Inner Join 	dbo._Reference149 Номенклатура With (NOLOCK) 
 		ON T1.code is not NULL and T1.code = Номенклатура._Code
 	Left Join #Temp_PickupPoints  
 		ON T1.PickupPoint = #Temp_PickupPoints.ERPКодСклада
+        Inner Join dbo._Reference256 Упаковки With (NOLOCK)
+		On 
+		Упаковки._OwnerID_TYPE = 0x08  
+		AND Упаковки.[_OwnerID_RTRef] = 0x00000095
+		AND 
+		Номенклатура._IDRRef = Упаковки._OwnerID_RRRef		
+		And Упаковки._Fld6003RRef = Номенклатура._Fld3489RRef
+		AND Упаковки._Marked = 0x00
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
 Select 
-	Номенклатура._IDRRef AS НоменклатураСсылка,
-    Номенклатура._Fld3480 AS article,
-    Номенклатура._Code AS code,
-    #Temp_GoodsBegin.СкладПВЗСсылка AS СкладСсылка,
-	Упаковки._IDRRef AS УпаковкаСсылка,
+	Номенклатура.НоменклатураСсылка AS НоменклатураСсылка,
+	Номенклатура.article AS article,
+	Номенклатура.code AS code,
+	Номенклатура.СкладПВЗСсылка AS СкладСсылка,
+	Номенклатура.УпаковкаСсылка AS УпаковкаСсылка,--Упаковки._IDRRef AS УпаковкаСсылка,
 	1 As Количество,
-	Упаковки._Fld6000 AS Вес,
-	Упаковки._Fld6006 AS Объем,
+	Номенклатура.Вес AS Вес,--Упаковки._Fld6000 AS Вес,
+	Номенклатура.Объем AS Объем,--Упаковки._Fld6006 AS Объем,
 	10 AS ВремяНаОбслуживание,
 	IsNull(ГруппыПланирования._IDRRef, 0x00000000000000000000000000000000) AS ГруппаПланирования,
 	IsNull(ГруппыПланирования._Description, '') AS ГруппаПланированияНаименование,
@@ -1297,15 +1322,7 @@ Select
 	1 AS Приоритет
 INTO #Temp_Goods
 From 
-	dbo._Reference149 Номенклатура With (NOLOCK)
-    inner join #Temp_GoodsBegin on Номенклатура._IDRRef = #Temp_GoodsBegin.НоменклатураСсылка
-	Inner Join dbo._Reference256 Упаковки With (NOLOCK)
-		On 
-		Упаковки._OwnerID_TYPE = 0x08  
-		AND Упаковки.[_OwnerID_RTRef] = 0x00000095
-		AND Номенклатура._IDRRef = Упаковки._OwnerID_RRRef		
-		And Упаковки._Fld6003RRef = Номенклатура._Fld3489RRef
-		AND Упаковки._Marked = 0x00
+	#Temp_GoodsBegin Номенклатура
 	Left Join dbo._Reference23294 ГруппыПланирования With (NOLOCK)
 		Inner Join dbo._Reference23294_VT23309 With (NOLOCK)
 			on ГруппыПланирования._IDRRef = _Reference23294_VT23309._Reference23294_IDRRef
@@ -1313,19 +1330,19 @@ From
 		On 
 		ГруппыПланирования._Fld23302RRef IN (Select СкладСсылка From #Temp_GeoData) --склад
 		AND ГруппыПланирования._Fld25141 = 0x01--участвует в расчете мощности
-		AND (ГруппыПланирования._Fld23301RRef = Номенклатура._Fld3526RRef OR (Номенклатура._Fld3526RRef = 0xAC2CBF86E693F63444670FFEB70264EE AND ГруппыПланирования._Fld23301RRef= 0xAD3F7F5FC4F15DAD4F693CAF8365EC0D) ) --габариты
+		AND (ГруппыПланирования._Fld23301RRef = Номенклатура.Габариты OR (Номенклатура.Габариты = 0xAC2CBF86E693F63444670FFEB70264EE AND ГруппыПланирования._Fld23301RRef= 0xAD3F7F5FC4F15DAD4F693CAF8365EC0D) ) --габариты
 		AND ГруппыПланирования._Marked = 0x00
         AND #Temp_GoodsBegin.СкладПВЗСсылка Is Null
 UNION ALL
 Select 
-	Номенклатура._IDRRef AS НоменклатураСсылка,
-	Номенклатура._Fld3480 AS article,
-	Номенклатура._Code AS code,
-	#Temp_GoodsBegin.СкладПВЗСсылка AS СкладСсылка,
-	Упаковки._IDRRef AS УпаковкаСсылка,
+	Номенклатура.НоменклатураСсылка AS НоменклатураСсылка,
+	Номенклатура.article AS article,
+	Номенклатура.code AS code,
+	Номенклатура.СкладПВЗСсылка AS СкладСсылка,
+	Номенклатура.УпаковкаСсылка AS УпаковкаСсылка,--Упаковки._IDRRef AS УпаковкаСсылка,
 	1 As Количество,
-	Упаковки._Fld6000 AS Вес,
-	Упаковки._Fld6006 AS Объем,
+	Номенклатура.Вес AS Вес,--Упаковки._Fld6000 AS Вес,
+	Номенклатура.Объем AS Объем,--Упаковки._Fld6006 AS Объем,
 	10 AS ВремяНаОбслуживание,
 	IsNull(ПодчиненнаяГП._IDRRef, 0x00000000000000000000000000000000) AS ГруппаПланирования,
 	IsNull(ПодчиненнаяГП._Description, '') AS ГруппаПланированияНаименование,
@@ -1333,15 +1350,7 @@ Select
 	IsNull(ПодчиненнаяГП._Fld23302RRef, 0x00000000000000000000000000000000) AS ГруппаПланированияСклад,
 	0
 From 
-	dbo._Reference149 Номенклатура With (NOLOCK)
-	inner join #Temp_GoodsBegin on Номенклатура._IDRRef = #Temp_GoodsBegin.НоменклатураСсылка
-	Inner Join dbo._Reference256 Упаковки With (NOLOCK)
-		On 
-		Упаковки._OwnerID_TYPE = 0x08  
-		AND Упаковки.[_OwnerID_RTRef] = 0x00000095
-		AND Номенклатура._IDRRef = Упаковки._OwnerID_RRRef		
-		And Упаковки._Fld6003RRef = Номенклатура._Fld3489RRef
-		AND Упаковки._Marked = 0x00
+	#Temp_GoodsBegin Номенклатура
 	Left Join dbo._Reference23294 ГруппыПланирования With (NOLOCK)
 		Inner Join dbo._Reference23294_VT23309 With (NOLOCK)
 			on ГруппыПланирования._IDRRef = _Reference23294_VT23309._Reference23294_IDRRef
@@ -1349,7 +1358,7 @@ From
 		On 
 		ГруппыПланирования._Fld23302RRef IN (Select СкладСсылка From #Temp_GeoData) --склад
 		AND ГруппыПланирования._Fld25141 = 0x01--участвует в расчете мощности
-		AND (ГруппыПланирования._Fld23301RRef = Номенклатура._Fld3526RRef OR (Номенклатура._Fld3526RRef = 0xAC2CBF86E693F63444670FFEB70264EE AND ГруппыПланирования._Fld23301RRef= 0xAD3F7F5FC4F15DAD4F693CAF8365EC0D) ) --габариты
+		AND (ГруппыПланирования._Fld23301RRef = Номенклатура.Габариты OR (Номенклатура.Габариты = 0xAC2CBF86E693F63444670FFEB70264EE AND ГруппыПланирования._Fld23301RRef= 0xAD3F7F5FC4F15DAD4F693CAF8365EC0D) ) --габариты
 		AND ГруппыПланирования._Marked = 0x00
 		AND #Temp_GoodsBegin.СкладПВЗСсылка Is Null
 	Inner Join dbo._Reference23294 ПодчиненнаяГП
@@ -1441,21 +1450,19 @@ SELECT
 	MIN(T1._Fld23834) AS ДатаПрибытия 
 Into #Temp_MinimumWarehouseDates
 FROM
-    dbo._InfoRg23830 T1 With (NOLOCK)
+    dbo._InfoRg23830 T1 With (NOLOCK{7})
 WHERE
-    T1._Fld23831RRef IN (
+    T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData UNION ALL Select СкладСсылка From #Temp_PickupPoints)
+		AND	T1._Fld23832 BETWEEN @P_DateTimeNow AND DateAdd(DAY,6,@P_DateTimeNow)
+		AND T1._Fld23831RRef IN (
         SELECT
             T2.СкладИсточника AS СкладИсточника
         FROM
             #Temp_Remains T2 WITH(NOLOCK)) 
-		AND T1._Fld23832 BETWEEN @P_DateTimeNow AND  DateAdd(DAY,6,@P_DateTimeNow)
-		--AND T1._Fld23832 <= DateAdd(DAY,6,@P_DateTimeNow)
-		AND T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData UNION ALL Select СкладСсылка From #Temp_PickupPoints)
 GROUP BY T1._Fld23831RRef,
 T1._Fld23833RRef
 OPTION (OPTIMIZE FOR (@P_DateTimeNow='{1}'),KEEP PLAN, KEEPFIXED PLAN);
 
-;
 
 SELECT
     T1.НоменклатураСсылка,
@@ -1890,7 +1897,7 @@ INTO #Temp_PickupWorkingHours
 From 
 	#Temp_Dates
 	Inner Join dbo._Reference226 Склады 
-		ON Склады._IDRRef IN (Select СкладНазначения From #Temp_ShipmentDatesPickUp)
+		ON Склады._IDRRef IN (Select СкладСсылка From #Temp_PickupPoints)
 	Inner Join _Reference23612 
 		On Склады._Fld23620RRef = _Reference23612._IDRRef
 	Left Join _Reference23612_VT23613 As ПВЗГрафикРаботы 
@@ -1923,14 +1930,14 @@ SELECT
 Into #Temp_AvailablePickUp
 FROM
     #Temp_ShipmentDatesPickUp
-		Inner {6} Join #Temp_PickupWorkingHours
-		On #Temp_PickupWorkingHours.СкладНазначения = #Temp_ShipmentDatesPickUp.СкладНазначения
-		And #Temp_PickupWorkingHours.ВремяОкончания > #Temp_ShipmentDatesPickUp.ДатаСоСклада 	 
+		Inner {6} JOIN #Temp_PickupWorkingHours
+		On #Temp_PickupWorkingHours.ВремяОкончания > #Temp_ShipmentDatesPickUp.ДатаСоСклада
+		And #Temp_PickupWorkingHours.СкладНазначения = #Temp_ShipmentDatesPickUp.СкладНазначения
 Group by
 	#Temp_ShipmentDatesPickUp.НоменклатураСсылка,
 	#Temp_ShipmentDatesPickUp.article,
 	#Temp_ShipmentDatesPickUp.code
-OPTION (KEEP PLAN, KEEPFIXED PLAN);
+OPTION (HASH GROUP, KEEP PLAN, KEEPFIXED PLAN);
 
 With PlanningGroups AS(
 Select Distinct 
@@ -1958,7 +1965,6 @@ FROM
     Inner Join PlanningGroups ON PlanningGroups.ГруппаПланирования = T5._Fld25112RRef
 WHERE
     T5._Period BETWEEN @P_DateTimePeriodBegin AND @P_DateTimePeriodEnd --begin +2
-    --AND T5._Period <= @P_DateTimePeriodEnd --end
     AND T5._Fld25111RRef in (Select Геозона From #Temp_GeoData) 
 GROUP BY
     T5._Period,
@@ -1978,7 +1984,7 @@ HAVING
             ) AS NUMERIC(16, 0)
         ) > 0.0
     )
-OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'),KEEP PLAN, KEEPFIXED PLAN);
+OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'),KEEP PLAN, KEEPFIXED PLAN);
 ;
 
 select
@@ -2148,7 +2154,7 @@ GROUP BY
 	T1.НоменклатураСсылка,
     T1.article,
 	T1.code
-OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'),KEEP PLAN, KEEPFIXED PLAN);
+OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'),KEEP PLAN, KEEPFIXED PLAN);
 
 Select 
 	IsNull(#Temp_AvailableCourier.article,#Temp_AvailablePickUp.article) AS article,
@@ -2165,9 +2171,6 @@ from [master].[sys].[dm_hadr_database_replica_states]";
 
         public const string DatebaseBalancingMain = @"select top (1) _IDRRef from dbo._Reference112";
 
-        public const string DatebaseBalancingReplicaTables = @"SELECT name
-FROM sys.databases
-WHERE OBJECT_ID(name+'.dbo.MSreplication_objects') IS NOT NULL
-";
+        public const string DatebaseBalancingReplicaTables = @"Select TOP(1) _IDRRef FROM dbo._Reference99";
     }
 }

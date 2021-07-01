@@ -1,6 +1,6 @@
-﻿using DateTimeService.Areas.Identity.Data;
+﻿using AutoMapper;
+using DateTimeService.Areas.Identity.Data;
 using DateTimeService.Data;
-using DateTimeService.Logging;
 using DateTimeService.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -13,12 +13,8 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Linq;
-using System.Net.Http;
-using System.Net.Sockets;
-using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using AutoMapper;
 
 namespace DateTimeService.Controllers
 {
@@ -49,11 +45,10 @@ namespace DateTimeService.Controllers
         public async Task<ObjectResult> MaxAvailableCountAsync(IEnumerable<RequestDataMaxAvailableCount> nomenclatures)
         {
 
-            //string connString = _configuration.GetConnectionString("1CDataSqlConnection");
 
-            string connString = await _loadBalacing.GetDatabaseConnectionAsync();
+            var conn = await _loadBalacing.GetDatabaseConnectionAsync("");
 
-            //string connString = @"Server=localhost;Database=DevBase_cut_v3;Uid=sa;Pwd=; Trusted_Connection = False;";
+          
 
             var result = new List<ResponseMaxAvailableCount>();
             var logElement = new ElasticLogElement
@@ -62,7 +57,7 @@ namespace DateTimeService.Controllers
                 Host = HttpContext.Request.Host.ToString(),
                 RequestContent = JsonSerializer.Serialize(nomenclatures),
                 Id = Guid.NewGuid().ToString(),
-                DatabaseConnection = LoadBalancing.RemoveCredentialsFromConnectionString(connString),
+                DatabaseConnection = LoadBalancing.RemoveCredentialsFromConnectionString(conn.ConnectionString),
                 AuthenticatedUser = User.Identity.Name
             };
 
@@ -72,9 +67,7 @@ namespace DateTimeService.Controllers
 
             try
             {
-                //sql connection object
-                using SqlConnection conn = new(connString);
-
+                
                 conn.StatisticsEnabled = true;
 
                 string query = @"SELECT
@@ -116,8 +109,7 @@ namespace DateTimeService.Controllers
 
                 cmd.CommandText = string.Format(query, string.Join(", ", parameters));
 
-                //open connection
-                conn.Open();
+               
 
                 //execute the SQLCommand
                 SqlDataReader dr = cmd.ExecuteReader();
@@ -143,8 +135,7 @@ namespace DateTimeService.Controllers
                 //close data reader
                 dr.Close();
 
-                //close connection
-                conn.Close();
+                
 
                 logElement.TimeSQLExecution = sqlCommandExecutionTime;
                 logElement.ResponseContent = JsonSerializer.Serialize(result);
@@ -156,6 +147,8 @@ namespace DateTimeService.Controllers
                 logElement.ErrorDescription = ex.Message;
                 logElement.Status = "Error";
             }
+
+            conn.Close();
 
             var logstringElement = JsonSerializer.Serialize(logElement);
 
@@ -174,7 +167,7 @@ namespace DateTimeService.Controllers
             OkObjectResult result;
 
             var data = _mapper.Map<RequestDataAvailableDate>(inputDataJson);
-
+            string databaseType = "";
             Stopwatch stopwatchExecution = new();
             stopwatchExecution.Start();
 
@@ -188,24 +181,42 @@ namespace DateTimeService.Controllers
             };
 
 
-            string connString;
+            //string connString;
+            SqlConnection conn;
             Stopwatch watch = new();
             watch.Start();
             try
             {
-                connString = await _loadBalacing.GetDatabaseConnectionAsync();
+                //connString = await _loadBalacing.GetDatabaseConnectionAsync();
+                conn = await _loadBalacing.GetDatabaseConnectionAsync(databaseType);
             }
             catch (Exception ex)
             {
-                connString = "";
+                //connString = "";
                 logElementLoadBal.TimeSQLExecution = 0;
                 logElementLoadBal.ErrorDescription = ex.Message;
                 logElementLoadBal.Status = "Error";
                 var logstringElement1 = JsonSerializer.Serialize(logElementLoadBal);
                 _logger.LogInformation(logstringElement1);
+                return StatusCode(503);
             }
             watch.Stop();
-            //string connString = @"Server=localhost;Database=DevBase_cut_v3;Uid=sa;Pwd=; Trusted_Connection = False;";
+           
+
+            if (conn == null)
+            {
+                logElementLoadBal.TimeSQLExecution = 0;
+                logElementLoadBal.ErrorDescription = "Не найдено доступное соединение к БД";
+                logElementLoadBal.Status = "Error";
+                logElementLoadBal.LoadBalancingExecution = watch.ElapsedMilliseconds;
+                var logstringElement1 = JsonSerializer.Serialize(logElementLoadBal);
+                _logger.LogInformation(logstringElement1);
+
+                Dictionary<string, string> errorDesc = new();
+                errorDesc.Add("ErrorDescription", "Не найдено доступное соединение к БД");
+
+                return StatusCode(500, errorDesc);
+            }
 
             ResponseAvailableDate dbResult = new();
 
@@ -215,14 +226,14 @@ namespace DateTimeService.Controllers
                 Host = HttpContext.Request.Host.ToString(),
                 RequestContent = JsonSerializer.Serialize(data),
                 Id = Guid.NewGuid().ToString(),
-                DatabaseConnection = LoadBalancing.RemoveCredentialsFromConnectionString(connString),
+                DatabaseConnection = LoadBalancing.RemoveCredentialsFromConnectionString(conn.ConnectionString),
                 AuthenticatedUser = User.Identity.Name,
                 LoadBalancingExecution = watch.ElapsedMilliseconds
             };
 
-            logElement.AdditionalData.Add("Referer",Request.Headers["Referer"].ToString());
+            logElement.AdditionalData.Add("Referer", Request.Headers["Referer"].ToString());
             logElement.AdditionalData.Add("User-Agent", Request.Headers["User-Agent"].ToString());
-            logElement.AdditionalData.Add("RemoteIpAddress", Request.HttpContext.Connection.RemoteIpAddress.ToString()); 
+            logElement.AdditionalData.Add("RemoteIpAddress", Request.HttpContext.Connection.RemoteIpAddress.ToString());
 
 
             watch.Reset();
@@ -246,7 +257,7 @@ namespace DateTimeService.Controllers
                 }
             };
             watch.Start();
-            GlobalParam1C.FillValues(connString, Parameters1C, _logger);
+            GlobalParam1C.FillValues(conn, Parameters1C, _logger);
             watch.Stop();
             logElement.GlobalParametersExecution = watch.ElapsedMilliseconds;
             watch.Reset();
@@ -255,18 +266,18 @@ namespace DateTimeService.Controllers
             watch.Start();
             try
             {
-                if (data.codes.Length == 0 || (data.codes.Length == 1 && data.codes[0] == null))
+                if (data.Codes.Length == 0 || (data.Codes.Length == 1 && data.Codes[0] == null))
                 {
                     throw new Exception("Пустой массив кодов");
                 }
 
                 //sql connection object
-                using SqlConnection conn = new(connString);
+                //using SqlConnection conn = new(connString);
 
                 conn.StatisticsEnabled = true;
 
                 //open connection
-                conn.Open();
+                //conn.Open();
 
                 string query = Queries.AvailableDate;
 
@@ -277,8 +288,7 @@ namespace DateTimeService.Controllers
 
                 SqlCommand cmd = new(query, conn);
 
-                //FillGoodsTable(data, conn);
-
+                
                 List<string> pickups = new();
 
                 var queryTextBegin = TextFillGoodsTable(data, cmd, true, pickups);
@@ -298,14 +308,14 @@ namespace DateTimeService.Controllers
                     cmd.Parameters.Add(parameterString, SqlDbType.NVarChar, 4);
                     cmd.Parameters[parameterString].Value = pickupPoint;
                 }
-                if (pickupParameters.Count==0)
+                if (pickupParameters.Count == 0)
                 {
                     pickupParameters.Add("NULL");
                 }
 
 
                 cmd.Parameters.Add("@P_CityCode", SqlDbType.NVarChar, 10);
-                cmd.Parameters["@P_CityCode"].Value = data.city_id;
+                cmd.Parameters["@P_CityCode"].Value = data.CityId;
 
                 cmd.Parameters.Add("@P_DateTimeNow", SqlDbType.DateTime);
                 cmd.Parameters["@P_DateTimeNow"].Value = DateMove;
@@ -338,23 +348,29 @@ namespace DateTimeService.Controllers
                 }
                 else
                 {
-                    dateTimeNowOptimizeString = dateTimeNowOptimizeString = DateMove.Date.ToString("yyyy-MM-ddTHH:mm:ss"); 
+                    dateTimeNowOptimizeString = dateTimeNowOptimizeString = DateMove.Date.ToString("yyyy-MM-ddTHH:mm:ss");
                 }
 
                 var pickupWorkingHoursJoinType = _configuration.GetValue<string>("pickupWorkingHoursJoinType");
 
-                cmd.CommandText = queryTextBegin +  string.Format(query, string.Join(",", pickupParameters),
+                string useIndexHint = _configuration.GetValue<string>("useIndexHintWarehouseDates");// @", INDEX([_InfoRg23830_Custom2])";
+                if (databaseType == "replica_tables")
+                {
+                    useIndexHint = "";
+                }
+
+                cmd.CommandText = queryTextBegin + string.Format(query, string.Join(",", pickupParameters),
                     dateTimeNowOptimizeString,
                     DateMove.Date.ToString("yyyy-MM-ddTHH:mm:ss"),
                     DateMove.Date.AddDays(Parameters1C.First(x => x.Name.Contains("rsp_КоличествоДнейЗаполненияГрафика")).ValueDouble - 1).ToString("yyyy-MM-ddTHH:mm:ss"),
                     Parameters1C.First(x => x.Name.Contains("КоличествоДнейАнализаЛучшейЦеныПриОтсрочкеЗаказа")).ValueDouble,
-                    Parameters1C.First(x => x.Name.Contains("ПроцентДнейАнализаЛучшейЦеныПриОтсрочкеЗаказа")).ValueDouble, 
-                    pickupWorkingHoursJoinType);
+                    Parameters1C.First(x => x.Name.Contains("ПроцентДнейАнализаЛучшейЦеныПриОтсрочкеЗаказа")).ValueDouble,
+                    pickupWorkingHoursJoinType, useIndexHint);
 
 
                 //execute the SQLCommand
                 SqlDataReader dr = cmd.ExecuteReader();
-                
+
                 //check if there are records
                 if (dr.HasRows)
                 {
@@ -365,10 +381,10 @@ namespace DateTimeService.Controllers
                         var availableDateCourier = dr.GetDateTime(2).AddMonths(-24000);
                         var availableDateSelf = dr.GetDateTime(3).AddMonths(-24000);
 
-                        dbResult.article.Add(article);
-                        dbResult.code.Add(code);
-                        dbResult.courier.Add(new(availableDateCourier));
-                        dbResult.self.Add(new(availableDateSelf));
+                        dbResult.Article.Add(article);
+                        dbResult.Code.Add(code);
+                        dbResult.Courier.Add(new(availableDateCourier));
+                        dbResult.Self.Add(new(availableDateSelf));
                     }
                 }
 
@@ -379,7 +395,7 @@ namespace DateTimeService.Controllers
                 dr.Close();
 
                 //close connection
-                conn.Close();
+                //conn.Close();
 
                 logElement.TimeSQLExecution = sqlCommandExecutionTime;
                 logElement.ResponseContent = JsonSerializer.Serialize(dbResult);
@@ -393,81 +409,90 @@ namespace DateTimeService.Controllers
                 logElement.Status = "Error";
             }
 
+            conn.Close();
+
             var resultDict = new ResponseAvailableDateDict();
 
             try
             {
-                foreach (var codeItem in data.codes)
+                foreach (var codeItem in data.Codes)
                 {
 
-                    if (data.codes.Length == 0 || (data.codes.Length == 1 && data.codes[0] == null))
+                    if (data.Codes.Length == 0 || (data.Codes.Length == 1 && data.Codes[0] == null))
                     {
                         break;
                     }
 
                     var resultElement = new ResponseAvailableDateDictElement
                     {
-                        code = codeItem.article,
-                        sales_code = codeItem.sales_code,
-                        courier = null,
-                        self = null
+                        Code = codeItem.Article,
+                        SalesCode = codeItem.SalesCode,
+                        Courier = null,
+                        Self = null
                     };
-                  
+
 
                     int dbResultIndex = -1;
-                    if (String.IsNullOrEmpty(codeItem.code))
+                    if (String.IsNullOrEmpty(codeItem.Code))
                     {
-                        dbResultIndex = dbResult.article.FindIndex(s => s == codeItem.article);
+                        dbResultIndex = dbResult.Article.FindIndex(s => s == codeItem.Article);
                     }
                     else
                     {
-                        dbResultIndex = dbResult.code.FindIndex(s => s == codeItem.code);
+                        dbResultIndex = dbResult.Code.FindIndex(s => s == codeItem.Code);
                     }
 
                     if (dbResultIndex == -1)
                         continue;
 
-                    resultElement.courier = data.delivery_types.Contains("courier") && dbResult.courier[dbResultIndex].Year != 3999
-                        ? dbResult.courier[dbResultIndex].Date.ToString("yyyy-MM-ddTHH:mm:ss")
+                    resultElement.Courier = data.DeliveryTypes.Contains("courier") && dbResult.Courier[dbResultIndex].Year != 3999
+                        ? dbResult.Courier[dbResultIndex].Date.ToString("yyyy-MM-ddTHH:mm:ss")
                         : null;
-                    resultElement.self = data.delivery_types.Contains("self") && dbResult.self[dbResultIndex].Year != 3999
-                        ? dbResult.self[dbResultIndex].Date.ToString("yyyy-MM-ddTHH:mm:ss")
+                    resultElement.Self = data.DeliveryTypes.Contains("self") && dbResult.Self[dbResultIndex].Year != 3999
+                        ? dbResult.Self[dbResultIndex].Date.ToString("yyyy-MM-ddTHH:mm:ss")
                         : null;
 
-                    if (String.IsNullOrEmpty(codeItem.code))
+                    if (String.IsNullOrEmpty(codeItem.Code))
                     {
-                        resultDict.data.Add(codeItem.article, resultElement);
+                        resultDict.Data.Add(codeItem.Article, resultElement);
                     }
                     else
                     {
-                        resultDict.data.Add(String.Concat(codeItem.article, "_", codeItem.sales_code), resultElement);
+                        resultDict.Data.Add(String.Concat(codeItem.Article, "_", codeItem.SalesCode), resultElement);
                     }
                 }
             }
-            catch(Exception ex)
+            catch (ArgumentException ex)
+            {
+                logElement.TimeSQLExecution = sqlCommandExecutionTime;
+                logElement.ErrorDescription = "Duplicated keys in dictionary";
+                logElement.Status = "Error";
+                logElement.AdditionalData.Add("Key", ex.Message);
+            }
+            catch (Exception ex)
             {
                 logElement.TimeSQLExecution = sqlCommandExecutionTime;
                 logElement.ErrorDescription = ex.Message;
                 logElement.Status = "Error";
             }
 
-            
 
-            if (data.delivery_types.Contains("self") && data.delivery_types.Contains("courier"))
+
+            if (data.DeliveryTypes.Contains("self") && data.DeliveryTypes.Contains("courier"))
             {
                 var resultBoth = new ResponseAvailableDateDictBothDates();
 
-                foreach(var item in resultDict.data)
+                foreach (var item in resultDict.Data)
                 {
                     var newItem = new ResponseAvailableDateDictElementBothDates
                     {
-                        code = item.Value.code,
-                        sales_code = item.Value.sales_code,
-                        courier = item.Value.courier,
-                        self = item.Value.self
+                        Code = item.Value.Code,
+                        SalesCode = item.Value.SalesCode,
+                        Courier = item.Value.Courier,
+                        Self = item.Value.Self
                     };
 
-                    resultBoth.data.Add(item.Key, newItem);
+                    resultBoth.Data.Add(item.Key, newItem);
                 }
 
                 result = Ok(resultBoth);
@@ -502,14 +527,35 @@ namespace DateTimeService.Controllers
             Stopwatch stopwatchExecution = new();
             stopwatchExecution.Start();
 
+            var logElementLoadBal = new ElasticLogElement
+            {
+                Path = HttpContext.Request.Path,
+                Host = HttpContext.Request.Host.ToString(),
+                RequestContent = JsonSerializer.Serialize(data),
+                Id = Guid.NewGuid().ToString(),
+                AuthenticatedUser = User.Identity.Name
+            };
+
+            //string connString;
+            SqlConnection conn;
             Stopwatch watch = new();
             watch.Start();
-            string connString = await _loadBalacing.GetDatabaseConnectionAsync();
+            try
+            {
+                //connString = await _loadBalacing.GetDatabaseConnectionAsync();
+                conn = await _loadBalacing.GetDatabaseConnectionAsync("");
+            }
+            catch (Exception ex)
+            {
+                //connString = "";
+                logElementLoadBal.TimeSQLExecution = 0;
+                logElementLoadBal.ErrorDescription = ex.Message;
+                logElementLoadBal.Status = "Error";
+                var logstringElement1 = JsonSerializer.Serialize(logElementLoadBal);
+                _logger.LogInformation(logstringElement1);
+                return StatusCode(500);
+            }
             watch.Stop();
-
-            //string connString = _configuration.GetConnectionString("1CDataSqlConnection");
-
-            //string connString = @"Server=localhost;Database=DevBase_cut_v3;Uid=sa;Pwd=; Trusted_Connection = False;";
 
             ResponseIntervalList result = new();
 
@@ -520,7 +566,7 @@ namespace DateTimeService.Controllers
                 Host = HttpContext.Request.Host.ToString(),
                 RequestContent = JsonSerializer.Serialize(inputData),
                 Id = Guid.NewGuid().ToString(),
-                DatabaseConnection = LoadBalancing.RemoveCredentialsFromConnectionString(connString),
+                DatabaseConnection = LoadBalancing.RemoveCredentialsFromConnectionString(conn.ConnectionString),
                 AuthenticatedUser = User.Identity.Name,
                 LoadBalancingExecution = watch.ElapsedMilliseconds
             };
@@ -556,7 +602,7 @@ namespace DateTimeService.Controllers
             };
 
             watch.Start();
-            GlobalParam1C.FillValues(connString, Parameters1C, _logger);
+            GlobalParam1C.FillValues(conn, Parameters1C, _logger);
             watch.Stop();
             logElement.GlobalParametersExecution = watch.ElapsedMilliseconds;
             watch.Reset();
@@ -571,7 +617,7 @@ namespace DateTimeService.Controllers
 
             bool adressExists = false;
 
-            if (data.delivery_type == "self")
+            if (data.DeliveryType == "self")
             {
                 adressExists = true;
                 alwaysCheckGeozone = false;
@@ -579,8 +625,10 @@ namespace DateTimeService.Controllers
             else
             {
                 alwaysCheckGeozone = _configuration.GetValue<bool>("alwaysCheckGeozone");
-
-                adressExists = _geoZones.AdressExists(connString, data.address_id);
+                if (!alwaysCheckGeozone)
+                {
+                    adressExists = _geoZones.AdressExists(conn, data.AddressId);
+                }                
             }
 
             if (!adressExists || alwaysCheckGeozone)
@@ -588,7 +636,7 @@ namespace DateTimeService.Controllers
                 //TODO: добавить обращение к сервисам для получения геозоны
                 Stopwatch stopwatch = new();
                 stopwatch.Start();
-                var coords = await _geoZones.GetAddressCoordinates(data.address_id);
+                var coords = await _geoZones.GetAddressCoordinates(data.AddressId);
                 stopwatch.Stop();
                 logElement.TimeLocationExecution = stopwatch.ElapsedMilliseconds;
                 stopwatch.Reset();
@@ -613,22 +661,18 @@ namespace DateTimeService.Controllers
                 try
                 {
                     //sql connection object
-                    using SqlConnection conn = new(connString);
+                    //using SqlConnection conn = new(connString);
 
                     conn.StatisticsEnabled = true;
 
                     //open connection
-                    conn.Open();
+                    //conn.Open();
 
                     string query = Queries.IntervalList;
 
                     SqlCommand cmd = new(query, conn);
 
-                    //FillGoodsTable(data, conn);
-
                     var queryTextBegin = TextFillGoodsTable(data, cmd, false);
-
-                    
 
                     if (_configuration.GetValue<bool>("disableKeepFixedPlan"))
                     {
@@ -641,20 +685,17 @@ namespace DateTimeService.Controllers
                     var EmptyDate = new DateTime(2001, 1, 1, 0, 0, 0);
                     var MaxDate = new DateTime(5999, 11, 11, 0, 0, 0);
 
-                    //define the SqlCommand object
-                    //SqlCommand cmd = new(query, conn);
-
                     cmd.Parameters.Add("@P_AdressCode", SqlDbType.NVarChar, 20);
-                    cmd.Parameters["@P_AdressCode"].Value = data.address_id != null ? data.address_id : DBNull.Value;
+                    cmd.Parameters["@P_AdressCode"].Value = data.AddressId != null ? data.AddressId : DBNull.Value;
 
-                    cmd.Parameters.Add("@PickupPoint1", SqlDbType.NVarChar,5);
-                    cmd.Parameters["@PickupPoint1"].Value = data.pickup_point != null ? data.pickup_point : DBNull.Value;
+                    cmd.Parameters.Add("@PickupPoint1", SqlDbType.NVarChar, 5);
+                    cmd.Parameters["@PickupPoint1"].Value = data.PickupPoint != null ? data.PickupPoint : DBNull.Value;
 
                     cmd.Parameters.Add("@P_Credit", SqlDbType.Int);
-                    cmd.Parameters["@P_Credit"].Value = data.payment == "partly_pay" ? 1 : 0;
+                    cmd.Parameters["@P_Credit"].Value = data.Payment == "partly_pay" ? 1 : 0;
 
                     cmd.Parameters.Add("@P_Floor", SqlDbType.Float);
-                    cmd.Parameters["@P_Floor"].Value = (double)(data.floor != null ? data.floor : Parameters1C.First(x => x.Name.Contains("Логистика_ЭтажПоУмолчанию")).ValueDouble);
+                    cmd.Parameters["@P_Floor"].Value = (double)(data.Floor != null ? data.Floor : Parameters1C.First(x => x.Name.Contains("Логистика_ЭтажПоУмолчанию")).ValueDouble);
 
                     cmd.Parameters.Add("@P_DaysToShow", SqlDbType.Int);
                     cmd.Parameters["@P_DaysToShow"].Value = 7;
@@ -699,7 +740,7 @@ namespace DateTimeService.Controllers
                         Parameters1C.First(x => x.Name.Contains("КоличествоДнейАнализаЛучшейЦеныПриОтсрочкеЗаказа")).ValueDouble,
                         Parameters1C.First(x => x.Name.Contains("ПроцентДнейАнализаЛучшейЦеныПриОтсрочкеЗаказа")).ValueDouble);
 
-                    
+
 
                     //execute the SQLCommand
                     SqlDataReader dr = cmd.ExecuteReader();
@@ -714,16 +755,16 @@ namespace DateTimeService.Controllers
                             var begin = dr.GetDateTime(0).AddMonths(-24000);
                             var end = dr.GetDateTime(1).AddMonths(-24000);
 
-                            result.data.Add(new ResponseIntervalListElement
+                            result.Data.Add(new ResponseIntervalListElement
                             {
-                                begin = begin,
-                                end = end
+                                Begin = begin,
+                                End = end
                             });
 
-                            resultLog.data.Add(new ResponseIntervalListElementWithOffSet
+                            resultLog.Data.Add(new ResponseIntervalListElementWithOffSet
                             {
-                                begin = new(begin),
-                                end = new(end)
+                                Begin = new(begin),
+                                End = new(end)
                             });
                         }
                     }
@@ -735,7 +776,7 @@ namespace DateTimeService.Controllers
                     dr.Close();
 
                     //close connection
-                    conn.Close();
+                    //conn.Close();
 
                     logElement.TimeSQLExecution = sqlCommandExecutionTime;
                     logElement.ResponseContent = JsonSerializer.Serialize(resultLog);
@@ -748,7 +789,7 @@ namespace DateTimeService.Controllers
                     logElement.Status = "Error";
                 }
 
-
+            conn.Close();
             watch.Stop();
             logElement.TimeSQLExecutionFact = watch.ElapsedMilliseconds;
 
@@ -762,199 +803,79 @@ namespace DateTimeService.Controllers
             return Ok(result);
         }
 
-        private static void FillGoodsTable(RequestIntervalList data, SqlConnection conn)
-        {
-            RequestDataAvailableDate convertedData = new()
-            {
-                codes = data.orderItems.ToArray()
-            };
-
-            FillGoodsTable(convertedData, conn);
-        }
-
-
-        private static void FillGoodsTable(RequestDataAvailableDate data, SqlConnection conn)
-        {
-
-            string queryGoodsCreate = Queries.CreateTableGoodsRawCreate;
-
-            SqlCommand cmdGoodsTableCreate = new(queryGoodsCreate, conn);
-
-            var GoodsRowsCreate = cmdGoodsTableCreate.ExecuteNonQuery();
-
-            string queryGoods = Queries.CreateTableGoodsRawInsert;
-
-            SqlCommand cmdGoodsTable = new(queryGoods, conn);
-
-            var parameters = new List<string>();//string[data.codes.Length];
-
-            var codesCounter = 0;
-            var pickupPointsCounter = 0;
-
-            foreach (var codesElem in data.codes)
-            {
-
-                var parameterString = string.Format("(@Article{0}, @Code{0}, NULL, @Quantity{0})", codesCounter);
-
-                cmdGoodsTable.Parameters.AddWithValue(string.Format("@Article{0}", codesCounter), codesElem.article);
-                if (String.IsNullOrEmpty(codesElem.code))
-                    cmdGoodsTable.Parameters.AddWithValue(string.Format("@Code{0}", codesCounter), DBNull.Value);
-                else
-                    cmdGoodsTable.Parameters.AddWithValue(string.Format("@Code{0}", codesCounter), codesElem.code);
-                cmdGoodsTable.Parameters.AddWithValue(string.Format("@Quantity{0}", codesCounter), codesElem.quantity);
-
-                parameters.Add(parameterString);
-
-                foreach (var pickupElem in codesElem.PickupPoints)
-                {
-                    var parameterStringPickup = string.Format("(@Article{0}, @Code{0}, @PickupPoint{1}, @Quantity{0})", codesCounter, pickupPointsCounter);
-
-                    cmdGoodsTable.Parameters.AddWithValue(string.Format("@PickupPoint{0}", pickupPointsCounter), pickupElem);
-
-                    parameters.Add(parameterStringPickup);
-
-                    pickupPointsCounter++;
-                }
-                codesCounter++;
-            }
-
-            cmdGoodsTable.CommandText = string.Format(queryGoods, string.Join(", ", parameters));
-
-            var GoodsRows = cmdGoodsTable.ExecuteNonQuery();
-        }
-
-        private static DataTable FillGoodsTableParameter(RequestDataAvailableDate data)
-        {
-
-            var table = new DataTable();
-            table.Columns.Add("Article", typeof(string));
-            table.Columns.Add("code", typeof(string));
-            table.Columns.Add("PickupPoint", typeof(string));
-            table.Columns.Add("quantity", typeof(string));
-
-            foreach (var codesElem in data.codes)
-            {
-
-
-                var row = table.NewRow();
-
-                row["Article"] = codesElem.article;
-
-                if (String.IsNullOrEmpty(codesElem.code))
-                    row["code"] = DBNull.Value;
-                else
-                    row["code"] = codesElem.code;
-
-
-                row["PickupPoint"] = DBNull.Value;
-                row["Quantity"] = codesElem.quantity;
-
-                table.Rows.Add(row);
-
-               
-                foreach (var pickupElem in codesElem.PickupPoints)
-                {
-                    var rowPickup = table.NewRow();
-
-                    rowPickup["Article"] = codesElem.article;
-
-                    if (String.IsNullOrEmpty(codesElem.code))
-                        rowPickup["code"] = DBNull.Value;
-                    else
-                        rowPickup["code"] = codesElem.code;
-
-
-                    rowPickup["PickupPoint"] = pickupElem;
-                    rowPickup["Quantity"] = codesElem.quantity;
-
-                    table.Rows.Add(rowPickup);
-                }
-                
-            }
-
-            return table;
-        }
-
 
         private static string TextFillGoodsTable(RequestIntervalList data, SqlCommand cmdGoodsTable, bool optimizeRowsCount)
         {
             RequestDataAvailableDate convertedData = new()
             {
-                codes = data.orderItems.ToArray()
+                Codes = data.OrderItems.ToArray()
             };
 
             return TextFillGoodsTable(convertedData, cmdGoodsTable, optimizeRowsCount, new());
         }
 
-        private static string TextFillGoodsTable(RequestDataAvailableDate data, SqlCommand cmdGoodsTable, bool optimizeRowsCount, List<string> PickupsList)
+        public static string TextFillGoodsTable(RequestDataAvailableDate data, SqlCommand cmdGoodsTable, bool optimizeRowsCount, List<string> PickupsList)
         {
 
-          
             var resultString = Queries.CreateTableGoodsRawCreate;
 
             var insertRowsLimit = 900;
 
-            var parameters = new List<string>();//string[data.codes.Length];
-            //List<string> PickupsList = new();
+            var parameters = new List<string>();
 
-            var maxCodes = data.codes.Length;
+            var maxCodes = data.Codes.Length;
 
-            foreach (var codesElem in data.codes)
+            foreach (var codesElem in data.Codes)
             {
                 foreach (var item in codesElem.PickupPoints)
                 {
                     if (!PickupsList.Contains(item))
                     {
                         PickupsList.Add(item);
-                    }                    
+                    }
                 }
             }
 
-            //var codesCounter = 0;
-            //var pickupPointsCounter = 0;
-
             int maxPickups = PickupsList.Count;
-            //PickupsList.Add("");
-            //if (maxPickups > 2) maxPickups = 7;
 
-            if (data.codes.Length > 2) maxCodes = 10;
-            if (data.codes.Length > 10) maxCodes = 30;
-            if (data.codes.Length > 30) maxCodes = 60;
-            if (data.codes.Length > 60) maxCodes = 100;
-            if (data.codes.Length > maxCodes || !optimizeRowsCount) maxCodes = data.codes.Length;
+            if (data.Codes.Length > 2) maxCodes = 10;
+            if (data.Codes.Length > 10) maxCodes = 30;
+            if (data.Codes.Length > 30) maxCodes = 60;
+            if (data.Codes.Length > 60) maxCodes = 100;
+            if (data.Codes.Length > maxCodes || !optimizeRowsCount) maxCodes = data.Codes.Length;
 
 
             for (int codesCounter = 0; codesCounter < maxCodes; codesCounter++)
             {
 
                 RequestDataCodeItem codesElem;
-                if (codesCounter< data.codes.Length)
+                if (codesCounter < data.Codes.Length)
                 {
-                    codesElem = data.codes[codesCounter];
+                    codesElem = data.Codes[codesCounter];
                 }
                 else
                 {
-                    codesElem = data.codes[data.codes.Length-1];
+                    codesElem = data.Codes[^1];
                 }
 
-      
-                
+
+
                 var parameterString = string.Format("(@Article{0}, @Code{0}, NULL, @Quantity{0})", codesCounter);
 
-                
+
                 //cmdGoodsTable.Parameters.AddWithValue(string.Format("@Article{0}", codesCounter), codesElem.article);
                 cmdGoodsTable.Parameters.Add(string.Format("@Article{0}", codesCounter), SqlDbType.NVarChar, 11);
-                cmdGoodsTable.Parameters[string.Format("@Article{0}", codesCounter)].Value = codesElem.article;
+                cmdGoodsTable.Parameters[string.Format("@Article{0}", codesCounter)].Value = codesElem.Article;
 
                 cmdGoodsTable.Parameters.Add(string.Format("@Code{0}", codesCounter), SqlDbType.NVarChar, 11);
-                if (String.IsNullOrEmpty(codesElem.code))
+                if (String.IsNullOrEmpty(codesElem.Code))
                     cmdGoodsTable.Parameters[string.Format("@Code{0}", codesCounter)].Value = DBNull.Value;
                 else
-                    cmdGoodsTable.Parameters[string.Format("@Code{0}", codesCounter)].Value = codesElem.code;
+                    cmdGoodsTable.Parameters[string.Format("@Code{0}", codesCounter)].Value = codesElem.Code;
 
                 //cmdGoodsTable.Parameters.AddWithValue(string.Format("@Quantity{0}", codesCounter), codesElem.quantity);
                 cmdGoodsTable.Parameters.Add(string.Format("@Quantity{0}", codesCounter), SqlDbType.Int, 10);
-                cmdGoodsTable.Parameters[string.Format("@Quantity{0}", codesCounter)].Value = codesElem.quantity;
+                cmdGoodsTable.Parameters[string.Format("@Quantity{0}", codesCounter)].Value = codesElem.Quantity;
 
                 parameters.Add(parameterString);
 
@@ -965,7 +886,7 @@ namespace DateTimeService.Controllers
                     parameters.Clear();
                 }
 
-                if (maxPickups>0)
+                if (maxPickups > 0)
                 {
                     var PickupParameter = string.Join(",", codesElem.PickupPoints);
 
@@ -974,7 +895,7 @@ namespace DateTimeService.Controllers
 
                     var parameterStringPickup = string.Format("(@Article{0}, @Code{0}, @PickupPoint{0}, @Quantity{0})", codesCounter);
                     parameters.Add(parameterStringPickup);
-                }           
+                }
 
             }
 
@@ -985,7 +906,7 @@ namespace DateTimeService.Controllers
                 parameters.Clear();
             }
 
-            return resultString;//string.Format(queryGoods, string.Join(", ", parameters));
+            return resultString;
 
         }
 
