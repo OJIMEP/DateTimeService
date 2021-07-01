@@ -1,29 +1,47 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
 namespace DateTimeService.Models
 {
     public class RequestIntervalListDTO
     {
-        public string address_id { get; set; }
-        public string delivery_type { get; set; }
-        public string pickup_point { get; set; }
-        public double? floor { get; set; }
-        public string payment { get; set; }
+        [JsonPropertyName("address_id")]
+        public string AddressId { get; set; }
+
+        [JsonPropertyName("delivery_type")]
+        public string DeliveryType { get; set; }
+
+        [JsonPropertyName("pickup_point")]
+        public string PickupPoint { get; set; }
+
+        [JsonPropertyName("floor")]
+        public double? Floor { get; set; }
+
+        [JsonPropertyName("payment")]
+        public string Payment { get; set; }
+
         [JsonPropertyName("order_items")]
-        public List<RequestDataCodeItemDTO> orderItems { get; set; }
+        public List<RequestDataCodeItemDTO> OrderItems { get; set; }
     }
 
     public class RequestIntervalList
     {
-        public string address_id { get; set; }
-        public string delivery_type { get; set; }
-        public string pickup_point { get; set; }
-        public double? floor { get; set; }
-        public string payment { get; set; }
-        public List<RequestDataCodeItem> orderItems { get; set; }
+        [JsonPropertyName("address_id")]
+        public string AddressId { get; set; }
+
+        [JsonPropertyName("delivery_type")]
+        public string DeliveryType { get; set; }
+
+        [JsonPropertyName("pickup_point")]
+        public string PickupPoint { get; set; }
+
+        [JsonPropertyName("floor")]
+        public double? Floor { get; set; }
+
+        [JsonPropertyName("payment")]
+        public string Payment { get; set; }
+
+        [JsonPropertyName("order_items")]
+        public List<RequestDataCodeItem> OrderItems { get; set; }
     }
 }

@@ -34,7 +34,7 @@ namespace DateTimeService
                     logger.LogError(ex, "An error occurred while migrating the database.");
                 }
 
-                
+
                 try
                 {
                     var userManager = services.GetRequiredService<UserManager<DateTimeServiceUser>>();
@@ -56,7 +56,7 @@ namespace DateTimeService
                 catch (Exception ex)
                 {
                     var logger = services.GetRequiredService<ILogger<DateTimeController>>();
-                    logger.LogError(ex, "An error occurred while seeding the database.");
+                    logger.LogError(ex, "An error occurred while clearing the database.");
                 }
 
 

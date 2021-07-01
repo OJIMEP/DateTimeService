@@ -1,41 +1,48 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Text.Json.Serialization;
 
 namespace DateTimeService.Models
 {
     public class ResponseIntervalList
     {
-        public List<ResponseIntervalListElement> data { get; set; }
+        [JsonPropertyName("data")]
+        public List<ResponseIntervalListElement> Data { get; set; }
 
         public ResponseIntervalList()
         {
-            data = new List<ResponseIntervalListElement>();
+            Data = new List<ResponseIntervalListElement>();
         }
 
     }
 
     public class ResponseIntervalListWithOffSet
     {
-        public List<ResponseIntervalListElementWithOffSet> data { get; set; }
+        [JsonPropertyName("data")]
+        public List<ResponseIntervalListElementWithOffSet> Data { get; set; }
 
         public ResponseIntervalListWithOffSet()
         {
-            data = new List<ResponseIntervalListElementWithOffSet>();
+            Data = new List<ResponseIntervalListElementWithOffSet>();
         }
 
     }
 
     public class ResponseIntervalListElement
     {
-        public DateTime begin { get; set; }
-        public DateTime end { get; set; }
+        [JsonPropertyName("begin")]
+        public DateTime Begin { get; set; }
+
+        [JsonPropertyName("end")]
+        public DateTime End { get; set; }
     }
 
     public class ResponseIntervalListElementWithOffSet
     {
-        public DateTimeOffset begin { get; set; }
-        public DateTimeOffset end { get; set; }
+        [JsonPropertyName("begin")]
+        public DateTimeOffset Begin { get; set; }
+
+        [JsonPropertyName("end")]
+        public DateTimeOffset End { get; set; }
     }
 }
