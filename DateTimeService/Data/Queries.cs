@@ -475,7 +475,7 @@ GROUP BY
 HAVING
     (SUM(T2._Fld21412) <> 0.0
     OR SUM(T2._Fld21411) <> 0.0)
-	AND SUM(T2._Fld21412) - SUM(T2._Fld21411) <> 0.0
+	AND SUM(T2._Fld21411) - SUM(T2._Fld21412) > 0.0
 OPTION (OPTIMIZE FOR (@P_DateTimeNow='{1}'),KEEP PLAN, KEEPFIXED PLAN);
 
 SELECT Distinct
@@ -942,6 +942,22 @@ Having
 OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'),KEEP PLAN, KEEPFIXED PLAN);
 
 /*Тут начинаются интервалы, которые рассчитанные*/
+Select Distinct
+	Case 
+		When DATEPART(MINUTE,ГрафикПланирования._Fld23333) > 0 
+		Then DATEADD(HOUR,1,ГрафикПланирования._Fld23333) 
+		else ГрафикПланирования._Fld23333 
+	End As ВремяВыезда,
+	ГрафикПланирования._Fld23321 AS Дата,
+	ГрафикПланирования._Fld23322RRef AS ГруппаПланирования
+Into #Temp_CourierDepartureDates
+From 
+	dbo._InfoRg23320 AS ГрафикПланирования With (NOLOCK)
+	INNER JOIN #Temp_PlanningGroups T2 With (NOLOCK) ON (ГрафикПланирования._Fld23322RRef = T2.ГруппаПланирования) 
+Where ГрафикПланирования._Fld23321 BETWEEN @P_DateTimePeriodBegin AND @P_DateTimePeriodEnd 
+	AND ГрафикПланирования._Fld23333 > @P_DateTimeNow
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}',@P_DateTimeNow='{1}'),KEEP PLAN, KEEPFIXED PLAN);
+
 SELECT
     T5._Period AS Период,
     T5._Fld25112RRef As ГруппаПланирования, 
@@ -969,7 +985,7 @@ SELECT
                     ELSE -(T5._Fld25113)
                 END
             ) AS КоличествоЗаказовЗаИнтервалВремени
-into #Temp_IntervalsAll
+into #Temp_IntervalsAll_old
 FROM
     dbo._AccumRg25110 T5 With (NOLOCK)
 	INNER JOIN #Temp_PlanningGroups T2 With (NOLOCK) ON (T5._Fld25112RRef = T2.ГруппаПланирования)
@@ -999,6 +1015,25 @@ HAVING
     )
 OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'), KEEP PLAN, KEEPFIXED PLAN);
 ;
+
+Select Distinct
+	ВременныеИнтервалы.Период AS Период,
+	ВременныеИнтервалы.Геозона AS Геозона,
+	ВременныеИнтервалы.ГруппаПланирования AS ГруппаПланирования,
+	ВременныеИнтервалы.ВремяНачалаНачальное AS ВремяНачалаНачальное,
+	ВременныеИнтервалы.ВремяОкончанияНачальное AS ВремяОкончанияНачальное,
+	ВременныеИнтервалы.КоличествоЗаказовЗаИнтервалВремени AS КоличествоЗаказовЗаИнтервалВремени,
+	ВременныеИнтервалы.ВремяНачала AS ВремяНачала,
+	ВременныеИнтервалы.ВремяОкончания AS ВремяОкончания,
+	ВременныеИнтервалы.Приоритет
+Into #Temp_IntervalsAll
+From
+	#Temp_IntervalsAll_old AS ВременныеИнтервалы
+		Inner Join #Temp_CourierDepartureDates AS ВТ_ГрафикПланирования
+		ON DATEPART(HOUR, ВТ_ГрафикПланирования.ВремяВыезда) <= DATEPART(HOUR, ВременныеИнтервалы.ВремяНачалаНачальное)
+		AND ВременныеИнтервалы.ГруппаПланирования = ВТ_ГрафикПланирования.ГруппаПланирования
+	    AND ВременныеИнтервалы.Период = ВТ_ГрафикПланирования.Дата
+OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
 select
 DATEADD(
@@ -1951,7 +1986,7 @@ Group By
 	#Temp_IntervalsAll.ГруппаПланирования,
 	#Temp_IntervalsAll.Геозона,
 	T2._Fld25137
-OPTION (KEEP PLAN, KEEPFIXED PLAN);
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}'), KEEP PLAN, KEEPFIXED PLAN);
 
 INsert into #Temp_Intervals
 select
@@ -1984,7 +2019,7 @@ Group By
 	#Temp_IntervalsAll.Период,
 	#Temp_IntervalsAll.ГруппаПланирования,
 	#Temp_IntervalsAll.Геозона
-OPTION (KEEP PLAN, KEEPFIXED PLAN);
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}'), KEEP PLAN, KEEPFIXED PLAN);
 
 INsert into #Temp_Intervals
 select
@@ -2005,15 +2040,15 @@ from #Temp_IntervalsAll
 		And #Temp_IntervalsAll.ВремяНачалаНачальное >= ГеоЗонаВременныеИнтервалы._Fld25128
 		And #Temp_IntervalsAll.ВремяНачалаНачальное < ГеоЗонаВременныеИнтервалы._Fld25129
 WHERE
-	#Temp_IntervalsAll.Период >= DATEADD(DAY, 2, @P_DateTimePeriodBegin) --begin +2
-    AND #Temp_IntervalsAll.Период <= @P_DateTimePeriodEnd --end
+	#Temp_IntervalsAll.Период BETWEEN DATEADD(DAY, 2, @P_DateTimePeriodBegin) AND @P_DateTimePeriodEnd --begin +2
+    --AND #Temp_IntervalsAll.Период <= @P_DateTimePeriodEnd --end
 Group By 
 	ГеоЗонаВременныеИнтервалы._Fld25128,
 	ГеоЗонаВременныеИнтервалы._Fld25129,
 	#Temp_IntervalsAll.Период,
 	#Temp_IntervalsAll.ГруппаПланирования,
 	#Temp_IntervalsAll.Геозона
-OPTION (KEEP PLAN, KEEPFIXED PLAN);
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'), KEEP PLAN, KEEPFIXED PLAN);
 
 With Temp_DeliveryPower AS
 (
@@ -2040,8 +2075,8 @@ SELECT
 FROM
     dbo._AccumRg25104 МощностиДоставки With (NOLOCK)
 WHERE
-    МощностиДоставки._Period >= @P_DateTimePeriodBegin
-    AND МощностиДоставки._Period <= @P_DateTimePeriodEnd
+    МощностиДоставки._Period BETWEEN @P_DateTimePeriodBegin AND @P_DateTimePeriodEnd
+    --AND МощностиДоставки._Period <= @P_DateTimePeriodEnd
     AND МощностиДоставки._Fld25105RRef IN (Select ЗонаДоставкиРодительСсылка From  #Temp_GeoData)
 GROUP BY
     CAST(CAST(МощностиДоставки._Period  AS DATE) AS DATETIME)
