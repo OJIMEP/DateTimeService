@@ -354,7 +354,7 @@ namespace DateTimeService.Controllers
                 var pickupWorkingHoursJoinType = _configuration.GetValue<string>("pickupWorkingHoursJoinType");
 
                 string useIndexHint = _configuration.GetValue<string>("useIndexHintWarehouseDates");// @", INDEX([_InfoRg23830_Custom2])";
-                if (databaseType == "replica_tables")
+                if (databaseType != "replica_tables")
                 {
                     useIndexHint = "";
                 }
