@@ -63,10 +63,10 @@ SET @PickupPoint6 = '2';
 DECLARE @P_DaysToShow numeric(2);
  Set @P_DaysToShow = 7;
 
- Set @P_DateTimeNow = '4021-06-30T11:30:00' 
- Set @P_DateTimePeriodBegin = '4021-06-30T00:00:00'
- Set @P_DateTimePeriodEnd = '4021-07-04T00:00:00'
- Set @P_TimeNow = '2001-01-01T11:30:00'
+ Set @P_DateTimeNow = '4021-07-02T16:00:00' 
+ Set @P_DateTimePeriodBegin = '4021-07-02T00:00:00'
+ Set @P_DateTimePeriodEnd = '4021-07-06T00:00:00'
+ Set @P_TimeNow = '2001-01-01T16:00:00'
  Set @P_EmptyDate = '2001-01-01T00:00:00'
  Set @P_MaxDate = '5999-11-11T00:00:00'
 
@@ -351,7 +351,7 @@ From
 		AND ГруппыПланирования._Fld25141 = 0x01--участвует в расчете мощности
 		AND (ГруппыПланирования._Fld23301RRef = Номенклатура.Габариты OR (Номенклатура.Габариты = 0xAC2CBF86E693F63444670FFEB70264EE AND ГруппыПланирования._Fld23301RRef= 0xAD3F7F5FC4F15DAD4F693CAF8365EC0D) ) --габариты
 		AND ГруппыПланирования._Marked = 0x00
-		AND #Temp_GoodsBegin.СкладПВЗСсылка Is Null
+		AND Номенклатура.СкладПВЗСсылка Is Null
 UNION ALL
 Select 
 	Номенклатура.НоменклатураСсылка AS НоменклатураСсылка,
@@ -379,11 +379,11 @@ From
 		AND ГруппыПланирования._Fld25141 = 0x01--участвует в расчете мощности
 		AND (ГруппыПланирования._Fld23301RRef = Номенклатура.Габариты OR (Номенклатура.Габариты = 0xAC2CBF86E693F63444670FFEB70264EE AND ГруппыПланирования._Fld23301RRef= 0xAD3F7F5FC4F15DAD4F693CAF8365EC0D) ) --габариты
 		AND ГруппыПланирования._Marked = 0x00
-		AND #Temp_GoodsBegin.СкладПВЗСсылка Is Null
+		AND Номенклатура.СкладПВЗСсылка Is Null
 	Inner Join dbo._Reference23294 ПодчиненнаяГП
 			On  ГруппыПланирования._Fld26526RRef = ПодчиненнаяГП._IDRRef
 Where 
-	#Temp_GoodsBegin.СкладПВЗСсылка IS NULL
+	Номенклатура.СкладПВЗСсылка IS NULL
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
 With Temp_ExchangeRates AS (
@@ -446,7 +446,7 @@ HAVING
     (SUM(T2._Fld21412) <> 0.0
     OR SUM(T2._Fld21411) <> 0.0)
 	AND SUM(T2._Fld21411) - SUM(T2._Fld21412) > 0.0
-OPTION (OPTIMIZE FOR (@P_DateTimeNow='4021-06-30T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
+OPTION (OPTIMIZE FOR (@P_DateTimeNow='4021-07-02T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
 
 SELECT Distinct
     T1._Fld23831RRef AS СкладИсточника,
@@ -480,7 +480,7 @@ WHERE
             #Temp_Remains T2 WITH(NOLOCK)) 
 GROUP BY T1._Fld23831RRef,
 T1._Fld23833RRef
-OPTION (OPTIMIZE FOR (@P_DateTimeNow='4021-06-30T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
+OPTION (OPTIMIZE FOR (@P_DateTimeNow='4021-07-02T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
 
 
 SELECT
@@ -1003,7 +1003,7 @@ HAVING
             ) AS NUMERIC(16, 0)
         ) > 0.0
     )
-OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-06-24T00:00:00',@P_DateTimePeriodEnd='4021-06-28T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
+OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-07-02T00:00:00',@P_DateTimePeriodEnd='4021-07-06T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
 ;
 
 select
@@ -1038,7 +1038,7 @@ Group By
 	#Temp_IntervalsAll.Геозона,
 	T2._Fld25137,
 	#Temp_IntervalsAll.Приоритет
-OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-05-28T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-07-02T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
 
 INsert into #Temp_Intervals
 select
@@ -1072,7 +1072,7 @@ Group By
 	#Temp_IntervalsAll.ГруппаПланирования,
 	#Temp_IntervalsAll.Геозона,
 	#Temp_IntervalsAll.Приоритет
-OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-05-28T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-07-02T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
 
 INsert into #Temp_Intervals
 select
@@ -1102,7 +1102,7 @@ Group By
 	#Temp_IntervalsAll.ГруппаПланирования,
 	#Temp_IntervalsAll.Геозона,
 	#Temp_IntervalsAll.Приоритет
-OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-05-28T00:00:00', KEEP PLAN, KEEPFIXED PLAN);
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-07-02T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
 
 select Период, Max(Приоритет) AS Приоритет into #Temp_PlanningGroupPriority from #Temp_Intervals Group by Период;
 
@@ -1173,7 +1173,7 @@ GROUP BY
 	T1.НоменклатураСсылка,
     T1.article,
 	T1.code
-OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-06-24T00:00:00',@P_DateTimePeriodEnd='4021-06-28T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
+OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-07-02T00:00:00',@P_DateTimePeriodEnd='4021-07-06T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
 
 Select 
 	IsNull(#Temp_AvailableCourier.article,#Temp_AvailablePickUp.article) AS article,

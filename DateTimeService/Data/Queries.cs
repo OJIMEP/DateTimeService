@@ -1367,7 +1367,7 @@ From
 		AND ГруппыПланирования._Fld25141 = 0x01--участвует в расчете мощности
 		AND (ГруппыПланирования._Fld23301RRef = Номенклатура.Габариты OR (Номенклатура.Габариты = 0xAC2CBF86E693F63444670FFEB70264EE AND ГруппыПланирования._Fld23301RRef= 0xAD3F7F5FC4F15DAD4F693CAF8365EC0D) ) --габариты
 		AND ГруппыПланирования._Marked = 0x00
-        AND #Temp_GoodsBegin.СкладПВЗСсылка Is Null
+        AND Номенклатура.СкладПВЗСсылка Is Null
 UNION ALL
 Select 
 	Номенклатура.НоменклатураСсылка AS НоменклатураСсылка,
@@ -1395,11 +1395,11 @@ From
 		AND ГруппыПланирования._Fld25141 = 0x01--участвует в расчете мощности
 		AND (ГруппыПланирования._Fld23301RRef = Номенклатура.Габариты OR (Номенклатура.Габариты = 0xAC2CBF86E693F63444670FFEB70264EE AND ГруппыПланирования._Fld23301RRef= 0xAD3F7F5FC4F15DAD4F693CAF8365EC0D) ) --габариты
 		AND ГруппыПланирования._Marked = 0x00
-		AND #Temp_GoodsBegin.СкладПВЗСсылка Is Null
+		AND Номенклатура.СкладПВЗСсылка Is Null
 	Inner Join dbo._Reference23294 ПодчиненнаяГП
 			On  ГруппыПланирования._Fld26526RRef = ПодчиненнаяГП._IDRRef
 Where 
-	#Temp_GoodsBegin.СкладПВЗСсылка IS NULL
+	Номенклатура.СкладПВЗСсылка IS NULL
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
 With Temp_ExchangeRates AS (
