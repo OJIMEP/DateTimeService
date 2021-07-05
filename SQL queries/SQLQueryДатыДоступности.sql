@@ -63,14 +63,14 @@ SET @PickupPoint6 = '2';
 DECLARE @P_DaysToShow numeric(2);
  Set @P_DaysToShow = 7;
 
- Set @P_DateTimeNow = '4021-06-15T15:56:00' 
- Set @P_DateTimePeriodBegin = '4021-06-15T00:00:00'
- Set @P_DateTimePeriodEnd = '4021-06-19T00:00:00'
- Set @P_TimeNow = '2001-01-01T15:56:00'
+ Set @P_DateTimeNow = '4021-07-02T16:00:00' 
+ Set @P_DateTimePeriodBegin = '4021-07-02T00:00:00'
+ Set @P_DateTimePeriodEnd = '4021-07-06T00:00:00'
+ Set @P_TimeNow = '2001-01-01T16:00:00'
  Set @P_EmptyDate = '2001-01-01T00:00:00'
  Set @P_MaxDate = '5999-11-11T00:00:00'
 
-DECLARE @Temp_GoodsRaw Table  
+Create Table #Temp_GoodsRaw   
 (	
 	Article nvarchar(20), 
 	code nvarchar(20), 
@@ -79,7 +79,7 @@ DECLARE @Temp_GoodsRaw Table
 )
 
 INSERT INTO 
-	@Temp_GoodsRaw ( 
+	#Temp_GoodsRaw ( 
 		Article, code, PickupPoint, quantity 
 	)
 VALUES
@@ -143,7 +143,7 @@ VALUES
 ('930387',NULL,NULL,0),
 ('470873',NULL,NULL,0),
 ('378483',NULL,NULL,0),
-	('596784',NULL,'340,388,460,417,234,2',0),
+('596784',NULL,'340,388,460,417,234,2',0),
 ('115257',NULL,'340,388,460,417,234,2',0),
 ('5994994',NULL,'340,388,460,417,234,2',0),
 ('115255',NULL,'340,388,460,417,234,2',0),
@@ -268,13 +268,20 @@ select
 	t1.Article, 
 	t1.code, 
 	value AS PickupPoint 
-from @Temp_GoodsRaw t1
+from #Temp_GoodsRaw t1
 	cross apply 
 		string_split(IsNull(t1.PickupPoint,'-'), ',')
 )
 Select 
 	Номенклатура._IDRRef AS НоменклатураСсылка,
-	#Temp_PickupPoints.СкладСсылка AS СкладПВЗСсылка
+	Номенклатура._Code AS code,
+	Номенклатура._Fld3480 AS article,
+	Номенклатура._Fld3489RRef AS ЕдиницаИзмерения,
+	Номенклатура._Fld3526RRef AS Габариты,
+	#Temp_PickupPoints.СкладСсылка AS СкладПВЗСсылка,
+	Упаковки._IDRRef AS УпаковкаСсылка,
+	Упаковки._Fld6000 AS Вес,
+	Упаковки._Fld6006 AS Объем
 INTO #Temp_GoodsBegin
 From
 	Temp_GoodsRawParsed T1
@@ -282,42 +289,59 @@ From
 		ON T1.code is NULL and T1.Article = Номенклатура._Fld3480
 	Left Join #Temp_PickupPoints  
 		ON T1.PickupPoint = #Temp_PickupPoints.ERPКодСклада
+	Inner Join dbo._Reference256 Упаковки With (NOLOCK)
+		On 
+		Упаковки._OwnerID_TYPE = 0x08  
+		AND Упаковки.[_OwnerID_RTRef] = 0x00000095
+		AND 
+		Номенклатура._IDRRef = Упаковки._OwnerID_RRRef		
+		And Упаковки._Fld6003RRef = Номенклатура._Fld3489RRef
+		AND Упаковки._Marked = 0x00
 union
 Select 
 	Номенклатура._IDRRef,
-	#Temp_PickupPoints.СкладСсылка
+	Номенклатура._Code,
+	Номенклатура._Fld3480,
+	Номенклатура._Fld3489RRef,
+	Номенклатура._Fld3526RRef,
+	#Temp_PickupPoints.СкладСсылка,
+	Упаковки._IDRRef AS УпаковкаСсылка,
+	Упаковки._Fld6000 AS Вес,
+	Упаковки._Fld6006 AS Объем
 From 
 	Temp_GoodsRawParsed T1
 	Inner Join 	dbo._Reference149 Номенклатура With (NOLOCK) 
 		ON T1.code is not NULL and T1.code = Номенклатура._Code
 	Left Join #Temp_PickupPoints  
 		ON T1.PickupPoint = #Temp_PickupPoints.ERPКодСклада
-OPTION (KEEP PLAN, KEEPFIXED PLAN);
-
-Select 
-	Номенклатура._IDRRef AS НоменклатураСсылка,
-	Номенклатура._Fld3480 AS article,
-	Номенклатура._Code AS code,
-	#Temp_GoodsBegin.СкладПВЗСсылка AS СкладСсылка,
-	Упаковки._IDRRef AS УпаковкаСсылка,
-	1 As Количество,
-	Упаковки._Fld6000 AS Вес,
-	Упаковки._Fld6006 AS Объем,
-	10 AS ВремяНаОбслуживание,
-	IsNull(ГруппыПланирования._IDRRef, 0x00000000000000000000000000000000) AS ГруппаПланирования,
-	IsNull(ГруппыПланирования._Description, '') AS ГруппаПланированияНаименование,
-	IsNull(ГруппыПланирования._Fld25519, @P_EmptyDate) AS ГруппаПланированияДобавляемоеВремя
-INTO #Temp_Goods
-From 
-	dbo._Reference149 Номенклатура With (NOLOCK)
-	inner join #Temp_GoodsBegin on Номенклатура._IDRRef = #Temp_GoodsBegin.НоменклатураСсылка
 	Inner Join dbo._Reference256 Упаковки With (NOLOCK)
 		On 
 		Упаковки._OwnerID_TYPE = 0x08  
 		AND Упаковки.[_OwnerID_RTRef] = 0x00000095
-		AND Номенклатура._IDRRef = Упаковки._OwnerID_RRRef		
+		AND 
+		Номенклатура._IDRRef = Упаковки._OwnerID_RRRef		
 		And Упаковки._Fld6003RRef = Номенклатура._Fld3489RRef
 		AND Упаковки._Marked = 0x00
+OPTION (KEEP PLAN, KEEPFIXED PLAN);
+
+Select 
+	Номенклатура.НоменклатураСсылка AS НоменклатураСсылка,
+	Номенклатура.article AS article,
+	Номенклатура.code AS code,
+	Номенклатура.СкладПВЗСсылка AS СкладСсылка,
+	Номенклатура.УпаковкаСсылка AS УпаковкаСсылка,--Упаковки._IDRRef AS УпаковкаСсылка,
+	1 As Количество,
+	Номенклатура.Вес AS Вес,--Упаковки._Fld6000 AS Вес,
+	Номенклатура.Объем AS Объем,--Упаковки._Fld6006 AS Объем,
+	10 AS ВремяНаОбслуживание,
+	IsNull(ГруппыПланирования._IDRRef, 0x00000000000000000000000000000000) AS ГруппаПланирования,
+	IsNull(ГруппыПланирования._Description, '') AS ГруппаПланированияНаименование,
+	IsNull(ГруппыПланирования._Fld25519, @P_EmptyDate) AS ГруппаПланированияДобавляемоеВремя,
+	IsNull(ГруппыПланирования._Fld23302RRef, 0x00000000000000000000000000000000) AS ГруппаПланированияСклад,
+	1 AS Приоритет
+INTO #Temp_Goods
+From 
+	#Temp_GoodsBegin Номенклатура
 	Left Join dbo._Reference23294 ГруппыПланирования With (NOLOCK)
 		Inner Join dbo._Reference23294_VT23309 With (NOLOCK)
 			on ГруппыПланирования._IDRRef = _Reference23294_VT23309._Reference23294_IDRRef
@@ -325,8 +349,41 @@ From
 		On 
 		ГруппыПланирования._Fld23302RRef IN (Select СкладСсылка From #Temp_GeoData) --склад
 		AND ГруппыПланирования._Fld25141 = 0x01--участвует в расчете мощности
-		AND (ГруппыПланирования._Fld23301RRef = Номенклатура._Fld3526RRef OR (Номенклатура._Fld3526RRef = 0xAC2CBF86E693F63444670FFEB70264EE AND ГруппыПланирования._Fld23301RRef= 0xAD3F7F5FC4F15DAD4F693CAF8365EC0D) ) --габариты
+		AND (ГруппыПланирования._Fld23301RRef = Номенклатура.Габариты OR (Номенклатура.Габариты = 0xAC2CBF86E693F63444670FFEB70264EE AND ГруппыПланирования._Fld23301RRef= 0xAD3F7F5FC4F15DAD4F693CAF8365EC0D) ) --габариты
 		AND ГруппыПланирования._Marked = 0x00
+		AND Номенклатура.СкладПВЗСсылка Is Null
+UNION ALL
+Select 
+	Номенклатура.НоменклатураСсылка AS НоменклатураСсылка,
+	Номенклатура.article AS article,
+	Номенклатура.code AS code,
+	Номенклатура.СкладПВЗСсылка AS СкладСсылка,
+	Номенклатура.УпаковкаСсылка AS УпаковкаСсылка,--Упаковки._IDRRef AS УпаковкаСсылка,
+	1 As Количество,
+	Номенклатура.Вес AS Вес,--Упаковки._Fld6000 AS Вес,
+	Номенклатура.Объем AS Объем,--Упаковки._Fld6006 AS Объем,
+	10 AS ВремяНаОбслуживание,
+	IsNull(ПодчиненнаяГП._IDRRef, 0x00000000000000000000000000000000) AS ГруппаПланирования,
+	IsNull(ПодчиненнаяГП._Description, '') AS ГруппаПланированияНаименование,
+	IsNull(ПодчиненнаяГП._Fld25519, @P_EmptyDate) AS ГруппаПланированияДобавляемоеВремя,
+	IsNull(ПодчиненнаяГП._Fld23302RRef, 0x00000000000000000000000000000000) AS ГруппаПланированияСклад,
+	0
+From 
+	#Temp_GoodsBegin Номенклатура
+	Left Join dbo._Reference23294 ГруппыПланирования With (NOLOCK)
+		Inner Join dbo._Reference23294_VT23309 With (NOLOCK)
+			on ГруппыПланирования._IDRRef = _Reference23294_VT23309._Reference23294_IDRRef
+			and _Reference23294_VT23309._Fld23311RRef in (Select ЗонаДоставкиРодительСсылка From #Temp_GeoData)
+		On 
+		ГруппыПланирования._Fld23302RRef IN (Select СкладСсылка From #Temp_GeoData) --склад
+		AND ГруппыПланирования._Fld25141 = 0x01--участвует в расчете мощности
+		AND (ГруппыПланирования._Fld23301RRef = Номенклатура.Габариты OR (Номенклатура.Габариты = 0xAC2CBF86E693F63444670FFEB70264EE AND ГруппыПланирования._Fld23301RRef= 0xAD3F7F5FC4F15DAD4F693CAF8365EC0D) ) --габариты
+		AND ГруппыПланирования._Marked = 0x00
+		AND Номенклатура.СкладПВЗСсылка Is Null
+	Inner Join dbo._Reference23294 ПодчиненнаяГП
+			On  ГруппыПланирования._Fld26526RRef = ПодчиненнаяГП._IDRRef
+Where 
+	Номенклатура.СкладПВЗСсылка IS NULL
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
 With Temp_ExchangeRates AS (
@@ -388,8 +445,8 @@ GROUP BY
 HAVING
     (SUM(T2._Fld21412) <> 0.0
     OR SUM(T2._Fld21411) <> 0.0)
-	AND SUM(T2._Fld21412) - SUM(T2._Fld21411) <> 0.0
-OPTION (OPTIMIZE FOR (@P_DateTimeNow='4021-06-15T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
+	AND SUM(T2._Fld21411) - SUM(T2._Fld21412) > 0.0
+OPTION (OPTIMIZE FOR (@P_DateTimeNow='4021-07-02T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
 
 SELECT Distinct
     T1._Fld23831RRef AS СкладИсточника,
@@ -412,21 +469,19 @@ SELECT
 	MIN(T1._Fld23834) AS ДатаПрибытия 
 Into #Temp_MinimumWarehouseDates
 FROM
-    dbo._InfoRg23830 T1 With (NOLOCK)
+    dbo._InfoRg23830 T1 With (NOLOCK, INDEX([_InfoRg23830_Custom2])) 	
 WHERE
-    T1._Fld23831RRef IN (
+	T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData UNION ALL Select СкладСсылка From #Temp_PickupPoints)
+		AND	T1._Fld23832 BETWEEN @P_DateTimeNow AND DateAdd(DAY,6,@P_DateTimeNow)
+		AND T1._Fld23831RRef IN (
         SELECT
             T2.СкладИсточника AS СкладИсточника
         FROM
             #Temp_Remains T2 WITH(NOLOCK)) 
-		AND T1._Fld23832 BETWEEN @P_DateTimeNow AND  DateAdd(DAY,6,@P_DateTimeNow)
-		--AND T1._Fld23832 <= DateAdd(DAY,6,@P_DateTimeNow)
-		AND T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData UNION ALL Select СкладСсылка From #Temp_PickupPoints)
 GROUP BY T1._Fld23831RRef,
 T1._Fld23833RRef
-OPTION (OPTIMIZE FOR (@P_DateTimeNow='4021-06-15T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
+OPTION (OPTIMIZE FOR (@P_DateTimeNow='4021-07-02T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
 
-;
 
 SELECT
     T1.НоменклатураСсылка,
@@ -633,6 +688,7 @@ SELECT
     T1.ВремяНаОбслуживание,
     T1.ГруппаПланирования,
 	T1.ГруппаПланированияДобавляемоеВремя,
+	T1.Приоритет,
 	0 AS PickUp
 into #Temp_ClosestDatesByGoods
 FROM
@@ -644,6 +700,7 @@ FROM
 		AND ISNULL(T3.СкладНазначения, T2.СкладНазначения) IN (Select СкладСсылка From #Temp_GeoData) 
 Where 
 	T1.СкладСсылка IS NULL
+	And T1.ГруппаПланированияСклад = ISNULL(T3.СкладНазначения, T2.СкладНазначения) 
 GROUP BY
     T1.НоменклатураСсылка,
 	T1.article,
@@ -654,7 +711,8 @@ GROUP BY
     T1.ВремяНаОбслуживание,
     T1.Количество,
     T1.ГруппаПланирования,
-	T1.ГруппаПланированияДобавляемоеВремя
+	T1.ГруппаПланированияДобавляемоеВремя,
+	T1.Приоритет
 UNION ALL
 SELECT
     T1.НоменклатураСсылка,
@@ -668,6 +726,7 @@ SELECT
     T1.ВремяНаОбслуживание,
     T1.ГруппаПланирования,
 	T1.ГруппаПланированияДобавляемоеВремя,
+	T1.Приоритет,
 	1 AS PickUp
 FROM
     #Temp_Goods T1 WITH(NOLOCK)	
@@ -688,7 +747,8 @@ GROUP BY
     T1.ВремяНаОбслуживание,
     T1.Количество,
     T1.ГруппаПланирования,
-	T1.ГруппаПланированияДобавляемоеВремя
+	T1.ГруппаПланированияДобавляемоеВремя,
+	T1.Приоритет
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
 SELECT
@@ -708,6 +768,7 @@ SELECT
             ELSE T1.БлижайшаяДата
         END        
     ) AS ДатаДоступности,
+	T1.Приоритет,
 	T1.PickUp
 Into #Temp_ShipmentDates
 FROM
@@ -727,32 +788,48 @@ GROUP BY
     T1.Объем,
     T1.ВремяНаОбслуживание,
     T1.ГруппаПланирования,
+	T1.Приоритет,
 	T1.PickUp
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
+With MinDates AS
+(
+Select 
+	T1.НоменклатураСсылка,
+    MIN(T1.ДатаДоступности) AS ДатаСоСклада
+FROM 
+    #Temp_ShipmentDates T1 WITH(NOLOCK)
+Where T1.PickUp = 0
+Group by T1.НоменклатураСсылка
+)
 SELECT
     T1.НоменклатураСсылка,
 	T1.article,
 	T1.code,
-    MIN(T1.ДатаДоступности) AS ДатаСоСклада,
+    MinDates.ДатаСоСклада AS ДатаСоСклада,
     T1.Вес,
     T1.Объем,
     T1.ВремяНаОбслуживание,
     T1.ГруппаПланирования,
+	T1.Приоритет,
 	T1.PickUp
 Into #Temp_ShipmentDatesDeliveryCourier
 FROM 
     #Temp_ShipmentDates T1 WITH(NOLOCK)
+	Inner Join MinDates 
+		On T1.НоменклатураСсылка = MinDates.НоменклатураСсылка 
+		And T1.ДатаДоступности = MinDates.ДатаСоСклада 
 Where T1.PickUp = 0
-GROUP BY
-    T1.НоменклатураСсылка,
-	T1.article,
-	T1.code,
-    T1.Вес,
-    T1.Объем,
-    T1.ВремяНаОбслуживание,
-    T1.ГруппаПланирования,
-	T1.PickUp
+--GROUP BY
+--    T1.НоменклатураСсылка,
+--	T1.article,
+--	T1.code,
+--    T1.Вес,
+--    T1.Объем,
+--    T1.ВремяНаОбслуживание,
+--    T1.ГруппаПланирования,
+--	T1.Приоритет,
+--	T1.PickUp
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
 SELECT
@@ -839,7 +916,7 @@ INTO #Temp_PickupWorkingHours
 From 
 	#Temp_Dates
 	Inner Join dbo._Reference226 Склады 
-		ON Склады._IDRRef IN (Select СкладНазначения From #Temp_ShipmentDatesPickUp)
+		ON Склады._IDRRef IN (Select СкладСсылка From #Temp_PickupPoints)
 	Inner Join _Reference23612 
 		On Склады._Fld23620RRef = _Reference23612._IDRRef
 	Left Join _Reference23612_VT23613 As ПВЗГрафикРаботы 
@@ -873,14 +950,20 @@ Into #Temp_AvailablePickUp
 FROM
     #Temp_ShipmentDatesPickUp
 		Inner JOIN #Temp_PickupWorkingHours
-		On #Temp_PickupWorkingHours.СкладНазначения = #Temp_ShipmentDatesPickUp.СкладНазначения
-		And #Temp_PickupWorkingHours.ВремяОкончания > #Temp_ShipmentDatesPickUp.ДатаСоСклада 	 
+		On #Temp_PickupWorkingHours.ВремяОкончания > #Temp_ShipmentDatesPickUp.ДатаСоСклада
+		And #Temp_PickupWorkingHours.СкладНазначения = #Temp_ShipmentDatesPickUp.СкладНазначения 	 
 Group by
 	#Temp_ShipmentDatesPickUp.НоменклатураСсылка,
 	#Temp_ShipmentDatesPickUp.article,
 	#Temp_ShipmentDatesPickUp.code
-OPTION (KEEP PLAN, KEEPFIXED PLAN);
+OPTION (HASH GROUP, KEEP PLAN, KEEPFIXED PLAN);
 
+With PlanningGroups AS(
+Select Distinct 
+	#Temp_ShipmentDatesDeliveryCourier.ГруппаПланирования,
+	#Temp_ShipmentDatesDeliveryCourier.Приоритет
+From #Temp_ShipmentDatesDeliveryCourier
+)
 SELECT
     T5._Period AS Период,
     T5._Fld25112RRef As ГруппаПланирования, 
@@ -893,20 +976,22 @@ SELECT
             DATEDIFF(SECOND, @P_EmptyDate, T5._Fld25202) AS NUMERIC(12)
         ),
         T5._Period
-    ) As ВремяНачала
+    ) As ВремяНачала,
+	PlanningGroups.Приоритет
 into #Temp_IntervalsAll
 FROM
     dbo._AccumRg25110 T5 With (NOLOCK)
+	Inner Join PlanningGroups ON PlanningGroups.ГруппаПланирования = T5._Fld25112RRef
 WHERE
     T5._Period BETWEEN @P_DateTimePeriodBegin AND @P_DateTimePeriodEnd --begin +2
-    --AND T5._Period <= @P_DateTimePeriodEnd --end
     AND T5._Fld25111RRef in (Select Геозона From #Temp_GeoData) 
 GROUP BY
     T5._Period,
     T5._Fld25112RRef,
     T5._Fld25111RRef,
     T5._Fld25202,
-	T5._Fld25203
+	T5._Fld25203,
+	PlanningGroups.Приоритет
 HAVING
     (
         CAST(
@@ -918,7 +1003,7 @@ HAVING
             ) AS NUMERIC(16, 0)
         ) > 0.0
     )
-OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-06-15T00:00:00',@P_DateTimePeriodEnd='4021-06-19T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
+OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-07-02T00:00:00',@P_DateTimePeriodEnd='4021-07-06T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
 ;
 
 select
@@ -931,7 +1016,8 @@ DATEADD(
     ) As ВремяНачала,
 #Temp_IntervalsAll.Период,
 #Temp_IntervalsAll.ГруппаПланирования,
-#Temp_IntervalsAll.Геозона
+#Temp_IntervalsAll.Геозона,
+#Temp_IntervalsAll.Приоритет
 into #Temp_Intervals
 from #Temp_IntervalsAll
 	Inner Join _Reference114_VT25126 ГеоЗонаВременныеИнтервалы With (NOLOCK)
@@ -950,8 +1036,9 @@ Group By
 	#Temp_IntervalsAll.Период,
 	#Temp_IntervalsAll.ГруппаПланирования,
 	#Temp_IntervalsAll.Геозона,
-	T2._Fld25137
-OPTION (KEEP PLAN, KEEPFIXED PLAN);
+	T2._Fld25137,
+	#Temp_IntervalsAll.Приоритет
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-07-02T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
 
 INsert into #Temp_Intervals
 select
@@ -964,8 +1051,8 @@ DATEADD(
     ) As ВремяНачала,
 #Temp_IntervalsAll.Период,
 #Temp_IntervalsAll.ГруппаПланирования,
-#Temp_IntervalsAll.Геозона
-
+#Temp_IntervalsAll.Геозона,
+#Temp_IntervalsAll.Приоритет
 from #Temp_IntervalsAll
 	Inner Join _Reference114_VT25126 ГеоЗонаВременныеИнтервалы With (NOLOCK)
 		On #Temp_IntervalsAll.Геозона = ГеоЗонаВременныеИнтервалы._Reference114_IDRRef
@@ -983,8 +1070,9 @@ Group By
 	ГеоЗонаВременныеИнтервалы._Fld25129,
 	#Temp_IntervalsAll.Период,
 	#Temp_IntervalsAll.ГруппаПланирования,
-	#Temp_IntervalsAll.Геозона
-OPTION (KEEP PLAN, KEEPFIXED PLAN);
+	#Temp_IntervalsAll.Геозона,
+	#Temp_IntervalsAll.Приоритет
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-07-02T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
 
 INsert into #Temp_Intervals
 select
@@ -997,23 +1085,26 @@ DATEADD(
     ) As ВремяНачала,
 #Temp_IntervalsAll.Период,
 #Temp_IntervalsAll.ГруппаПланирования,
-#Temp_IntervalsAll.Геозона
-
+#Temp_IntervalsAll.Геозона,
+#Temp_IntervalsAll.Приоритет
 from #Temp_IntervalsAll
 	Inner Join _Reference114_VT25126 ГеоЗонаВременныеИнтервалы With (NOLOCK)
 		On #Temp_IntervalsAll.Геозона = ГеоЗонаВременныеИнтервалы._Reference114_IDRRef
 		And #Temp_IntervalsAll.ВремяНачалаНачальное >= ГеоЗонаВременныеИнтервалы._Fld25128
 		And #Temp_IntervalsAll.ВремяНачалаНачальное < ГеоЗонаВременныеИнтервалы._Fld25129
 WHERE
-	#Temp_IntervalsAll.Период >= DATEADD(DAY, 2, @P_DateTimePeriodBegin) --begin +2
-    AND #Temp_IntervalsAll.Период <= @P_DateTimePeriodEnd --end
+	#Temp_IntervalsAll.Период BETWEEN DATEADD(DAY, 2, @P_DateTimePeriodBegin) AND @P_DateTimePeriodEnd --begin +2
+    --AND #Temp_IntervalsAll.Период <= @P_DateTimePeriodEnd --end
 Group By 
 	ГеоЗонаВременныеИнтервалы._Fld25128,
 	ГеоЗонаВременныеИнтервалы._Fld25129,
 	#Temp_IntervalsAll.Период,
 	#Temp_IntervalsAll.ГруппаПланирования,
-	#Temp_IntervalsAll.Геозона 
-OPTION (KEEP PLAN, KEEPFIXED PLAN);
+	#Temp_IntervalsAll.Геозона,
+	#Temp_IntervalsAll.Приоритет
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-07-02T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
+
+select Период, Max(Приоритет) AS Приоритет into #Temp_PlanningGroupPriority from #Temp_Intervals Group by Период;
 
 With Temp_DeliveryPower AS
 (
@@ -1040,8 +1131,8 @@ SELECT
 FROM
     dbo._AccumRg25104 МощностиДоставки With (NOLOCK)
 WHERE
-    МощностиДоставки._Period >= @P_DateTimePeriodBegin
-    AND МощностиДоставки._Period <= @P_DateTimePeriodEnd
+    МощностиДоставки._Period BETWEEN @P_DateTimePeriodBegin AND @P_DateTimePeriodEnd
+    --AND МощностиДоставки._Period <= @P_DateTimePeriodEnd
 	AND МощностиДоставки._Fld25105RRef IN (Select ЗонаДоставкиРодительСсылка From  #Temp_GeoData)
 GROUP BY
     CAST(CAST(МощностиДоставки._Period  AS DATE) AS DATETIME)
@@ -1068,6 +1159,7 @@ FROM
     #Temp_ShipmentDatesDeliveryCourier T1 WITH(NOLOCK)
     Left JOIN Temp_DeliveryPower T2 WITH(NOLOCK)
     Inner JOIN #Temp_Intervals T3 WITH(NOLOCK)
+		Inner Join #Temp_PlanningGroupPriority With (NOLOCK) ON T3.Период = #Temp_PlanningGroupPriority.Период AND T3.Приоритет = #Temp_PlanningGroupPriority.Приоритет
 		ON T3.Период = T2.Дата
 	ON T2.МассаОборот >= T1.Вес
     AND T2.ОбъемОборот >= T1.Объем
@@ -1081,7 +1173,7 @@ GROUP BY
 	T1.НоменклатураСсылка,
     T1.article,
 	T1.code
-OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-06-15T00:00:00',@P_DateTimePeriodEnd='4021-06-19T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
+OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-07-02T00:00:00',@P_DateTimePeriodEnd='4021-07-06T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
 
 Select 
 	IsNull(#Temp_AvailableCourier.article,#Temp_AvailablePickUp.article) AS article,
@@ -1093,7 +1185,7 @@ From
 	FULL Join #Temp_AvailablePickUp 
 		On #Temp_AvailableCourier.НоменклатураСсылка = #Temp_AvailablePickUp.НоменклатураСсылка 
 
-
+DROP TABLE #Temp_GoodsRaw
 DROP TABLE #Temp_GeoData
 DROP TABLE #Temp_WarehouseDates
 DROP TABLE #Temp_MinimumWarehouseDates
@@ -1115,4 +1207,6 @@ DROP TABLE #Temp_AvailableCourier
 DROP TABLE #Temp_AvailablePickUp
 DROP TABLE #Temp_PickupDatesGroup
 DROP TAble #Temp_PickupWorkingHours
-DROP TAble #Temp_DatesDROP Table #Temp_PickupPoints
+DROP TAble #Temp_Dates
+DROP Table #Temp_PickupPoints
+DRop Table #Temp_PlanningGroupPriority

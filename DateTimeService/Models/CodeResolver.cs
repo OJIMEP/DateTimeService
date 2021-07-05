@@ -1,25 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using AutoMapper;
+﻿using AutoMapper;
+using System;
 
 namespace DateTimeService.Models
 {
-    public class CodeResolver: IValueResolver<RequestDataCodeItemDTO, RequestDataCodeItem, string>
+    public class CodeResolver : IValueResolver<RequestDataCodeItemDTO, RequestDataCodeItem, string>
     {
         public string Resolve(RequestDataCodeItemDTO source, RequestDataCodeItem destination, String destMember, ResolutionContext context)
         {
-            if (source.sales_code == null)
+            if (source.SalesCode == null)
                 return null;
             else
             {
-                return GetCodeFromSaleCode(source.sales_code);
+                return GetCodeFromSaleCode(source.SalesCode);
             }
         }
 
         //123456 => 00-00123456
-        private string GetCodeFromSaleCode(String saleCode)
+        private static string GetCodeFromSaleCode(String saleCode)
         {
             string prefix = "00-";
             int codeLength = 11 - prefix.Length;
