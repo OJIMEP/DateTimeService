@@ -147,6 +147,20 @@ namespace DateTimeService.Data
                     result.AvailableToUse = true;
                 }                
             }
+            catch(FormatException ex)
+            {
+                var logElement = new ElasticLogElement
+                {
+                    TimeSQLExecution = 0,
+                    ErrorDescription = "Некорректные координаты адреса",
+                    Status = "Error",
+                    DatabaseConnection = connString
+                };
+                logElement.AdditionalData.Add("address_id", address_id);
+                var logstringElement = JsonSerializer.Serialize(logElement);
+
+                _logger.LogInformation(logstringElement);
+            }
             catch (Exception ex)
             {
                 var logElement = new ElasticLogElement
