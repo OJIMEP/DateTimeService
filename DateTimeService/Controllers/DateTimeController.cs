@@ -46,8 +46,8 @@ namespace DateTimeService.Controllers
         {
 
 
-            var conn = await _loadBalacing.GetDatabaseConnectionAsync("");
-
+            var dbConnection = await _loadBalacing.GetDatabaseConnectionAsync();
+            var conn = dbConnection.connection;
           
 
             var result = new List<ResponseMaxAvailableCount>();
@@ -188,7 +188,10 @@ namespace DateTimeService.Controllers
             try
             {
                 //connString = await _loadBalacing.GetDatabaseConnectionAsync();
-                conn = await _loadBalacing.GetDatabaseConnectionAsync(databaseType);
+                var dbConnection = await _loadBalacing.GetDatabaseConnectionAsync();
+                conn = dbConnection.connection;
+                databaseType = dbConnection.databaseType;
+
             }
             catch (Exception ex)
             {
@@ -543,7 +546,10 @@ namespace DateTimeService.Controllers
             try
             {
                 //connString = await _loadBalacing.GetDatabaseConnectionAsync();
-                conn = await _loadBalacing.GetDatabaseConnectionAsync("");
+                //conn = await _loadBalacing.GetDatabaseConnectionAsync("");
+                var dbConnection = await _loadBalacing.GetDatabaseConnectionAsync();
+                conn = dbConnection.connection;
+                
             }
             catch (Exception ex)
             {

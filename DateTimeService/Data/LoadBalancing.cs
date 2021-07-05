@@ -12,7 +12,7 @@ namespace DateTimeService.Data
 {
     public interface ILoadBalancing
     {
-        Task<SqlConnection> GetDatabaseConnectionAsync(string databaseType);
+        Task<DbConnection> GetDatabaseConnectionAsync();
     }
 
     public class LoadBalancing : ILoadBalancing
@@ -26,9 +26,11 @@ namespace DateTimeService.Data
             _logger = logger;
         }
 
-        public async Task<SqlConnection> GetDatabaseConnectionAsync(string databaseType)
+        public async Task<DbConnection> GetDatabaseConnectionAsync()
         {
             //string connString = _configuration.GetConnectionString("1CDataSqlConnection");
+
+            var result = new DbConnection();
 
             var connectionParameters = DatabaseList.Databases;//_configuration.GetSection("OneSDatabases").Get<List<DatabaseConnectionParameter>>();
 
@@ -38,9 +40,9 @@ namespace DateTimeService.Data
 
             bool firstAvailable = false;
 
-            var result = "";
+            var resultString = "";
 
-            SqlConnection resultConnection = null;
+            //SqlConnection resultConnection = null;
             SqlConnection conn = null;
 
             while (true)
@@ -89,9 +91,9 @@ namespace DateTimeService.Data
 
                             //close connection
                             //conn.Close();
-                            resultConnection = conn;
-                            result = connParametr.Connection;
-                            databaseType = connParametr.Type;
+                            result.connection = conn;
+                            resultString = connParametr.Connection;
+                            result.databaseType = connParametr.Type;
                             break;
                         }
                         catch (Exception ex)
@@ -121,13 +123,13 @@ namespace DateTimeService.Data
                             failedConnections.Add(connParametr.Connection);
                         }
                 }
-                if (result.Length > 0 || firstAvailable)
+                if (resultString.Length > 0 || firstAvailable)
                     break;
                 else
                     firstAvailable = true;
             }
 
-            return resultConnection;
+            return result;
         }
 
         public static string RemoveCredentialsFromConnectionString(string connectionString)
@@ -157,6 +159,11 @@ namespace DateTimeService.Data
 
     }
 
+    public class DbConnection
+    {
+        public SqlConnection connection { get; set; }
+        public string databaseType { get; set; }
+    }
 
 
 }
