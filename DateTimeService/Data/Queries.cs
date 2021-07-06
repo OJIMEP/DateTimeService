@@ -1651,22 +1651,22 @@ GROUP BY
     T2.ДатаДоступности
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
-SELECT
-    T1.НоменклатураСсылка,
-    T1.СкладНазначения,
-    Min(ISNULL(T2.ДатаДоступности1, T1.ДатаДоступности)) AS ДатаДоступности
-Into #Temp_SourcesCorrectedDate
-FROM
-    #Temp_Sources T1 WITH(NOLOCK)
-    LEFT OUTER JOIN #Temp_BestPriceAfterClosestDate T2 WITH(NOLOCK)
-    ON (T1.НоменклатураСсылка = T2.НоменклатураСсылка)
-    AND (T1.ДатаДоступности = T2.ДатаДоступности)
-    AND (T1.СкладНазначения = T2.СкладНазначения)
-    AND (T1.ТипИсточника = 3)
-GROUP BY
-	T1.НоменклатураСсылка,
-	T1.СкладНазначения
-OPTION (KEEP PLAN, KEEPFIXED PLAN);
+--SELECT
+--    T1.НоменклатураСсылка,
+--    T1.СкладНазначения,
+--    Min(ISNULL(T2.ДатаДоступности1, T1.ДатаДоступности)) AS ДатаДоступности
+--Into #Temp_SourcesCorrectedDate
+--FROM
+--    #Temp_Sources T1 WITH(NOLOCK)
+--    LEFT OUTER JOIN #Temp_BestPriceAfterClosestDate T2 WITH(NOLOCK)
+--    ON (T1.НоменклатураСсылка = T2.НоменклатураСсылка)
+--    AND (T1.ДатаДоступности = T2.ДатаДоступности)
+--    AND (T1.СкладНазначения = T2.СкладНазначения)
+--    AND (T1.ТипИсточника = 3)
+--GROUP BY
+--	T1.НоменклатураСсылка,
+--	T1.СкладНазначения
+--OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
 With Temp_ClosestDate AS
 (SELECT
@@ -1692,6 +1692,24 @@ SELECT
 Group by T4.НоменклатураСсылка, T4.СкладНазначения
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
+
+With Temp_SourcesCorrectedDate AS
+(
+SELECT
+    T1.НоменклатураСсылка,
+    T1.СкладНазначения,
+    Min(ISNULL(T2.ДатаДоступности1, T1.ДатаДоступности)) AS ДатаДоступности
+FROM
+    #Temp_Sources T1 WITH(NOLOCK)
+    LEFT OUTER JOIN #Temp_BestPriceAfterClosestDate T2 WITH(NOLOCK)
+    ON (T1.НоменклатураСсылка = T2.НоменклатураСсылка)
+    AND (T1.ДатаДоступности = T2.ДатаДоступности)
+    AND (T1.СкладНазначения = T2.СкладНазначения)
+    AND (T1.ТипИсточника = 3)
+GROUP BY
+	T1.НоменклатураСсылка,
+	T1.СкладНазначения
+)
 SELECT
     T1.НоменклатураСсылка,
 	T1.article,
@@ -1709,7 +1727,7 @@ SELECT
 into #Temp_ClosestDatesByGoods
 FROM
     #Temp_Goods T1 WITH(NOLOCK)	
-    LEFT JOIN #Temp_SourcesCorrectedDate T2 WITH(NOLOCK)
+    LEFT JOIN Temp_SourcesCorrectedDate T2 WITH(NOLOCK)
 		LEFT JOIN  #Temp_T3 T3 ON (T2.НоменклатураСсылка = T3.НоменклатураСсылка) 
 			And T2.СкладНазначения = T3.СкладНазначения
     ON (T1.НоменклатураСсылка = T2.НоменклатураСсылка) 
@@ -1746,7 +1764,7 @@ SELECT
 	1 AS PickUp
 FROM
     #Temp_Goods T1 WITH(NOLOCK)	
-    LEFT JOIN #Temp_SourcesCorrectedDate T2 WITH(NOLOCK)
+    LEFT JOIN Temp_SourcesCorrectedDate T2 WITH(NOLOCK)
 		LEFT JOIN  #Temp_T3 T3 ON (T2.НоменклатураСсылка = T3.НоменклатураСсылка) 
 			And T2.СкладНазначения = T3.СкладНазначения
     ON (T1.НоменклатураСсылка = T2.НоменклатураСсылка) 
@@ -1836,16 +1854,6 @@ FROM
 		On T1.НоменклатураСсылка = MinDates.НоменклатураСсылка 
 		And T1.ДатаДоступности = MinDates.ДатаСоСклада 
     Where T1.PickUp = 0
---GROUP BY
---    T1.НоменклатураСсылка,
---	T1.article,
---	T1.code,
---    T1.Вес,
---    T1.Объем,
---    T1.ВремяНаОбслуживание,
---    T1.ГруппаПланирования,
---	T1.Приоритет,
---	T1.PickUp
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
 SELECT
@@ -1865,13 +1873,13 @@ GROUP BY
 	T1.СкладНазначения
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
-Select 
-	CAST(CAST(DateAdd(DAY, @P_DaysToShow,Max(ДатаСоСклада))AS date) AS datetime) AS МаксимальнаяДата,
-	CAST(CAST(Min(ДатаСоСклада)AS date) AS datetime) AS МинимальнаяДата
-Into #Temp_PickupDatesGroup
-From 
-	#Temp_ShipmentDatesPickUp
-OPTION (KEEP PLAN, KEEPFIXED PLAN);
+--Select 
+--	CAST(CAST(DateAdd(DAY, @P_DaysToShow,Max(ДатаСоСклада))AS date) AS datetime) AS МаксимальнаяДата,
+--	CAST(CAST(Min(ДатаСоСклада)AS date) AS datetime) AS МинимальнаяДата
+--Into #Temp_PickupDatesGroup
+--From 
+--	#Temp_ShipmentDatesPickUp
+--OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
 /*Это получение списка дат интервалов ПВЗ*/
 WITH
@@ -1903,15 +1911,24 @@ WITH
     (
         SELECT ROW_NUMBER() OVER (ORDER BY (SELECT NULL))
         FROM H1 a, H1 b, H1 c, H1 d, H1 e, H1 f, H1 g, H1 h
+     ),
+	Temp_PickupDatesGroup AS
+	(
+	Select 
+		CAST(CAST(DateAdd(DAY, @P_DaysToShow,Max(ДатаСоСклада))AS date) AS datetime) AS МаксимальнаяДата,
+		CAST(CAST(Min(ДатаСоСклада)AS date) AS datetime) AS МинимальнаяДата
+	From 
+		#Temp_ShipmentDatesPickUp
     )
 SELECT
 	DATEADD(dd,t.N-1,f.МинимальнаяДата) AS Date
 INTO #Temp_Dates
-FROM #Temp_PickupDatesGroup f
+FROM Temp_PickupDatesGroup f
   CROSS APPLY (SELECT TOP (Isnull(DATEDIFF(dd,f.МинимальнаяДата,f.МаксимальнаяДата)+1,1))
         N
     FROM cteTally
     ORDER BY N) t
+OPTION (KEEP PLAN, KEEPFIXED PLAN);
 	;
 
 Select 
@@ -2120,7 +2137,7 @@ Group By
     #Temp_IntervalsAll.Приоритет
 OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'), KEEP PLAN, KEEPFIXED PLAN);
 
-select Период, Max(Приоритет) AS Приоритет into #Temp_PlanningGroupPriority from #Temp_Intervals Group by Период;
+--select Период, Max(Приоритет) AS Приоритет into #Temp_PlanningGroupPriority from #Temp_Intervals Group by Период;
 
 With Temp_DeliveryPower AS
 (
@@ -2152,6 +2169,10 @@ WHERE
     AND МощностиДоставки._Fld25105RRef IN (Select ЗонаДоставкиРодительСсылка From  #Temp_GeoData)
 GROUP BY
     CAST(CAST(МощностиДоставки._Period  AS DATE) AS DATETIME)
+), 
+Temp_PlanningGroupPriority AS
+(
+select Период, Max(Приоритет) AS Приоритет from #Temp_Intervals Group by Период
 )
 SELECT
     T1.НоменклатураСсылка,
@@ -2175,7 +2196,7 @@ FROM
     #Temp_ShipmentDatesDeliveryCourier T1 WITH(NOLOCK)
     Left JOIN Temp_DeliveryPower T2 WITH(NOLOCK)
     Inner JOIN #Temp_Intervals T3 WITH(NOLOCK)
-        Inner Join #Temp_PlanningGroupPriority With (NOLOCK) ON T3.Период = #Temp_PlanningGroupPriority.Период AND T3.Приоритет = #Temp_PlanningGroupPriority.Приоритет
+        Inner Join Temp_PlanningGroupPriority With (NOLOCK) ON T3.Период = Temp_PlanningGroupPriority.Период AND T3.Приоритет = Temp_PlanningGroupPriority.Приоритет
 		ON T3.Период = T2.Дата
 	ON T2.МассаОборот >= T1.Вес
     AND T2.ОбъемОборот >= T1.Объем
