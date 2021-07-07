@@ -526,7 +526,7 @@ namespace DateTimeService.Controllers
         public async Task<IActionResult> IntervalListAsync(RequestIntervalListDTO inputData)
         {
             var data = _mapper.Map<RequestIntervalList>(inputData);
-
+            string databaseType = "";
             Stopwatch stopwatchExecution = new();
             stopwatchExecution.Start();
 
@@ -549,7 +549,7 @@ namespace DateTimeService.Controllers
                 //conn = await _loadBalacing.GetDatabaseConnectionAsync("");
                 var dbConnection = await _loadBalacing.GetDatabaseConnectionAsync();
                 conn = dbConnection.connection;
-                
+                databaseType = dbConnection.databaseType;
             }
             catch (Exception ex)
             {
@@ -739,12 +739,19 @@ namespace DateTimeService.Controllers
                         dateTimeNowOptimizeString = DateMove.Date.ToString("yyyy-MM-ddTHH:mm:ss");
                     }
 
+                    string useIndexHint = _configuration.GetValue<string>("useIndexHintWarehouseDates");// @", INDEX([_InfoRg23830_Custom2])";
+                    if (databaseType != "replica_tables")
+                    {
+                        useIndexHint = "";
+                    }
+
                     cmd.CommandText = queryTextBegin + string.Format(query, "",
                         dateTimeNowOptimizeString,
                         DateMove.Date.ToString("yyyy-MM-ddTHH:mm:ss"),
                         DateMove.Date.AddDays(Parameters1C.First(x => x.Name.Contains("rsp_КоличествоДнейЗаполненияГрафика")).ValueDouble - 1).ToString("yyyy-MM-ddTHH:mm:ss"),
                         Parameters1C.First(x => x.Name.Contains("КоличествоДнейАнализаЛучшейЦеныПриОтсрочкеЗаказа")).ValueDouble,
-                        Parameters1C.First(x => x.Name.Contains("ПроцентДнейАнализаЛучшейЦеныПриОтсрочкеЗаказа")).ValueDouble);
+                        Parameters1C.First(x => x.Name.Contains("ПроцентДнейАнализаЛучшейЦеныПриОтсрочкеЗаказа")).ValueDouble,
+                        useIndexHint);
 
 
 

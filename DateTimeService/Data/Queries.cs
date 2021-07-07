@@ -497,17 +497,16 @@ SELECT
 	T1._Fld23833RRef AS СкладНазначения,
 	MIN(T1._Fld23834) AS ДатаПрибытия 
 Into #Temp_MinimumWarehouseDates
-FROM 
-    dbo._InfoRg23830 T1 With (NOLOCK)
+FROM
+    dbo._InfoRg23830 T1 With (NOLOCK{6}) 	
 WHERE
-    T1._Fld23831RRef IN (
+	T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData UNION ALL Select СкладСсылка From #Temp_PickupPoints)
+		AND	T1._Fld23832 BETWEEN @P_DateTimeNow AND DateAdd(DAY,6,@P_DateTimeNow)
+		AND T1._Fld23831RRef IN (
         SELECT
             T2.СкладИсточника AS СкладИсточника
         FROM
             #Temp_Remains T2 WITH(NOLOCK)) 
-		AND T1._Fld23832 >= @P_DateTimeNow
-		AND T1._Fld23832 <= DateAdd(DAY,6,@P_DateTimeNow)
-		AND T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData UNION ALL Select СкладСсылка From #Temp_PickupPoints)
 GROUP BY T1._Fld23831RRef,
 T1._Fld23833RRef
 OPTION (OPTIMIZE FOR (@P_DateTimeNow='{1}'),KEEP PLAN, KEEPFIXED PLAN);
@@ -2261,6 +2260,7 @@ With Temp_GoodsRawParsed AS
 select 
 	t1.Article, 
 	t1.code, 
+    t1.quantity,
 	value AS PickupPoint 
 from #Temp_GoodsRaw t1
 	cross apply 
@@ -2272,10 +2272,14 @@ Select
 	Номенклатура._Fld3480 AS article,
 	Номенклатура._Fld3489RRef AS ЕдиницаИзмерения,
 	Номенклатура._Fld3526RRef AS Габариты,
+    T1.quantity AS Количество,
 	#Temp_PickupPoints.СкладСсылка AS СкладПВЗСсылка,
 	Упаковки._IDRRef AS УпаковкаСсылка,
 	Упаковки._Fld6000 AS Вес,
-	Упаковки._Fld6006 AS Объем
+	Упаковки._Fld6006 AS Объем,
+	Упаковки._Fld6001 AS Высота,
+	Упаковки._Fld6002 AS Глубина,
+	Упаковки._Fld6009 AS Ширина
 INTO #Temp_GoodsBegin
 From
 	Temp_GoodsRawParsed T1
@@ -2298,10 +2302,14 @@ Select
 	Номенклатура._Fld3480,
 	Номенклатура._Fld3489RRef,
 	Номенклатура._Fld3526RRef,
+    T1.quantity AS Количество,
 	#Temp_PickupPoints.СкладСсылка,
 	Упаковки._IDRRef AS УпаковкаСсылка,
 	Упаковки._Fld6000 AS Вес,
-	Упаковки._Fld6006 AS Объем
+	Упаковки._Fld6006 AS Объем,
+	Упаковки._Fld6001 AS Высота,
+	Упаковки._Fld6002 AS Глубина,
+	Упаковки._Fld6009 AS Ширина
 From 
 	Temp_GoodsRawParsed T1
 	Inner Join 	dbo._Reference149 Номенклатура With (NOLOCK) 
@@ -2318,13 +2326,67 @@ From
 		AND Упаковки._Marked = 0x00
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
+
+/*Размеры для расчета габаритов*/
+SELECT
+T1.НоменклатураСсылка,
+CAST(SUM((T1.Вес * T1.Количество)) AS NUMERIC(36, 6)) AS Вес,
+CAST(SUM((T1.Объем * T1.Количество)) AS NUMERIC(38, 8)) AS Объем,
+MAX(T1.Высота) AS Высота,
+MAX(T1.Глубина) AS Глубина,
+MAX(T1.Ширина) AS Ширина,
+0x00000000000000000000000000000000  AS Габарит
+Into #Temp_Size
+FROM #Temp_GoodsBegin T1 WITH(NOLOCK)
+Group By 
+	T1.НоменклатураСсылка
+OPTION (KEEP PLAN, KEEPFIXED PLAN);
+
+/*Габарит общий*/
+SELECT
+    --TOP 1 
+	T1.НоменклатураСсылка,
+	CASE
+        WHEN (
+            ISNULL(
+                T1.Габарит,
+                0x00000000000000000000000000000000
+            ) <> 0x00000000000000000000000000000000
+        ) THEN T1.Габарит
+        WHEN (T4._Fld21339 > 0)
+        AND (T1.Вес >= T4._Fld21339)
+        AND (T5._Fld21337 > 0)
+        AND (T1.Объем >= T5._Fld21337) THEN 0xAD3F7F5FC4F15DAD4F693CAF8365EC0D --хбт в кбт
+        WHEN (T2._Fld21168 > 0)
+        AND (T1.Вес >= T2._Fld21168) THEN 0xAD3F7F5FC4F15DAD4F693CAF8365EC0D --кбт
+        WHEN (T3._Fld21166 > 0)
+        AND (T1.Объем >= T3._Fld21166) THEN 0xAD3F7F5FC4F15DAD4F693CAF8365EC0D --кбт
+        WHEN (T6._Fld21580 > 0)
+        AND (T1.Высота > 0)
+        AND (T1.Глубина > 0)
+        AND (T1.Ширина >0) THEN CASE
+            WHEN (T1.Высота >= T6._Fld21580) OR (T1.Глубина >= T6._Fld21580) OR (T1.Ширина >= T6._Fld21580) THEN 0xAD3F7F5FC4F15DAD4F693CAF8365EC0D --кбт
+            ELSE 0x8AB421D483ABE88A4C4C9928262FFB0D --мбт
+        END
+        ELSE 0x8AB421D483ABE88A4C4C9928262FFB0D --мбт
+    END AS Габарит
+Into #Temp_Dimensions
+FROM
+    #Temp_Size T1 WITH(NOLOCK)
+    INNER JOIN dbo._Const21167 T2 ON 1 = 1
+    INNER JOIN dbo._Const21165 T3 ON 1 = 1
+    INNER JOIN dbo._Const21338 T4 ON 1 = 1
+    INNER JOIN dbo._Const21336 T5 ON 1 = 1
+    INNER JOIN dbo._Const21579 T6 ON 1 = 1
+OPTION (KEEP PLAN, KEEPFIXED PLAN);
+
 Select 
 	Номенклатура.НоменклатураСсылка AS НоменклатураСсылка,
 	Номенклатура.article AS article,
 	Номенклатура.code AS code,
 	Номенклатура.СкладПВЗСсылка AS СкладСсылка,
 	Номенклатура.УпаковкаСсылка AS УпаковкаСсылка,--Упаковки._IDRRef AS УпаковкаСсылка,
-	1 As Количество,
+	Номенклатура.Количество As Количество,
 	Номенклатура.Вес AS Вес,--Упаковки._Fld6000 AS Вес,
 	Номенклатура.Объем AS Объем,--Упаковки._Fld6006 AS Объем,
 	10 AS ВремяНаОбслуживание,
@@ -2336,6 +2398,7 @@ Select
 INTO #Temp_Goods
 From 
 	#Temp_GoodsBegin Номенклатура
+    Inner Join #Temp_Dimensions With (NOLOCK) On Номенклатура.НоменклатураСсылка = #Temp_Dimensions.НоменклатураСсылка
 	Left Join dbo._Reference23294 ГруппыПланирования With (NOLOCK)
 		Inner Join dbo._Reference23294_VT23309 With (NOLOCK)
 			on ГруппыПланирования._IDRRef = _Reference23294_VT23309._Reference23294_IDRRef
@@ -2343,7 +2406,7 @@ From
 		On 
 		ГруппыПланирования._Fld23302RRef IN (Select СкладСсылка From #Temp_GeoData) --склад
 		AND ГруппыПланирования._Fld25141 = 0x01--участвует в расчете мощности
-		AND (ГруппыПланирования._Fld23301RRef = Номенклатура.Габариты OR (Номенклатура.Габариты = 0xAC2CBF86E693F63444670FFEB70264EE AND ГруппыПланирования._Fld23301RRef= 0xAD3F7F5FC4F15DAD4F693CAF8365EC0D) ) --габариты
+		AND ГруппыПланирования._Fld23301RRef = #Temp_Dimensions.Габарит --Номенклатура.Габариты OR (Номенклатура.Габариты = 0xAC2CBF86E693F63444670FFEB70264EE AND ГруппыПланирования._Fld23301RRef= 0xAD3F7F5FC4F15DAD4F693CAF8365EC0D) ) --габариты
 		AND ГруппыПланирования._Marked = 0x00
         AND Номенклатура.СкладПВЗСсылка Is Null
 UNION ALL
@@ -2353,7 +2416,7 @@ Select
 	Номенклатура.code AS code,
 	Номенклатура.СкладПВЗСсылка AS СкладСсылка,
 	Номенклатура.УпаковкаСсылка AS УпаковкаСсылка,--Упаковки._IDRRef AS УпаковкаСсылка,
-	1 As Количество,
+	Номенклатура.Количество As Количество,
 	Номенклатура.Вес AS Вес,--Упаковки._Fld6000 AS Вес,
 	Номенклатура.Объем AS Объем,--Упаковки._Fld6006 AS Объем,
 	10 AS ВремяНаОбслуживание,
@@ -2364,6 +2427,7 @@ Select
 	0
 From 
 	#Temp_GoodsBegin Номенклатура
+	Inner Join #Temp_Dimensions With (NOLOCK) On Номенклатура.НоменклатураСсылка = #Temp_Dimensions.НоменклатураСсылка
 	Left Join dbo._Reference23294 ГруппыПланирования With (NOLOCK)
 		Inner Join dbo._Reference23294_VT23309 With (NOLOCK)
 			on ГруппыПланирования._IDRRef = _Reference23294_VT23309._Reference23294_IDRRef
@@ -2371,7 +2435,7 @@ From
 		On 
 		ГруппыПланирования._Fld23302RRef IN (Select СкладСсылка From #Temp_GeoData) --склад
 		AND ГруппыПланирования._Fld25141 = 0x01--участвует в расчете мощности
-		AND (ГруппыПланирования._Fld23301RRef = Номенклатура.Габариты OR (Номенклатура.Габариты = 0xAC2CBF86E693F63444670FFEB70264EE AND ГруппыПланирования._Fld23301RRef= 0xAD3F7F5FC4F15DAD4F693CAF8365EC0D) ) --габариты
+		AND ГруппыПланирования._Fld23301RRef = #Temp_Dimensions.Габарит--(ГруппыПланирования._Fld23301RRef = Номенклатура.Габариты OR (Номенклатура.Габариты = 0xAC2CBF86E693F63444670FFEB70264EE AND ГруппыПланирования._Fld23301RRef= 0xAD3F7F5FC4F15DAD4F693CAF8365EC0D) ) --габариты
 		AND ГруппыПланирования._Marked = 0x00
 		AND Номенклатура.СкладПВЗСсылка Is Null
 	Inner Join dbo._Reference23294 ПодчиненнаяГП
@@ -2454,8 +2518,7 @@ FROM
 	ON T1._Fld23831RRef = #Temp_Remains.СкладИсточника
 	AND T1._Fld23832 = #Temp_Remains.ДатаСобытия
 	AND T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData UNION ALL Select СкладСсылка From #Temp_PickupPoints)   
-OPTION (KEEP PLAN, KEEPFIXED PLAN)
-;
+OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
 SELECT
 	T1._Fld23831RRef AS СкладИсточника,
@@ -2544,6 +2607,39 @@ WHERE
 	And T6.Источник_RTRef = 0x00000153
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
+
+With TempSourcesGrouped AS
+(
+Select
+	T1.НоменклатураСсылка AS НоменклатураСсылка,
+	Sum(T1.Количество) AS Количество,
+	T1.ДатаДоступности AS ДатаДоступности,
+	T1.СкладНазначения AS СкладНазначения
+From
+	#Temp_Sources T1	
+Group by
+	T1.НоменклатураСсылка,
+	T1.ДатаДоступности,
+	T1.СкладНазначения
+)
+Select
+	Источники1.НоменклатураСсылка AS Номенклатура,
+	Источники1.СкладНазначения AS СкладНазначения,
+	Источники1.ДатаДоступности AS ДатаДоступности,
+	Sum(Источник2.Количество) AS Количество
+Into #Temp_AvailableGoods
+From
+	TempSourcesGrouped AS Источники1
+		Left Join TempSourcesGrouped AS Источник2
+		On Источники1.НоменклатураСсылка = Источник2.НоменклатураСсылка
+		AND Источники1.СкладНазначения = Источник2.СкладНазначения
+			AND Источники1.ДатаДоступности >= Источник2.ДатаДоступности	
+Group by
+	Источники1.НоменклатураСсылка,
+	Источники1.ДатаДоступности,
+	Источники1.СкладНазначения
+OPTION (HASH GROUP, KEEP PLAN, KEEPFIXED PLAN);
+
 With Temp_ExchangeRates AS (
 SELECT
 	T1._Period AS Период,
@@ -2629,23 +2725,6 @@ GROUP BY
     T2.ДатаДоступности
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
---SELECT
---    T1.НоменклатураСсылка,
---    T1.СкладНазначения,
---    Min(ISNULL(T2.ДатаДоступности1, T1.ДатаДоступности)) AS ДатаДоступности
---Into #Temp_SourcesCorrectedDate
---FROM
---    #Temp_Sources T1 WITH(NOLOCK)
---    LEFT OUTER JOIN #Temp_BestPriceAfterClosestDate T2 WITH(NOLOCK)
---    ON (T1.НоменклатураСсылка = T2.НоменклатураСсылка)
---    AND (T1.ДатаДоступности = T2.ДатаДоступности)
---    AND (T1.СкладНазначения = T2.СкладНазначения)
---    AND (T1.ТипИсточника = 3)
---GROUP BY
---	T1.НоменклатураСсылка,
---	T1.СкладНазначения
---OPTION (KEEP PLAN, KEEPFIXED PLAN);
-
 With Temp_ClosestDate AS
 (SELECT
 T1.НоменклатураСсылка,
@@ -2694,7 +2773,7 @@ SELECT
 	T1.code,
     ISNULL(T3.СкладНазначения, T2.СкладНазначения) AS СкладНазначения,
     MIN(ISNULL(T3.ДатаДоступности, T2.ДатаДоступности)) AS БлижайшаяДата,
-    1 AS Количество,
+    T1.Количество AS Количество,
     T1.Вес,
     T1.Объем,
     T1.ВремяНаОбслуживание,
@@ -2713,6 +2792,7 @@ FROM
 Where 
 	T1.СкладСсылка IS NULL
     And T1.ГруппаПланированияСклад = ISNULL(T3.СкладНазначения, T2.СкладНазначения)
+    AND T1.Количество = 1
 GROUP BY
     T1.НоменклатураСсылка,
 	T1.article,
@@ -2732,7 +2812,7 @@ SELECT
 	T1.code,
     ISNULL(T3.СкладНазначения, T2.СкладНазначения) AS СкладНазначения,
     MIN(ISNULL(T3.ДатаДоступности, T2.ДатаДоступности)) AS БлижайшаяДата,
-    1 AS Количество,
+    T1.Количество AS Количество,
     T1.Вес,
     T1.Объем,
     T1.ВремяНаОбслуживание,
@@ -2749,11 +2829,86 @@ FROM
 		AND T1.СкладСсылка = ISNULL(T3.СкладНазначения, T2.СкладНазначения)
 Where 
 	NOT T1.СкладСсылка IS NULL
+    AND T1.Количество = 1
 GROUP BY
     T1.НоменклатураСсылка,
 	T1.article,
 	T1.code,
 	ISNULL(T3.СкладНазначения, T2.СкладНазначения),
+    T1.Вес,
+    T1.Объем,
+    T1.ВремяНаОбслуживание,
+    T1.Количество,
+    T1.ГруппаПланирования,
+	T1.ГруппаПланированияДобавляемоеВремя,
+	T1.Приоритет
+UNION ALL
+
+SELECT
+    T1.НоменклатураСсылка,
+	T1.article,
+	T1.code,
+    #Temp_AvailableGoods.СкладНазначения AS СкладНазначения,
+    Min(#Temp_AvailableGoods.ДатаДоступности) AS БлижайшаяДата,
+    T1.Количество AS Количество,
+    T1.Вес,
+    T1.Объем,
+    T1.ВремяНаОбслуживание,
+    T1.ГруппаПланирования,
+	T1.ГруппаПланированияДобавляемоеВремя,
+	T1.Приоритет,
+	0 AS PickUp
+FROM
+    #Temp_Goods T1 WITH(NOLOCK)	
+   Left Join #Temp_AvailableGoods With (NOLOCK) 
+			On T1.НоменклатураСсылка = #Temp_AvailableGoods.Номенклатура
+			AND T1.Количество <= #Temp_AvailableGoods.Количество
+			AND #Temp_AvailableGoods.СкладНазначения IN (Select СкладСсылка From #Temp_GeoData)
+Where 
+	T1.СкладСсылка IS NULL
+	And T1.ГруппаПланированияСклад = #Temp_AvailableGoods.СкладНазначения 
+	AND T1.Количество > 1
+GROUP BY
+    T1.НоменклатураСсылка,
+	T1.article,
+	T1.code,
+	#Temp_AvailableGoods.СкладНазначения,
+    T1.Вес,
+    T1.Объем,
+    T1.ВремяНаОбслуживание,
+    T1.Количество,
+    T1.ГруппаПланирования,
+	T1.ГруппаПланированияДобавляемоеВремя,
+	T1.Приоритет
+UNION ALL
+SELECT
+    T1.НоменклатураСсылка,
+	T1.article,
+	T1.code,
+    #Temp_AvailableGoods.СкладНазначения AS СкладНазначения,
+    Min(#Temp_AvailableGoods.ДатаДоступности) AS БлижайшаяДата,
+    T1.Количество AS Количество,
+    T1.Вес,
+    T1.Объем,
+    T1.ВремяНаОбслуживание,
+    T1.ГруппаПланирования,
+	T1.ГруппаПланированияДобавляемоеВремя,
+	T1.Приоритет,
+	1 AS PickUp
+FROM
+	 #Temp_Goods T1 WITH(NOLOCK)	
+	 Left Join #Temp_AvailableGoods With (NOLOCK) 
+		On T1.НоменклатураСсылка = #Temp_AvailableGoods.Номенклатура
+		AND T1.Количество <= #Temp_AvailableGoods.Количество
+		AND	T1.СкладСсылка = #Temp_AvailableGoods.СкладНазначения
+Where 
+	NOT T1.СкладСсылка IS NULL
+	AND T1.Количество > 1
+GROUP BY
+    T1.НоменклатураСсылка,
+	T1.article,
+	T1.code,
+	#Temp_AvailableGoods.СкладНазначения,
     T1.Вес,
     T1.Объем,
     T1.ВремяНаОбслуживание,
@@ -2850,14 +3005,6 @@ GROUP BY
 	T1.code,
 	T1.СкладНазначения
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
-
---Select 
---	CAST(CAST(DateAdd(DAY, @P_DaysToShow,Max(ДатаСоСклада))AS date) AS datetime) AS МаксимальнаяДата,
---	CAST(CAST(Min(ДатаСоСклада)AS date) AS datetime) AS МинимальнаяДата
---Into #Temp_PickupDatesGroup
---From 
---	#Temp_ShipmentDatesPickUp
---OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
 /*Это получение списка дат интервалов ПВЗ*/
 WITH
@@ -3105,7 +3252,6 @@ from #Temp_IntervalsAll
 		And #Temp_IntervalsAll.ВремяНачалаНачальное < ГеоЗонаВременныеИнтервалы._Fld25129
 WHERE
 	#Temp_IntervalsAll.Период BETWEEN DATEADD(DAY, 2, @P_DateTimePeriodBegin) AND @P_DateTimePeriodEnd --begin +2
-    --AND #Temp_IntervalsAll.Период <= @P_DateTimePeriodEnd --end
 Group By 
 	ГеоЗонаВременныеИнтервалы._Fld25128,
 	ГеоЗонаВременныеИнтервалы._Fld25129,
@@ -3114,8 +3260,6 @@ Group By
 	#Temp_IntervalsAll.Геозона,
     #Temp_IntervalsAll.Приоритет
 OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'), KEEP PLAN, KEEPFIXED PLAN);
-
---select Период, Max(Приоритет) AS Приоритет into #Temp_PlanningGroupPriority from #Temp_Intervals Group by Период;
 
 With Temp_DeliveryPower AS
 (
@@ -3143,7 +3287,6 @@ FROM
     dbo._AccumRg25104 МощностиДоставки With (NOLOCK)
 WHERE
     МощностиДоставки._Period BETWEEN @P_DateTimePeriodBegin AND @P_DateTimePeriodEnd
-    --AND МощностиДоставки._Period <= @P_DateTimePeriodEnd
     AND МощностиДоставки._Fld25105RRef IN (Select ЗонаДоставкиРодительСсылка From  #Temp_GeoData)
 GROUP BY
     CAST(CAST(МощностиДоставки._Period  AS DATE) AS DATETIME)

@@ -63,10 +63,10 @@ SET @PickupPoint6 = '2';
 DECLARE @P_DaysToShow numeric(2);
  Set @P_DaysToShow = 7;
 
- Set @P_DateTimeNow = '4021-07-06T15:40:00' 
- Set @P_DateTimePeriodBegin = '4021-07-06T00:00:00'
- Set @P_DateTimePeriodEnd = '4021-07-10T00:00:00'
- Set @P_TimeNow = '2001-01-01T15:40:00'
+ Set @P_DateTimeNow = '4021-07-07T16:20:00' 
+ Set @P_DateTimePeriodBegin = '4021-07-07T00:00:00'
+ Set @P_DateTimePeriodEnd = '4021-07-11T00:00:00'
+ Set @P_TimeNow = '2001-01-01T16:20:00'
  Set @P_EmptyDate = '2001-01-01T00:00:00'
  Set @P_MaxDate = '5999-11-11T00:00:00'
 
@@ -84,134 +84,134 @@ INSERT INTO
 	)
 VALUES
 ('596784',NULL,NULL,10),
---('115257',NULL,NULL,0),
---('5994994',NULL,NULL,0),
---('115255',NULL,NULL,0),
---('382584',NULL,NULL,0),
---('974128',NULL,NULL,0),
---('5994890',NULL,NULL,0),
---('115256',NULL,NULL,0),
---('5994543',NULL,NULL,0),
---('5981297',NULL,NULL,0),
---('930392',NULL,NULL,0),
---('538584',NULL,NULL,0),
---('538586',NULL,NULL,0),
---('5963137',NULL,NULL,0),
---('6176760',NULL,NULL,0),
---('5994577',NULL,NULL,0),
---('376789',NULL,NULL,0),
---('921628',NULL,NULL,0),
---('115261',NULL,NULL,0),
---('115264',NULL,NULL,0),
---('115262',NULL,NULL,0),
---('6013617',NULL,NULL,0),
---('6118716',NULL,NULL,0),
---('5994886',NULL,NULL,0),
---('5896770',NULL,NULL,0),
---('70340',NULL,NULL,0),
---('6535926',NULL,NULL,0),
---('48642',NULL,NULL,0),
---('6341692',NULL,NULL,0),
---('69189',NULL,NULL,0),
---('115254',NULL,NULL,0),
---('70343',NULL,NULL,0),
---('48643',NULL,NULL,0),
---('6294328',NULL,NULL,0),
---('5994901',NULL,NULL,0),
---('5994546',NULL,NULL,0),
---('6118718',NULL,NULL,0),
---('571261',NULL,NULL,0),
---('5915892',NULL,NULL,0),
---('70341',NULL,NULL,0),
---('974115',NULL,NULL,0),
---('921646',NULL,NULL,0),
---('921639',NULL,NULL,0),
---('5994974',NULL,NULL,0),
---('478667',NULL,NULL,0),
---('930389',NULL,NULL,0),
---('921629',NULL,NULL,0),
---('43028',NULL,NULL,0),
---('382103',NULL,NULL,0),
---('921641',NULL,NULL,0),
---('5912890',NULL,NULL,0),
---('538587',NULL,NULL,0),
---('470870',NULL,NULL,0),
---('6074879',NULL,NULL,0),
---('5985046',NULL,NULL,0),
---('5832263',NULL,NULL,0),
---('800758',NULL,NULL,0),
---('930387',NULL,NULL,0),
---('470873',NULL,NULL,0),
---('378483',NULL,NULL,0),
-('596784',NULL,'340,388,460,417,234,2',10)--,
---('115257',NULL,'340,388,460,417,234,2',0),
---('5994994',NULL,'340,388,460,417,234,2',0),
---('115255',NULL,'340,388,460,417,234,2',0),
---('382584',NULL,'340,388,460,417,234,2',0),
---('974128',NULL,'340,388,460,417,234,2',0),
---('5994890',NULL,'340,388,460,417,234,2',0),
---('115256',NULL,'340,388,460,417,234,2',0),
---('5994543',NULL,'340,388,460,417,234,2',0),
---('5981297',NULL,'340,388,460,417,234,2',0),
---('930392',NULL,'340,388,460,417,234,2',0),
---('538584',NULL,'340,388,460,417,234,2',0),
---('538586',NULL,'340,388,460,417,234,2',0),
---('5963137',NULL,'340,388,460,417,234,2',0),
---('6176760',NULL,'340,388,460,417,234,2',0),
---('5994577',NULL,'340,388,460,417,234,2',0),
---('376789',NULL,'340,388,460,417,234,2',0),
---('921628',NULL,'340,388,460,417,234,2',0),
---('115261',NULL,'340,388,460,417,234,2',0),
---('115264',NULL,'340,388,460,417,234,2',0),
---('115262',NULL,'340,388,460,417,234,2',0),
---('6013617',NULL,'340,388,460,417,234,2',0),
---('6118716',NULL,'340,388,460,417,234,2',0),
---('5994886',NULL,'340,388,460,417,234,2',0),
---('5896770',NULL,'340,388,460,417,234,2',0),
---('70340',NULL,'340,388,460,417,234,2',0),
---('6535926',NULL,'340,388,460,417,234,2',0),
---('48642',NULL,'340,388,460,417,234,2',0),
---('6341692',NULL,'340,388,460,417,234,2',0),
---('69189',NULL,'340,388,460,417,234,2',0),
---('115254',NULL,'340,388,460,417,234,2',0),
---('70343',NULL,'340,388,460,417,234,2',0),
---('48643',NULL,'340,388,460,417,234,2',0),
---('6294328',NULL,'340,388,460,417,234,2',0),
---('5994901',NULL,'340,388,460,417,234,2',0),
---('5994546',NULL,'340,388,460,417,234,2',0),
---('6118718',NULL,'340,388,460,417,234,2',0),
---('571261',NULL,'340,388,460,417,234,2',0),
---('5915892',NULL,'340,388,460,417,234,2',0),
---('70341',NULL,'340,388,460,417,234,2',0),
---('974115',NULL,'340,388,460,417,234,2',0),
---('921646',NULL,'340,388,460,417,234,2',0),
---('921639',NULL,'340,388,460,417,234,2',0),
---('5994974',NULL,'340,388,460,417,234,2',0),
---('478667',NULL,'340,388,460,417,234,2',0),
---('930389',NULL,'340,388,460,417,234,2',0),
---('921629',NULL,'340,388,460,417,234,2',0),
---('43028',NULL,'340,388,460,417,234,2',0),
---('382103',NULL,'340,388,460,417,234,2',0),
---('921641',NULL,'340,388,460,417,234,2',0),
---('5912890',NULL,'340,388,460,417,234,2',0),
---('538587',NULL,'340,388,460,417,234,2',0),
---('470870',NULL,'340,388,460,417,234,2',0),
---('6074879',NULL,'340,388,460,417,234,2',0),
---('5985046',NULL,'340,388,460,417,234,2',0),
---('5832263',NULL,'340,388,460,417,234,2',0),
---('800758',NULL,'340,388,460,417,234,2',0),
---('930387',NULL,'340,388,460,417,234,2',0),
---('470873',NULL,'340,388,460,417,234,2',0),
---('378483',NULL,'340,388,460,417,234,2',0)
+('115257',NULL,NULL,190),
+('5994994',NULL,NULL,1),
+('115255',NULL,NULL,1),
+('382584',NULL,NULL,1),
+('974128',NULL,NULL,1),
+('5994890',NULL,NULL,1),
+('115256',NULL,NULL,1),
+('5994543',NULL,NULL,1),
+('5981297',NULL,NULL,1),
+('930392',NULL,NULL,1),
+('538584',NULL,NULL,1),
+('538586',NULL,NULL,1),
+('5963137',NULL,NULL,1),
+('6176760',NULL,NULL,1),
+('5994577',NULL,NULL,1),
+('376789',NULL,NULL,1),
+('921628',NULL,NULL,1),
+('115261',NULL,NULL,1),
+('115264',NULL,NULL,1),
+('115262',NULL,NULL,1),
+('6013617',NULL,NULL,1),
+('6118716',NULL,NULL,1),
+('5994886',NULL,NULL,1),
+('5896770',NULL,NULL,1),
+('70340',NULL,NULL,1),
+('6535926',NULL,NULL,1),
+('48642',NULL,NULL,1),
+('6341692',NULL,NULL,1),
+('69189',NULL,NULL,1),
+('115254',NULL,NULL,1),
+('70343',NULL,NULL,1),
+('48643',NULL,NULL,1),
+('6294328',NULL,NULL,1),
+('5994901',NULL,NULL,1),
+('5994546',NULL,NULL,1),
+('6118718',NULL,NULL,1),
+('571261',NULL,NULL,1),
+('5915892',NULL,NULL,1),
+('70341',NULL,NULL,1),
+('974115',NULL,NULL,1),
+('921646',NULL,NULL,1),
+('921639',NULL,NULL,1),
+('5994974',NULL,NULL,1),
+('478667',NULL,NULL,1),
+('930389',NULL,NULL,1),
+('921629',NULL,NULL,1),
+('43028',NULL,NULL,1),
+('382103',NULL,NULL,1),
+('921641',NULL,NULL,1),
+('5912890',NULL,NULL,1),
+('538587',NULL,NULL,1),
+('470870',NULL,NULL,1),
+('6074879',NULL,NULL,1),
+('5985046',NULL,NULL,1),
+('5832263',NULL,NULL,1),
+('800758',NULL,NULL,1),
+('930387',NULL,NULL,1),
+('470873',NULL,NULL,1),
+('378483',NULL,NULL,1),
+('596784',NULL,'340,388,460,417,234,2',10),
+('115257',NULL,'340,388,460,417,234,2',190),
+('5994994',NULL,'340,388,460,417,234,2',1),
+('115255',NULL,'340,388,460,417,234,2',1),
+('382584',NULL,'340,388,460,417,234,2',1),
+('974128',NULL,'340,388,460,417,234,2',1),
+('5994890',NULL,'340,388,460,417,234,2',1),
+('115256',NULL,'340,388,460,417,234,2',1),
+('5994543',NULL,'340,388,460,417,234,2',1),
+('5981297',NULL,'340,388,460,417,234,2',1),
+('930392',NULL,'340,388,460,417,234,2',1),
+('538584',NULL,'340,388,460,417,234,2',1),
+('538586',NULL,'340,388,460,417,234,2',1),
+('5963137',NULL,'340,388,460,417,234,2',1),
+('6176760',NULL,'340,388,460,417,234,2',1),
+('5994577',NULL,'340,388,460,417,234,2',1),
+('376789',NULL,'340,388,460,417,234,2',1),
+('921628',NULL,'340,388,460,417,234,2',1),
+('115261',NULL,'340,388,460,417,234,2',1),
+('115264',NULL,'340,388,460,417,234,2',1),
+('115262',NULL,'340,388,460,417,234,2',1),
+('6013617',NULL,'340,388,460,417,234,2',1),
+('6118716',NULL,'340,388,460,417,234,2',1),
+('5994886',NULL,'340,388,460,417,234,2',1),
+('5896770',NULL,'340,388,460,417,234,2',1),
+('70340',NULL,'340,388,460,417,234,2',1),
+('6535926',NULL,'340,388,460,417,234,2',1),
+('48642',NULL,'340,388,460,417,234,2',1),
+('6341692',NULL,'340,388,460,417,234,2',1),
+('69189',NULL,'340,388,460,417,234,2',1),
+('115254',NULL,'340,388,460,417,234,2',1),
+('70343',NULL,'340,388,460,417,234,2',1),
+('48643',NULL,'340,388,460,417,234,2',1),
+('6294328',NULL,'340,388,460,417,234,2',1),
+('5994901',NULL,'340,388,460,417,234,2',1),
+('5994546',NULL,'340,388,460,417,234,2',1),
+('6118718',NULL,'340,388,460,417,234,2',1),
+('571261',NULL,'340,388,460,417,234,2',1),
+('5915892',NULL,'340,388,460,417,234,2',1),
+('70341',NULL,'340,388,460,417,234,2',1),
+('974115',NULL,'340,388,460,417,234,2',1),
+('921646',NULL,'340,388,460,417,234,2',1),
+('921639',NULL,'340,388,460,417,234,2',1),
+('5994974',NULL,'340,388,460,417,234,2',1),
+('478667',NULL,'340,388,460,417,234,2',1),
+('930389',NULL,'340,388,460,417,234,2',1),
+('921629',NULL,'340,388,460,417,234,2',1),
+('43028',NULL,'340,388,460,417,234,2',1),
+('382103',NULL,'340,388,460,417,234,2',1),
+('921641',NULL,'340,388,460,417,234,2',1),
+('5912890',NULL,'340,388,460,417,234,2',1),
+('538587',NULL,'340,388,460,417,234,2',1),
+('470870',NULL,'340,388,460,417,234,2',1),
+('6074879',NULL,'340,388,460,417,234,2',1),
+('5985046',NULL,'340,388,460,417,234,2',1),
+('5832263',NULL,'340,388,460,417,234,2',1),
+('800758',NULL,'340,388,460,417,234,2',1),
+('930387',NULL,'340,388,460,417,234,2',1),
+('470873',NULL,'340,388,460,417,234,2',1),
+('378483',NULL,'340,388,460,417,234,2',1)
 	--(@P_Article1,@P_Code1,@PickupPoint3,0),
 	--(@P_Article2,@P_Code2,@PickupPoint2,0),
-	--(@P_Article1,@P_Code1,NULL,0),
+	--(@P_Article1,@P_Code1,NULL,1),
 	--(@P_Article3,@P_Code3,@PickupPoint3,0),
-	--('843414',NULL,NULL,0),
-	--(@P_Article5,NULL,NULL,0)--,
-	--('5990264',NULL,NULL,0),
-	--('586456',NULL,NULL,0),
-	--('5990263',NULL,'340,388,460,417,234,2',0),
+	--('843414',NULL,NULL,1),
+	--(@P_Article5,NULL,NULL,1)--,
+	--('5990264',NULL,NULL,1),
+	--('586456',NULL,NULL,1),
+	--('5990263',NULL,'340,388,460,417,234,2',1),
 	--('586455',NULL,'340,388,460,417,2',0)--,
 	--('5990263',NULL,'388',0),
 	--('586455',NULL,'388',0),
@@ -283,7 +283,10 @@ Select
 	#Temp_PickupPoints.СкладСсылка AS СкладПВЗСсылка,
 	Упаковки._IDRRef AS УпаковкаСсылка,
 	Упаковки._Fld6000 AS Вес,
-	Упаковки._Fld6006 AS Объем
+	Упаковки._Fld6006 AS Объем,
+	Упаковки._Fld6001 AS Высота,
+	Упаковки._Fld6002 AS Глубина,
+	Упаковки._Fld6009 AS Ширина
 INTO #Temp_GoodsBegin
 From
 	Temp_GoodsRawParsed T1
@@ -310,7 +313,10 @@ Select
 	#Temp_PickupPoints.СкладСсылка,
 	Упаковки._IDRRef AS УпаковкаСсылка,
 	Упаковки._Fld6000 AS Вес,
-	Упаковки._Fld6006 AS Объем
+	Упаковки._Fld6006 AS Объем,
+	Упаковки._Fld6001 AS Высота,
+	Упаковки._Fld6002 AS Глубина,
+	Упаковки._Fld6009 AS Ширина
 From 
 	Temp_GoodsRawParsed T1
 	Inner Join 	dbo._Reference149 Номенклатура With (NOLOCK) 
@@ -325,6 +331,60 @@ From
 		Номенклатура._IDRRef = Упаковки._OwnerID_RRRef		
 		And Упаковки._Fld6003RRef = Номенклатура._Fld3489RRef
 		AND Упаковки._Marked = 0x00
+OPTION (KEEP PLAN, KEEPFIXED PLAN);
+
+
+/*Размеры для расчета габаритов*/
+SELECT
+T1.НоменклатураСсылка,
+CAST(SUM((T1.Вес * T1.Количество)) AS NUMERIC(36, 6)) AS Вес,
+CAST(SUM((T1.Объем * T1.Количество)) AS NUMERIC(38, 8)) AS Объем,
+MAX(T1.Высота) AS Высота,
+MAX(T1.Глубина) AS Глубина,
+MAX(T1.Ширина) AS Ширина,
+0x00000000000000000000000000000000  AS Габарит
+Into #Temp_Size
+FROM #Temp_GoodsBegin T1 WITH(NOLOCK)
+Group By 
+	T1.НоменклатураСсылка
+OPTION (KEEP PLAN, KEEPFIXED PLAN);
+
+/*Габарит общий*/
+SELECT
+    --TOP 1 
+	T1.НоменклатураСсылка,
+	CASE
+        WHEN (
+            ISNULL(
+                T1.Габарит,
+                0x00000000000000000000000000000000
+            ) <> 0x00000000000000000000000000000000
+        ) THEN T1.Габарит
+        WHEN (T4._Fld21339 > 0)
+        AND (T1.Вес >= T4._Fld21339)
+        AND (T5._Fld21337 > 0)
+        AND (T1.Объем >= T5._Fld21337) THEN 0xAD3F7F5FC4F15DAD4F693CAF8365EC0D --хбт в кбт
+        WHEN (T2._Fld21168 > 0)
+        AND (T1.Вес >= T2._Fld21168) THEN 0xAD3F7F5FC4F15DAD4F693CAF8365EC0D --кбт
+        WHEN (T3._Fld21166 > 0)
+        AND (T1.Объем >= T3._Fld21166) THEN 0xAD3F7F5FC4F15DAD4F693CAF8365EC0D --кбт
+        WHEN (T6._Fld21580 > 0)
+        AND (T1.Высота > 0)
+        AND (T1.Глубина > 0)
+        AND (T1.Ширина >0) THEN CASE
+            WHEN (T1.Высота >= T6._Fld21580) OR (T1.Глубина >= T6._Fld21580) OR (T1.Ширина >= T6._Fld21580) THEN 0xAD3F7F5FC4F15DAD4F693CAF8365EC0D --кбт
+            ELSE 0x8AB421D483ABE88A4C4C9928262FFB0D --мбт
+        END
+        ELSE 0x8AB421D483ABE88A4C4C9928262FFB0D --мбт
+    END AS Габарит
+Into #Temp_Dimensions
+FROM
+    #Temp_Size T1 WITH(NOLOCK)
+    INNER JOIN dbo._Const21167 T2 ON 1 = 1
+    INNER JOIN dbo._Const21165 T3 ON 1 = 1
+    INNER JOIN dbo._Const21338 T4 ON 1 = 1
+    INNER JOIN dbo._Const21336 T5 ON 1 = 1
+    INNER JOIN dbo._Const21579 T6 ON 1 = 1
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
 Select 
@@ -345,14 +405,15 @@ Select
 INTO #Temp_Goods
 From 
 	#Temp_GoodsBegin Номенклатура
+	Inner Join #Temp_Dimensions With (NOLOCK) On Номенклатура.НоменклатураСсылка = #Temp_Dimensions.НоменклатураСсылка
 	Left Join dbo._Reference23294 ГруппыПланирования With (NOLOCK)
 		Inner Join dbo._Reference23294_VT23309 With (NOLOCK)
 			on ГруппыПланирования._IDRRef = _Reference23294_VT23309._Reference23294_IDRRef
-			and _Reference23294_VT23309._Fld23311RRef in (Select ЗонаДоставкиРодительСсылка From #Temp_GeoData)
+			and _Reference23294_VT23309._Fld23311RRef in (Select ЗонаДоставкиРодительСсылка From #Temp_GeoData)		
 		On 
 		ГруппыПланирования._Fld23302RRef IN (Select СкладСсылка From #Temp_GeoData) --склад
 		AND ГруппыПланирования._Fld25141 = 0x01--участвует в расчете мощности
-		AND (ГруппыПланирования._Fld23301RRef = Номенклатура.Габариты OR (Номенклатура.Габариты = 0xAC2CBF86E693F63444670FFEB70264EE AND ГруппыПланирования._Fld23301RRef= 0xAD3F7F5FC4F15DAD4F693CAF8365EC0D) ) --габариты
+		AND ГруппыПланирования._Fld23301RRef = #Temp_Dimensions.Габарит --Номенклатура.Габариты OR (Номенклатура.Габариты = 0xAC2CBF86E693F63444670FFEB70264EE AND ГруппыПланирования._Fld23301RRef= 0xAD3F7F5FC4F15DAD4F693CAF8365EC0D) ) --габариты
 		AND ГруппыПланирования._Marked = 0x00
 		AND Номенклатура.СкладПВЗСсылка Is Null
 UNION ALL
@@ -373,6 +434,7 @@ Select
 	0
 From 
 	#Temp_GoodsBegin Номенклатура
+	Inner Join #Temp_Dimensions With (NOLOCK) On Номенклатура.НоменклатураСсылка = #Temp_Dimensions.НоменклатураСсылка
 	Left Join dbo._Reference23294 ГруппыПланирования With (NOLOCK)
 		Inner Join dbo._Reference23294_VT23309 With (NOLOCK)
 			on ГруппыПланирования._IDRRef = _Reference23294_VT23309._Reference23294_IDRRef
@@ -380,7 +442,7 @@ From
 		On 
 		ГруппыПланирования._Fld23302RRef IN (Select СкладСсылка From #Temp_GeoData) --склад
 		AND ГруппыПланирования._Fld25141 = 0x01--участвует в расчете мощности
-		AND (ГруппыПланирования._Fld23301RRef = Номенклатура.Габариты OR (Номенклатура.Габариты = 0xAC2CBF86E693F63444670FFEB70264EE AND ГруппыПланирования._Fld23301RRef= 0xAD3F7F5FC4F15DAD4F693CAF8365EC0D) ) --габариты
+		AND ГруппыПланирования._Fld23301RRef = #Temp_Dimensions.Габарит--(ГруппыПланирования._Fld23301RRef = Номенклатура.Габариты OR (Номенклатура.Габариты = 0xAC2CBF86E693F63444670FFEB70264EE AND ГруппыПланирования._Fld23301RRef= 0xAD3F7F5FC4F15DAD4F693CAF8365EC0D) ) --габариты
 		AND ГруппыПланирования._Marked = 0x00
 		AND Номенклатура.СкладПВЗСсылка Is Null
 	Inner Join dbo._Reference23294 ПодчиненнаяГП
@@ -449,7 +511,7 @@ HAVING
     (SUM(T2._Fld21412) <> 0.0
     OR SUM(T2._Fld21411) <> 0.0)
 	AND SUM(T2._Fld21411) - SUM(T2._Fld21412) > 0.0
-OPTION (OPTIMIZE FOR (@P_DateTimeNow='4021-07-06T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
+OPTION (OPTIMIZE FOR (@P_DateTimeNow='4021-07-07T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
 
 SELECT Distinct
     T1._Fld23831RRef AS СкладИсточника,
@@ -463,8 +525,7 @@ FROM
 	ON T1._Fld23831RRef = #Temp_Remains.СкладИсточника
 	AND T1._Fld23832 = #Temp_Remains.ДатаСобытия
 	AND T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData UNION ALL Select СкладСсылка From #Temp_PickupPoints)
-OPTION (KEEP PLAN, KEEPFIXED PLAN)
-;
+OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
 SELECT
 	T1._Fld23831RRef AS СкладИсточника,
@@ -483,7 +544,7 @@ WHERE
             #Temp_Remains T2 WITH(NOLOCK)) 
 GROUP BY T1._Fld23831RRef,
 T1._Fld23833RRef
-OPTION (OPTIMIZE FOR (@P_DateTimeNow='4021-07-06T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
+OPTION (OPTIMIZE FOR (@P_DateTimeNow='4021-07-07T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
 
 
 SELECT
@@ -552,6 +613,39 @@ WHERE
     NOT T6.Регистратор_RRRef IS NULL
 	And T6.Источник_RTRef = 0x00000153
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
+
+
+With TempSourcesGrouped AS
+(
+Select
+	T1.НоменклатураСсылка AS НоменклатураСсылка,
+	Sum(T1.Количество) AS Количество,
+	T1.ДатаДоступности AS ДатаДоступности,
+	T1.СкладНазначения AS СкладНазначения
+From
+	#Temp_Sources T1	
+Group by
+	T1.НоменклатураСсылка,
+	T1.ДатаДоступности,
+	T1.СкладНазначения
+)
+Select
+	Источники1.НоменклатураСсылка AS Номенклатура,
+	Источники1.СкладНазначения AS СкладНазначения,
+	Источники1.ДатаДоступности AS ДатаДоступности,
+	Sum(Источник2.Количество) AS Количество
+Into #Temp_AvailableGoods
+From
+	TempSourcesGrouped AS Источники1
+		Left Join TempSourcesGrouped AS Источник2
+		On Источники1.НоменклатураСсылка = Источник2.НоменклатураСсылка
+		AND Источники1.СкладНазначения = Источник2.СкладНазначения
+			AND Источники1.ДатаДоступности >= Источник2.ДатаДоступности	
+Group by
+	Источники1.НоменклатураСсылка,
+	Источники1.ДатаДоступности,
+	Источники1.СкладНазначения
+OPTION (HASH GROUP, KEEP PLAN, KEEPFIXED PLAN);
 
 With Temp_ExchangeRates AS (
 SELECT
@@ -638,23 +732,6 @@ GROUP BY
     T2.ДатаДоступности
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
---SELECT
---    T1.НоменклатураСсылка,
---    T1.СкладНазначения,
---    Min(ISNULL(T2.ДатаДоступности1, T1.ДатаДоступности)) AS ДатаДоступности
---Into #Temp_SourcesCorrectedDate
---FROM
---    #Temp_Sources T1 WITH(NOLOCK)
---    LEFT OUTER JOIN #Temp_BestPriceAfterClosestDate T2 WITH(NOLOCK)
---    ON (T1.НоменклатураСсылка = T2.НоменклатураСсылка)
---    AND (T1.ДатаДоступности = T2.ДатаДоступности)
---    AND (T1.СкладНазначения = T2.СкладНазначения)
---    AND (T1.ТипИсточника = 3)
---GROUP BY
---	T1.НоменклатураСсылка,
---	T1.СкладНазначения
---OPTION (KEEP PLAN, KEEPFIXED PLAN);
-
 With Temp_ClosestDate AS
 (SELECT
 T1.НоменклатураСсылка,
@@ -703,7 +780,7 @@ SELECT
 	T1.code,
     ISNULL(T3.СкладНазначения, T2.СкладНазначения) AS СкладНазначения,
     MIN(ISNULL(T3.ДатаДоступности, T2.ДатаДоступности)) AS БлижайшаяДата,
-    1 AS Количество,
+    T1.Количество AS Количество,
     T1.Вес,
     T1.Объем,
     T1.ВремяНаОбслуживание,
@@ -722,6 +799,7 @@ FROM
 Where 
 	T1.СкладСсылка IS NULL
 	And T1.ГруппаПланированияСклад = ISNULL(T3.СкладНазначения, T2.СкладНазначения) 
+	AND T1.Количество = 1
 GROUP BY
     T1.НоменклатураСсылка,
 	T1.article,
@@ -741,7 +819,7 @@ SELECT
 	T1.code,
     ISNULL(T3.СкладНазначения, T2.СкладНазначения) AS СкладНазначения,
     MIN(ISNULL(T3.ДатаДоступности, T2.ДатаДоступности)) AS БлижайшаяДата,
-    1 AS Количество,
+    T1.Количество AS Количество,
     T1.Вес,
     T1.Объем,
     T1.ВремяНаОбслуживание,
@@ -758,11 +836,86 @@ FROM
 		AND T1.СкладСсылка = ISNULL(T3.СкладНазначения, T2.СкладНазначения)
 Where 
 	NOT T1.СкладСсылка IS NULL
+	AND T1.Количество = 1
 GROUP BY
     T1.НоменклатураСсылка,
 	T1.article,
 	T1.code,
 	ISNULL(T3.СкладНазначения, T2.СкладНазначения),
+    T1.Вес,
+    T1.Объем,
+    T1.ВремяНаОбслуживание,
+    T1.Количество,
+    T1.ГруппаПланирования,
+	T1.ГруппаПланированияДобавляемоеВремя,
+	T1.Приоритет
+UNION ALL
+
+SELECT
+    T1.НоменклатураСсылка,
+	T1.article,
+	T1.code,
+    #Temp_AvailableGoods.СкладНазначения AS СкладНазначения,
+    Min(#Temp_AvailableGoods.ДатаДоступности) AS БлижайшаяДата,
+    T1.Количество AS Количество,
+    T1.Вес,
+    T1.Объем,
+    T1.ВремяНаОбслуживание,
+    T1.ГруппаПланирования,
+	T1.ГруппаПланированияДобавляемоеВремя,
+	T1.Приоритет,
+	0 AS PickUp
+FROM
+    #Temp_Goods T1 WITH(NOLOCK)	
+   Left Join #Temp_AvailableGoods With (NOLOCK) 
+			On T1.НоменклатураСсылка = #Temp_AvailableGoods.Номенклатура
+			AND T1.Количество <= #Temp_AvailableGoods.Количество
+			AND #Temp_AvailableGoods.СкладНазначения IN (Select СкладСсылка From #Temp_GeoData)
+Where 
+	T1.СкладСсылка IS NULL
+	And T1.ГруппаПланированияСклад = #Temp_AvailableGoods.СкладНазначения 
+	AND T1.Количество > 1
+GROUP BY
+    T1.НоменклатураСсылка,
+	T1.article,
+	T1.code,
+	#Temp_AvailableGoods.СкладНазначения,
+    T1.Вес,
+    T1.Объем,
+    T1.ВремяНаОбслуживание,
+    T1.Количество,
+    T1.ГруппаПланирования,
+	T1.ГруппаПланированияДобавляемоеВремя,
+	T1.Приоритет
+UNION ALL
+SELECT
+    T1.НоменклатураСсылка,
+	T1.article,
+	T1.code,
+    #Temp_AvailableGoods.СкладНазначения AS СкладНазначения,
+    Min(#Temp_AvailableGoods.ДатаДоступности) AS БлижайшаяДата,
+    T1.Количество AS Количество,
+    T1.Вес,
+    T1.Объем,
+    T1.ВремяНаОбслуживание,
+    T1.ГруппаПланирования,
+	T1.ГруппаПланированияДобавляемоеВремя,
+	T1.Приоритет,
+	1 AS PickUp
+FROM
+	 #Temp_Goods T1 WITH(NOLOCK)	
+	 Left Join #Temp_AvailableGoods With (NOLOCK) 
+		On T1.НоменклатураСсылка = #Temp_AvailableGoods.Номенклатура
+		AND T1.Количество <= #Temp_AvailableGoods.Количество
+		AND	T1.СкладСсылка = #Temp_AvailableGoods.СкладНазначения
+Where 
+	NOT T1.СкладСсылка IS NULL
+	AND T1.Количество > 1
+GROUP BY
+    T1.НоменклатураСсылка,
+	T1.article,
+	T1.code,
+	#Temp_AvailableGoods.СкладНазначения,
     T1.Вес,
     T1.Объем,
     T1.ВремяНаОбслуживание,
@@ -859,14 +1012,6 @@ GROUP BY
 	T1.code,
 	T1.СкладНазначения
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
-
---Select 
---	CAST(CAST(DateAdd(DAY, @P_DaysToShow,Max(ДатаСоСклада))AS date) AS datetime) AS МаксимальнаяДата,
---	CAST(CAST(Min(ДатаСоСклада)AS date) AS datetime) AS МинимальнаяДата
---Into #Temp_PickupDatesGroup
---From 
---	#Temp_ShipmentDatesPickUp
---OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
 /*Это получение списка дат интервалов ПВЗ*/
 WITH
@@ -1023,7 +1168,7 @@ HAVING
             ) AS NUMERIC(16, 0)
         ) > 0.0
     )
-OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-07-06T00:00:00',@P_DateTimePeriodEnd='4021-07-10T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
+OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-07-07T00:00:00',@P_DateTimePeriodEnd='4021-07-11T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
 ;
 
 select
@@ -1058,7 +1203,7 @@ Group By
 	#Temp_IntervalsAll.Геозона,
 	T2._Fld25137,
 	#Temp_IntervalsAll.Приоритет
-OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-07-06T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-07-07T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
 
 INsert into #Temp_Intervals
 select
@@ -1092,7 +1237,7 @@ Group By
 	#Temp_IntervalsAll.ГруппаПланирования,
 	#Temp_IntervalsAll.Геозона,
 	#Temp_IntervalsAll.Приоритет
-OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-07-06T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-07-07T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
 
 INsert into #Temp_Intervals
 select
@@ -1114,7 +1259,6 @@ from #Temp_IntervalsAll
 		And #Temp_IntervalsAll.ВремяНачалаНачальное < ГеоЗонаВременныеИнтервалы._Fld25129
 WHERE
 	#Temp_IntervalsAll.Период BETWEEN DATEADD(DAY, 2, @P_DateTimePeriodBegin) AND @P_DateTimePeriodEnd --begin +2
-    --AND #Temp_IntervalsAll.Период <= @P_DateTimePeriodEnd --end
 Group By 
 	ГеоЗонаВременныеИнтервалы._Fld25128,
 	ГеоЗонаВременныеИнтервалы._Fld25129,
@@ -1122,10 +1266,7 @@ Group By
 	#Temp_IntervalsAll.ГруппаПланирования,
 	#Temp_IntervalsAll.Геозона,
 	#Temp_IntervalsAll.Приоритет
-OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-07-06T00:00:00',@P_DateTimePeriodEnd='4021-07-10T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
-
---select Период, Max(Приоритет) AS Приоритет into #Temp_PlanningGroupPriority from #Temp_Intervals Group by Период
---OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-07-06T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-07-07T00:00:00',@P_DateTimePeriodEnd='4021-07-11T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
 
 With Temp_DeliveryPower AS
 (
@@ -1153,7 +1294,6 @@ FROM
     dbo._AccumRg25104 МощностиДоставки With (NOLOCK)
 WHERE
     МощностиДоставки._Period BETWEEN @P_DateTimePeriodBegin AND @P_DateTimePeriodEnd
-    --AND МощностиДоставки._Period <= @P_DateTimePeriodEnd
 	AND МощностиДоставки._Fld25105RRef IN (Select ЗонаДоставкиРодительСсылка From  #Temp_GeoData)
 GROUP BY
     CAST(CAST(МощностиДоставки._Period  AS DATE) AS DATETIME)
@@ -1198,7 +1338,7 @@ GROUP BY
 	T1.НоменклатураСсылка,
     T1.article,
 	T1.code
-OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-07-06T00:00:00',@P_DateTimePeriodEnd='4021-07-10T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
+OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-07-07T00:00:00',@P_DateTimePeriodEnd='4021-07-11T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
 
 Select 
 	IsNull(#Temp_AvailableCourier.article,#Temp_AvailablePickUp.article) AS article,
@@ -1236,3 +1376,6 @@ DROP TAble #Temp_PickupWorkingHours
 DROP TAble #Temp_Dates
 DROP Table #Temp_PickupPoints
 --DRop Table #Temp_PlanningGroupPriority
+Drop Table #Temp_Dimensions
+Drop Table #Temp_Size
+Drop table #Temp_AvailableGoods
