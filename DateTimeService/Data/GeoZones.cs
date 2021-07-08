@@ -147,7 +147,7 @@ namespace DateTimeService.Data
                     result.AvailableToUse = true;
                 }                
             }
-            catch(FormatException ex)
+            catch(FormatException )
             {
                 var logElement = new ElasticLogElement
                 {

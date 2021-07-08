@@ -63,9 +63,9 @@ SET @PickupPoint6 = '2';
 DECLARE @P_DaysToShow numeric(2);
  Set @P_DaysToShow = 7;
 
- Set @P_DateTimeNow = '4021-07-06T15:40:00' 
- Set @P_DateTimePeriodBegin = '4021-07-06T00:00:00'
- Set @P_DateTimePeriodEnd = '4021-07-10T00:00:00'
+ Set @P_DateTimeNow = '4021-07-08T15:40:00' 
+ Set @P_DateTimePeriodBegin = '4021-07-08T00:00:00'
+ Set @P_DateTimePeriodEnd = '4021-07-12T00:00:00'
  Set @P_TimeNow = '2001-01-01T15:40:00'
  Set @P_EmptyDate = '2001-01-01T00:00:00'
  Set @P_MaxDate = '5999-11-11T00:00:00'
@@ -446,7 +446,7 @@ HAVING
     (SUM(T2._Fld21412) <> 0.0
     OR SUM(T2._Fld21411) <> 0.0)
 	AND SUM(T2._Fld21411) - SUM(T2._Fld21412) > 0.0
-OPTION (OPTIMIZE FOR (@P_DateTimeNow='4021-07-06T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
+OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimeNow='4021-07-08T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
 
 SELECT Distinct
     T1._Fld23831RRef AS СкладИсточника,
@@ -460,27 +460,34 @@ FROM
 	ON T1._Fld23831RRef = #Temp_Remains.СкладИсточника
 	AND T1._Fld23832 = #Temp_Remains.ДатаСобытия
 	AND T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData UNION ALL Select СкладСсылка From #Temp_PickupPoints)
-OPTION (KEEP PLAN, KEEPFIXED PLAN)
-;
+OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
+With SourceWarehouses AS
+(
+SELECT Distinct
+	T2.СкладИсточника AS СкладИсточника
+FROM
+	#Temp_Remains T2 WITH(NOLOCK)
+)
 SELECT
 	T1._Fld23831RRef AS СкладИсточника,
 	T1._Fld23833RRef AS СкладНазначения,
 	MIN(T1._Fld23834) AS ДатаПрибытия 
 Into #Temp_MinimumWarehouseDates
 FROM
-    dbo._InfoRg23830 T1 With (NOLOCK, INDEX([_InfoRg23830_Custom2])) 	
+    dbo._InfoRg23830 T1 With (NOLOCK, INDEX([_InfoRg23830_Custom2]))
+	Inner Join SourceWarehouses On T1._Fld23831RRef = SourceWarehouses.СкладИсточника
 WHERE
 	T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData UNION ALL Select СкладСсылка From #Temp_PickupPoints)
 		AND	T1._Fld23832 BETWEEN @P_DateTimeNow AND DateAdd(DAY,6,@P_DateTimeNow)
-		AND T1._Fld23831RRef IN (
-        SELECT
-            T2.СкладИсточника AS СкладИсточника
-        FROM
-            #Temp_Remains T2 WITH(NOLOCK)) 
+		--AND T1._Fld23831RRef IN (
+        -- SELECT
+        --     T2.СкладИсточника AS СкладИсточника
+        -- FROM
+        --     #Temp_Remains T2 WITH(NOLOCK)) 
 GROUP BY T1._Fld23831RRef,
 T1._Fld23833RRef
-OPTION (OPTIMIZE FOR (@P_DateTimeNow='4021-07-06T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
+OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimeNow='4021-07-08T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
 
 
 SELECT
@@ -633,7 +640,7 @@ GROUP BY
     T2.ЦенаИсточника,
     T2.ЦенаИсточникаМинус,
     T2.ДатаДоступности
-OPTION (KEEP PLAN, KEEPFIXED PLAN);
+OPTION (HASH GROUP, KEEP PLAN, KEEPFIXED PLAN);
 
 --SELECT
 --    T1.НоменклатураСсылка,
@@ -767,7 +774,7 @@ GROUP BY
     T1.ГруппаПланирования,
 	T1.ГруппаПланированияДобавляемоеВремя,
 	T1.Приоритет
-OPTION (KEEP PLAN, KEEPFIXED PLAN);
+OPTION (HASH GROUP, KEEP PLAN, KEEPFIXED PLAN);
 
 SELECT
     T1.НоменклатураСсылка,
@@ -1020,7 +1027,7 @@ HAVING
             ) AS NUMERIC(16, 0)
         ) > 0.0
     )
-OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-07-06T00:00:00',@P_DateTimePeriodEnd='4021-07-10T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
+OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-07-08T00:00:00',@P_DateTimePeriodEnd='4021-07-12T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
 ;
 
 select
@@ -1055,7 +1062,7 @@ Group By
 	#Temp_IntervalsAll.Геозона,
 	T2._Fld25137,
 	#Temp_IntervalsAll.Приоритет
-OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-07-06T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-07-08T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
 
 INsert into #Temp_Intervals
 select
@@ -1089,7 +1096,7 @@ Group By
 	#Temp_IntervalsAll.ГруппаПланирования,
 	#Temp_IntervalsAll.Геозона,
 	#Temp_IntervalsAll.Приоритет
-OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-07-06T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-07-08T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
 
 INsert into #Temp_Intervals
 select
@@ -1119,7 +1126,7 @@ Group By
 	#Temp_IntervalsAll.ГруппаПланирования,
 	#Temp_IntervalsAll.Геозона,
 	#Temp_IntervalsAll.Приоритет
-OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-07-06T00:00:00',@P_DateTimePeriodEnd='4021-07-10T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-07-08T00:00:00',@P_DateTimePeriodEnd='4021-07-12T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
 
 --select Период, Max(Приоритет) AS Приоритет into #Temp_PlanningGroupPriority from #Temp_Intervals Group by Период
 --OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-07-06T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
@@ -1195,7 +1202,7 @@ GROUP BY
 	T1.НоменклатураСсылка,
     T1.article,
 	T1.code
-OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-07-06T00:00:00',@P_DateTimePeriodEnd='4021-07-10T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
+OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-07-08T00:00:00',@P_DateTimePeriodEnd='4021-07-12T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
 
 Select 
 	IsNull(#Temp_AvailableCourier.article,#Temp_AvailablePickUp.article) AS article,

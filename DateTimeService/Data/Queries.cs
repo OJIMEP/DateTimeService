@@ -1462,7 +1462,7 @@ HAVING
     (SUM(T2._Fld21412) <> 0.0
     OR SUM(T2._Fld21411) <> 0.0)
 	AND SUM(T2._Fld21411) - SUM(T2._Fld21412) > 0.0
-OPTION (OPTIMIZE FOR (@P_DateTimeNow='{1}'),KEEP PLAN, KEEPFIXED PLAN);
+OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimeNow='{1}'),KEEP PLAN, KEEPFIXED PLAN);
 
 SELECT Distinct
     T1._Fld23831RRef AS СкладИсточника,
@@ -1476,9 +1476,15 @@ FROM
 	ON T1._Fld23831RRef = #Temp_Remains.СкладИсточника
 	AND T1._Fld23832 = #Temp_Remains.ДатаСобытия
 	AND T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData UNION ALL Select СкладСсылка From #Temp_PickupPoints)   
-OPTION (KEEP PLAN, KEEPFIXED PLAN)
-;
+OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
+With SourceWarehouses AS
+(
+SELECT Distinct
+	T2.СкладИсточника AS СкладИсточника
+FROM
+	#Temp_Remains T2 WITH(NOLOCK)
+)
 SELECT
 	T1._Fld23831RRef AS СкладИсточника,
 	T1._Fld23833RRef AS СкладНазначения,
@@ -1486,17 +1492,18 @@ SELECT
 Into #Temp_MinimumWarehouseDates
 FROM
     dbo._InfoRg23830 T1 With (NOLOCK{7})
+    Inner Join SourceWarehouses On T1._Fld23831RRef = SourceWarehouses.СкладИсточника
 WHERE
     T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData UNION ALL Select СкладСсылка From #Temp_PickupPoints)
 		AND	T1._Fld23832 BETWEEN @P_DateTimeNow AND DateAdd(DAY,6,@P_DateTimeNow)
-		AND T1._Fld23831RRef IN (
-        SELECT
-            T2.СкладИсточника AS СкладИсточника
-        FROM
-            #Temp_Remains T2 WITH(NOLOCK)) 
+		--AND T1._Fld23831RRef IN (
+        -- SELECT
+        --     T2.СкладИсточника AS СкладИсточника
+        -- FROM
+        --     #Temp_Remains T2 WITH(NOLOCK)) 
 GROUP BY T1._Fld23831RRef,
 T1._Fld23833RRef
-OPTION (OPTIMIZE FOR (@P_DateTimeNow='{1}'),KEEP PLAN, KEEPFIXED PLAN);
+OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimeNow='{1}'),KEEP PLAN, KEEPFIXED PLAN);
 
 
 SELECT
@@ -1649,7 +1656,7 @@ GROUP BY
     T2.ЦенаИсточника,
     T2.ЦенаИсточникаМинус,
     T2.ДатаДоступности
-OPTION (KEEP PLAN, KEEPFIXED PLAN);
+OPTION (HASH GROUP, KEEP PLAN, KEEPFIXED PLAN);
 
 --SELECT
 --    T1.НоменклатураСсылка,
@@ -1783,7 +1790,7 @@ GROUP BY
     T1.ГруппаПланирования,
 	T1.ГруппаПланированияДобавляемоеВремя,
 	T1.Приоритет
-OPTION (KEEP PLAN, KEEPFIXED PLAN);
+OPTION (HASH GROUP, KEEP PLAN, KEEPFIXED PLAN);
 
 SELECT
     T1.НоменклатураСсылка,
