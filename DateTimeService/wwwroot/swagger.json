@@ -202,102 +202,6 @@
         }
       }
     },
-    "/api/DateTime/AvailableDateWithCount": {
-      "post": {
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "tags": [
-          "DateTime"
-        ],
-        "summary": "Получить даты доступности",
-        "description": "Получает ближайшие доступные даты доставки и самовывоза по каждому товару с учетом указанного его количества.",
-        "requestBody": {
-          "description": "содержимое отправляемого запроса",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/payload_availabledatewithcount"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "запрос выполнен",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "data": {
-                      "type": "object",
-                      "additionalProperties": {
-                        "type": "object",
-                        "description": "Ключ - артикул",
-                        "properties": {
-                          "code": {
-                            "type": "string",
-                            "description": "Артикул"
-                          },
-                          "sales_code": {
-                            "type": "string",
-                            "description": "Код уценки"
-                          },
-                          "courier": {
-                            "type": "string",
-                            "format": "date-time",
-                            "description": "Дата курьерской доставки"
-                          },
-                          "self": {
-                            "type": "string",
-                            "format": "date-time",
-                            "description": "Дата самовывоза"
-                          }
-                        }
-                      }
-                    }
-                  }
-                },
-                "example": {
-                  "data": {
-                    "101937": {
-                      "code": "101937",
-                      "courier": "2021-03-23T13:00:00",
-                      "self": "3999-11-11T00:00:00"
-                    },
-                    "1020938": {
-                      "code": "1020938",
-                      "courier": "2021-03-24T19:00:00",
-                      "self": "3999-11-11T00:00:00"
-                    },
-                    "789734_2242670": {
-                      "code": "789734",
-                      "sales_code": "2242670",
-                      "courier": "2021-05-05T00:00:00",
-                      "self": "3999-11-11T00:00:00"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Не аутентифицирован"
-          },
-          "403": {
-            "description": "Отсутствуют права на данный эндпоинт"
-          },
-          "500": {
-            "description": "внутренняя ошибка сервера",
-            "content": {}
-          }
-        }
-      }
-    },
-
     "/api/Authenticate/login": {
       "post": {
         "tags": [
@@ -1010,70 +914,10 @@
               "courier"
             ]
           },
-          "codes": {
-            "properties": {
-              "code": {
-                "type": "string",
-                "description": "Артикул номенклатуры"
-              },
-              "sales_code": {
-                "type": "string",
-                "description": "Код номенклатуры для уценки (goods_id). Если не уценка, то не отправляется в принципе, либо null"
-              },
-              "pickup_points": {
-                "type": "array",
-                "description": "Список кодов ПВЗ",
-                "items": {
-                  "type": "string"
-                }
-              }
-            },
-            "description": "Список артикулов с кодами уценки",
-            "example": [
-              {
-                "code": "789734",
-                "sales_code": "2242670",
-                "pickup_points": [
-                  "340",
-                  "388",
-                  "460",
-                  "417",
-                  "234",
-                  "2"
-                ]
-              },
-              {
-                "code": "69516",
-                "pickup_points": [
-                  "340",
-                  "388",
-                  "460",
-                  "417",
-                  "234",
-                  "2"
-                ]
-              }
-            ]
-          }
-        }
-      },
-      "payload_availabledatewithcount": {
-        "properties": {
-          "city_id": {
-            "type": "string",
-            "description": "Код города",
-            "example": "17030"
-          },
-          "delivery_types": {
-            "type": "array",
-            "description": "Вид доставки - самовывоз (self) или курьер (courier)",
-            "items": {
-              "type": "string"
-            },
-            "example": [
-              "self",
-              "courier"
-            ]
+          "check_quantity": {
+            "type": "bool",
+            "description": "Параметр проверки количества при расчете дат, необязательный - по умолчанию false.",
+            "example": true
           },
           "codes": {
             "properties": {
@@ -1087,7 +931,7 @@
               },
               "quantity": {
                 "type": "number",
-                "description": "Количество товаров"
+                "description": "Количество товаров, нужен при проверке количества"
               },
               "pickup_points": {
                 "type": "array",
@@ -1114,7 +958,7 @@
               },
               {
                 "code": "69516",
-                "quantity": 1,
+                "quantity": 10,
                 "pickup_points": [
                   "340",
                   "388",
