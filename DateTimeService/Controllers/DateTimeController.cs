@@ -48,7 +48,7 @@ namespace DateTimeService.Controllers
 
             var dbConnection = await _loadBalacing.GetDatabaseConnectionAsync();
             var conn = dbConnection.connection;
-          
+
 
             var result = new List<ResponseMaxAvailableCount>();
             var logElement = new ElasticLogElement
@@ -67,7 +67,7 @@ namespace DateTimeService.Controllers
 
             try
             {
-                
+
                 conn.StatisticsEnabled = true;
 
                 string query = @"SELECT
@@ -109,7 +109,7 @@ namespace DateTimeService.Controllers
 
                 cmd.CommandText = string.Format(query, string.Join(", ", parameters));
 
-               
+
 
                 //execute the SQLCommand
                 SqlDataReader dr = cmd.ExecuteReader();
@@ -135,7 +135,7 @@ namespace DateTimeService.Controllers
                 //close data reader
                 dr.Close();
 
-                
+
 
                 logElement.TimeSQLExecution = sqlCommandExecutionTime;
                 logElement.ResponseContent = JsonSerializer.Serialize(result);
@@ -173,7 +173,7 @@ namespace DateTimeService.Controllers
 
             var logElementLoadBal = new ElasticLogElement
             {
-                Path = HttpContext.Request.Path,
+                Path = HttpContext.Request.Path + (data.CheckQuantity == true ? "_quantity" : ""),
                 Host = HttpContext.Request.Host.ToString(),
                 RequestContent = JsonSerializer.Serialize(data),
                 Id = Guid.NewGuid().ToString(),
@@ -204,7 +204,7 @@ namespace DateTimeService.Controllers
                 return StatusCode(503);
             }
             watch.Stop();
-           
+
 
             if (conn == null)
             {
@@ -225,7 +225,7 @@ namespace DateTimeService.Controllers
 
             var logElement = new ElasticLogElement
             {
-                Path = HttpContext.Request.Path,
+                Path = HttpContext.Request.Path + (data.CheckQuantity == true ? "_quantity" : ""),
                 Host = HttpContext.Request.Host.ToString(),
                 RequestContent = JsonSerializer.Serialize(data),
                 Id = Guid.NewGuid().ToString(),
@@ -281,8 +281,15 @@ namespace DateTimeService.Controllers
 
                 //open connection
                 //conn.Open();
-
-                string query = Queries.AvailableDate;
+                string query = "";
+                if (data.CheckQuantity==true)
+                {
+                    query = Queries.AvailableDateWithCount;
+                }
+                else
+                {
+                    query = Queries.AvailableDate;
+                }
 
                 var DateMove = DateTime.Now.AddMonths(24000);
                 var TimeNow = new DateTime(2001, 1, 1, DateMove.Hour, DateMove.Minute, DateMove.Second);
@@ -291,7 +298,7 @@ namespace DateTimeService.Controllers
 
                 SqlCommand cmd = new(query, conn);
 
-                
+
                 List<string> pickups = new();
 
                 var queryTextBegin = TextFillGoodsTable(data, cmd, true, pickups);
@@ -526,7 +533,7 @@ namespace DateTimeService.Controllers
         public async Task<IActionResult> IntervalListAsync(RequestIntervalListDTO inputData)
         {
             var data = _mapper.Map<RequestIntervalList>(inputData);
-
+            string databaseType = "";
             Stopwatch stopwatchExecution = new();
             stopwatchExecution.Start();
 
@@ -549,7 +556,7 @@ namespace DateTimeService.Controllers
                 //conn = await _loadBalacing.GetDatabaseConnectionAsync("");
                 var dbConnection = await _loadBalacing.GetDatabaseConnectionAsync();
                 conn = dbConnection.connection;
-                
+                databaseType = dbConnection.databaseType;
             }
             catch (Exception ex)
             {
@@ -634,7 +641,7 @@ namespace DateTimeService.Controllers
                 if (!alwaysCheckGeozone)
                 {
                     adressExists = _geoZones.AdressExists(conn, data.AddressId);
-                }                
+                }
             }
 
             if (!adressExists || alwaysCheckGeozone)
@@ -739,12 +746,19 @@ namespace DateTimeService.Controllers
                         dateTimeNowOptimizeString = DateMove.Date.ToString("yyyy-MM-ddTHH:mm:ss");
                     }
 
+                    string useIndexHint = _configuration.GetValue<string>("useIndexHintWarehouseDates");// @", INDEX([_InfoRg23830_Custom2])";
+                    if (databaseType != "replica_tables")
+                    {
+                        useIndexHint = "";
+                    }
+
                     cmd.CommandText = queryTextBegin + string.Format(query, "",
                         dateTimeNowOptimizeString,
                         DateMove.Date.ToString("yyyy-MM-ddTHH:mm:ss"),
                         DateMove.Date.AddDays(Parameters1C.First(x => x.Name.Contains("rsp_КоличествоДнейЗаполненияГрафика")).ValueDouble - 1).ToString("yyyy-MM-ddTHH:mm:ss"),
                         Parameters1C.First(x => x.Name.Contains("КоличествоДнейАнализаЛучшейЦеныПриОтсрочкеЗаказа")).ValueDouble,
-                        Parameters1C.First(x => x.Name.Contains("ПроцентДнейАнализаЛучшейЦеныПриОтсрочкеЗаказа")).ValueDouble);
+                        Parameters1C.First(x => x.Name.Contains("ПроцентДнейАнализаЛучшейЦеныПриОтсрочкеЗаказа")).ValueDouble,
+                        useIndexHint);
 
 
 
