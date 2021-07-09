@@ -914,6 +914,11 @@
               "courier"
             ]
           },
+          "check_quantity": {
+            "type": "bool",
+            "description": "Параметр проверки количества при расчете дат, необязательный - по умолчанию false.",
+            "example": true
+          },
           "codes": {
             "properties": {
               "code": {
@@ -923,6 +928,10 @@
               "sales_code": {
                 "type": "string",
                 "description": "Код номенклатуры для уценки (goods_id). Если не уценка, то не отправляется в принципе, либо null"
+              },
+              "quantity": {
+                "type": "number",
+                "description": "Количество товаров, нужен при проверке количества"
               },
               "pickup_points": {
                 "type": "array",
@@ -937,6 +946,7 @@
               {
                 "code": "789734",
                 "sales_code": "2242670",
+                "quantity": 1,
                 "pickup_points": [
                   "340",
                   "388",
@@ -948,6 +958,7 @@
               },
               {
                 "code": "69516",
+                "quantity": 10,
                 "pickup_points": [
                   "340",
                   "388",
@@ -961,6 +972,7 @@
           }
         }
       },
+
       "orderitem": {
         "properties": {
           "code": {

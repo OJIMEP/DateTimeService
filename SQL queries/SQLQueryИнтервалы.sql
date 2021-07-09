@@ -570,20 +570,19 @@ SELECT
 	T1._Fld23833RRef AS СкладНазначения,
 	MIN(T1._Fld23834) AS ДатаПрибытия 
 Into #Temp_MinimumWarehouseDates
-FROM 
-    dbo._InfoRg23830 T1 With (NOLOCK)
+FROM
+    dbo._InfoRg23830 T1 With (NOLOCK, INDEX([_InfoRg23830_Custom2])) 	
 WHERE
-    T1._Fld23831RRef IN (
+	T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData UNION ALL Select СкладСсылка From #Temp_PickupPoints)
+		AND	T1._Fld23832 BETWEEN @P_DateTimeNow AND DateAdd(DAY,6,@P_DateTimeNow)
+		AND T1._Fld23831RRef IN (
         SELECT
             T2.СкладИсточника AS СкладИсточника
         FROM
             #Temp_Remains T2 WITH(NOLOCK)) 
-		AND T1._Fld23832 >= @P_DateTimeNow
-		AND T1._Fld23832 <= DateAdd(DAY,6,@P_DateTimeNow)
-		AND T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData UNION ALL Select СкладСсылка From #Temp_PickupPoints)
 GROUP BY T1._Fld23831RRef,
 T1._Fld23833RRef
-OPTION (OPTIMIZE FOR (@P_DateTimeNow='4021-06-29T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
+OPTION (OPTIMIZE FOR (@P_DateTimeNow='4021-07-06T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
 
 
 SELECT
@@ -814,49 +813,49 @@ Select
 	Min(T4.БлижайшаяДата) AS БлижайшаяДата
 into #Temp_ClosestDatesByGoods
 From 
-(SELECT
-    T1.НоменклатураСсылка,
-    ISNULL(T3.СкладНазначения, T2.СкладНазначения) AS СкладНазначения,
-    MIN(ISNULL(T3.ДатаДоступности, T2.ДатаДоступности)) AS БлижайшаяДата
+	(SELECT
+		T1.НоменклатураСсылка,
+		ISNULL(T3.СкладНазначения, T2.СкладНазначения) AS СкладНазначения,
+		MIN(ISNULL(T3.ДатаДоступности, T2.ДатаДоступности)) AS БлижайшаяДата
 
-FROM
-    #Temp_Goods T1 WITH(NOLOCK)
-    LEFT OUTER JOIN #Temp_SourcesCorrectedDate T2 WITH(NOLOCK)
-    ON (T1.НоменклатураСсылка = T2.НоменклатураСсылка)
-    LEFT OUTER JOIN (
-        SELECT
-            T4.НоменклатураСсылка,
-            T4.ДатаДоступности,
-            T4.СкладНазначения,
-            T5.ДатаДоступности AS БлижайшаяДата
-        FROM
-            #Temp_Sources T4 WITH(NOLOCK)
-            LEFT OUTER JOIN Temp_ClosestDate T5 WITH(NOLOCK)
-            ON (T4.НоменклатураСсылка = T5.НоменклатураСсылка)
-            AND (T4.СкладНазначения = T5.СкладНазначения)
-            AND (T4.ТипИсточника = 1)
-    ) T3 ON (T1.НоменклатураСсылка = T3.НоменклатураСсылка)
-    AND (
-        T3.ДатаДоступности <= DATEADD(DAY, 4, T3.БлижайшаяДата) --это параметр КоличествоДнейАнализа
-    )
-	Where T1.Количество = 1
-GROUP BY
-    T1.НоменклатураСсылка,
-    ISNULL(T3.СкладНазначения, T2.СкладНазначения)
-Union ALL
-Select 
-	#Temp_Goods.НоменклатураСсылка,
-	#Temp_AvailableGoods.СкладНазначения,
-	Min(#Temp_AvailableGoods.ДатаДоступности)
-From #Temp_Goods With (NOLOCK)
-	Left Join #Temp_AvailableGoods With (NOLOCK) 
-		On #Temp_Goods.НоменклатураСсылка = #Temp_AvailableGoods.Номенклатура
-		AND #Temp_Goods.Количество <= #Temp_AvailableGoods.Количество
-Where
-	#Temp_Goods.Количество > 1
-Group By
-	#Temp_Goods.НоменклатураСсылка,
-	#Temp_AvailableGoods.СкладНазначения) T4
+	FROM
+		#Temp_Goods T1 WITH(NOLOCK)
+		LEFT OUTER JOIN #Temp_SourcesCorrectedDate T2 WITH(NOLOCK)
+		ON (T1.НоменклатураСсылка = T2.НоменклатураСсылка)
+		LEFT OUTER JOIN (
+			SELECT
+				T4.НоменклатураСсылка,
+				T4.ДатаДоступности,
+				T4.СкладНазначения,
+				T5.ДатаДоступности AS БлижайшаяДата
+			FROM
+				#Temp_Sources T4 WITH(NOLOCK)
+				LEFT OUTER JOIN Temp_ClosestDate T5 WITH(NOLOCK)
+				ON (T4.НоменклатураСсылка = T5.НоменклатураСсылка)
+				AND (T4.СкладНазначения = T5.СкладНазначения)
+				AND (T4.ТипИсточника = 1)
+		) T3 ON (T1.НоменклатураСсылка = T3.НоменклатураСсылка)
+		AND (
+			T3.ДатаДоступности <= DATEADD(DAY, 4, T3.БлижайшаяДата) --это параметр КоличествоДнейАнализа
+		)
+		Where T1.Количество = 1
+	GROUP BY
+		T1.НоменклатураСсылка,
+		ISNULL(T3.СкладНазначения, T2.СкладНазначения)
+	Union ALL
+	Select 
+		#Temp_Goods.НоменклатураСсылка,
+		#Temp_AvailableGoods.СкладНазначения,
+		Min(#Temp_AvailableGoods.ДатаДоступности)
+	From #Temp_Goods With (NOLOCK)
+		Left Join #Temp_AvailableGoods With (NOLOCK) 
+			On #Temp_Goods.НоменклатураСсылка = #Temp_AvailableGoods.Номенклатура
+			AND #Temp_Goods.Количество <= #Temp_AvailableGoods.Количество
+	Where
+		#Temp_Goods.Количество > 1
+	Group By
+		#Temp_Goods.НоменклатураСсылка,
+		#Temp_AvailableGoods.СкладНазначения) T4
 Group by 
 	T4.НоменклатураСсылка,
 	T4.СкладНазначения

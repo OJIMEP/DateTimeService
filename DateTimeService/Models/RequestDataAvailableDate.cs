@@ -23,6 +23,9 @@ namespace DateTimeService.Models
         [Required, JsonPropertyName("city_id")]
         public string CityId { get; set; }
 
+        [Required, JsonPropertyName("check_quantity")]
+        public bool CheckQuantity { get; set; }
+
         [Required, JsonPropertyName("delivery_types")]
         public string[] DeliveryTypes { get; set; }
 
@@ -39,6 +42,9 @@ namespace DateTimeService.Models
 
         [Required, JsonPropertyName("delivery_types")]
         public string[] DeliveryTypes { get; set; }
+
+        [Required, JsonPropertyName("check_quantity")]
+        public bool CheckQuantity { get; set; }
 
         [Required, MinLength(1), JsonPropertyName("codeItems")]
         public RequestDataCodeItem[] Codes { get; set; }
