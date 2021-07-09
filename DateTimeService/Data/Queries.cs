@@ -476,7 +476,7 @@ HAVING
     (SUM(T2._Fld21412) <> 0.0
     OR SUM(T2._Fld21411) <> 0.0)
 	AND SUM(T2._Fld21411) - SUM(T2._Fld21412) > 0.0
-OPTION (OPTIMIZE FOR (@P_DateTimeNow='{1}'),KEEP PLAN, KEEPFIXED PLAN);
+OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimeNow='{1}'),KEEP PLAN, KEEPFIXED PLAN);
 
 SELECT Distinct
     T1._Fld23831RRef AS СкладИсточника,
@@ -492,24 +492,32 @@ FROM
 	AND T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData UNION ALL Select СкладСсылка From #Temp_PickupPoints)
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
+With SourceWarehouses AS
+(
+SELECT Distinct
+	T2.СкладИсточника AS СкладИсточника
+FROM
+	#Temp_Remains T2 WITH(NOLOCK)
+)
 SELECT
 	T1._Fld23831RRef AS СкладИсточника,
 	T1._Fld23833RRef AS СкладНазначения,
 	MIN(T1._Fld23834) AS ДатаПрибытия 
 Into #Temp_MinimumWarehouseDates
 FROM
-    dbo._InfoRg23830 T1 With (NOLOCK{6}) 	
+    dbo._InfoRg23830 T1 With (NOLOCK{6}) 
+    Inner Join SourceWarehouses On T1._Fld23831RRef = SourceWarehouses.СкладИсточника	
 WHERE
 	T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData UNION ALL Select СкладСсылка From #Temp_PickupPoints)
 		AND	T1._Fld23832 BETWEEN @P_DateTimeNow AND DateAdd(DAY,6,@P_DateTimeNow)
-		AND T1._Fld23831RRef IN (
-        SELECT
-            T2.СкладИсточника AS СкладИсточника
-        FROM
-            #Temp_Remains T2 WITH(NOLOCK)) 
+		--AND T1._Fld23831RRef IN (
+        -- SELECT
+        --     T2.СкладИсточника AS СкладИсточника
+        -- FROM
+        --     #Temp_Remains T2 WITH(NOLOCK)) 
 GROUP BY T1._Fld23831RRef,
 T1._Fld23833RRef
-OPTION (OPTIMIZE FOR (@P_DateTimeNow='{1}'),KEEP PLAN, KEEPFIXED PLAN);
+OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimeNow='{1}'),KEEP PLAN, KEEPFIXED PLAN);
 
 
 SELECT
@@ -699,7 +707,7 @@ GROUP BY
     T2.ЦенаИсточника,
     T2.ЦенаИсточникаМинус,
     T2.ДатаДоступности
-OPTION (KEEP PLAN, KEEPFIXED PLAN);
+OPTION (HASH GROUP, KEEP PLAN, KEEPFIXED PLAN);
 
 SELECT
     T1.НоменклатураСсылка,
@@ -1012,7 +1020,7 @@ HAVING
             ) AS NUMERIC(16, 0)
         ) > 0.0
     )
-OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'), KEEP PLAN, KEEPFIXED PLAN);
+OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'), KEEP PLAN, KEEPFIXED PLAN);
 ;
 
 Select Distinct
@@ -1075,7 +1083,6 @@ Group By
 	--T2._Fld25137,
 	#Temp_IntervalsAll.Приоритет
 OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}'), KEEP PLAN, KEEPFIXED PLAN);
-;
 
 INsert into #Temp_Intervals
 select
@@ -1118,7 +1125,6 @@ Group By
 	#Temp_IntervalsAll.Геозона,
 	#Temp_IntervalsAll.Приоритет
 OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}'), KEEP PLAN, KEEPFIXED PLAN); 
-;
 
 INsert into #Temp_Intervals
 select
@@ -1147,8 +1153,7 @@ from #Temp_IntervalsAll
 		And #Temp_IntervalsAll.ВремяНачалаНачальное >= ГеоЗонаВременныеИнтервалы._Fld25128
 		And #Temp_IntervalsAll.ВремяНачалаНачальное < ГеоЗонаВременныеИнтервалы._Fld25129
 WHERE
-	#Temp_IntervalsAll.Период >= DATEADD(DAY, 2, @P_DateTimePeriodBegin) --begin +2
-    AND #Temp_IntervalsAll.Период <= @P_DateTimePeriodEnd --end
+	#Temp_IntervalsAll.Период BETWEEN DATEADD(DAY, 2, @P_DateTimePeriodBegin) AND @P_DateTimePeriodEnd --begin +2
 Group By 
 	ГеоЗонаВременныеИнтервалы._Fld25128,
 	ГеоЗонаВременныеИнтервалы._Fld25129,
@@ -1657,23 +1662,6 @@ GROUP BY
     T2.ДатаДоступности
 OPTION (HASH GROUP, KEEP PLAN, KEEPFIXED PLAN);
 
---SELECT
---    T1.НоменклатураСсылка,
---    T1.СкладНазначения,
---    Min(ISNULL(T2.ДатаДоступности1, T1.ДатаДоступности)) AS ДатаДоступности
---Into #Temp_SourcesCorrectedDate
---FROM
---    #Temp_Sources T1 WITH(NOLOCK)
---    LEFT OUTER JOIN #Temp_BestPriceAfterClosestDate T2 WITH(NOLOCK)
---    ON (T1.НоменклатураСсылка = T2.НоменклатураСсылка)
---    AND (T1.ДатаДоступности = T2.ДатаДоступности)
---    AND (T1.СкладНазначения = T2.СкладНазначения)
---    AND (T1.ТипИсточника = 3)
---GROUP BY
---	T1.НоменклатураСсылка,
---	T1.СкладНазначения
---OPTION (KEEP PLAN, KEEPFIXED PLAN);
-
 With Temp_ClosestDate AS
 (SELECT
 T1.НоменклатураСсылка,
@@ -1878,14 +1866,6 @@ GROUP BY
 	T1.code,
 	T1.СкладНазначения
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
-
---Select 
---	CAST(CAST(DateAdd(DAY, @P_DaysToShow,Max(ДатаСоСклада))AS date) AS datetime) AS МаксимальнаяДата,
---	CAST(CAST(Min(ДатаСоСклада)AS date) AS datetime) AS МинимальнаяДата
---Into #Temp_PickupDatesGroup
---From 
---	#Temp_ShipmentDatesPickUp
---OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
 /*Это получение списка дат интервалов ПВЗ*/
 WITH
@@ -2133,7 +2113,6 @@ from #Temp_IntervalsAll
 		And #Temp_IntervalsAll.ВремяНачалаНачальное < ГеоЗонаВременныеИнтервалы._Fld25129
 WHERE
 	#Temp_IntervalsAll.Период BETWEEN DATEADD(DAY, 2, @P_DateTimePeriodBegin) AND @P_DateTimePeriodEnd --begin +2
-    --AND #Temp_IntervalsAll.Период <= @P_DateTimePeriodEnd --end
 Group By 
 	ГеоЗонаВременныеИнтервалы._Fld25128,
 	ГеоЗонаВременныеИнтервалы._Fld25129,
@@ -2142,8 +2121,6 @@ Group By
 	#Temp_IntervalsAll.Геозона,
     #Temp_IntervalsAll.Приоритет
 OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'), KEEP PLAN, KEEPFIXED PLAN);
-
---select Период, Max(Приоритет) AS Приоритет into #Temp_PlanningGroupPriority from #Temp_Intervals Group by Период;
 
 With Temp_DeliveryPower AS
 (
@@ -2171,7 +2148,6 @@ FROM
     dbo._AccumRg25104 МощностиДоставки With (NOLOCK)
 WHERE
     МощностиДоставки._Period BETWEEN @P_DateTimePeriodBegin AND @P_DateTimePeriodEnd
-    --AND МощностиДоставки._Period <= @P_DateTimePeriodEnd
     AND МощностиДоставки._Fld25105RRef IN (Select ЗонаДоставкиРодительСсылка From  #Temp_GeoData)
 GROUP BY
     CAST(CAST(МощностиДоставки._Period  AS DATE) AS DATETIME)
@@ -2511,7 +2487,7 @@ HAVING
     (SUM(T2._Fld21412) <> 0.0
     OR SUM(T2._Fld21411) <> 0.0)
 	AND SUM(T2._Fld21411) - SUM(T2._Fld21412) > 0.0
-OPTION (OPTIMIZE FOR (@P_DateTimeNow='{1}'),KEEP PLAN, KEEPFIXED PLAN);
+OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimeNow='{1}'),KEEP PLAN, KEEPFIXED PLAN);
 
 SELECT Distinct
     T1._Fld23831RRef AS СкладИсточника,
@@ -2527,6 +2503,13 @@ FROM
 	AND T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData UNION ALL Select СкладСсылка From #Temp_PickupPoints)   
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
+With SourceWarehouses AS
+(
+SELECT Distinct
+	T2.СкладИсточника AS СкладИсточника
+FROM
+	#Temp_Remains T2 WITH(NOLOCK)
+)
 SELECT
 	T1._Fld23831RRef AS СкладИсточника,
 	T1._Fld23833RRef AS СкладНазначения,
@@ -2534,17 +2517,18 @@ SELECT
 Into #Temp_MinimumWarehouseDates
 FROM
     dbo._InfoRg23830 T1 With (NOLOCK{7})
+    Inner Join SourceWarehouses On T1._Fld23831RRef = SourceWarehouses.СкладИсточника
 WHERE
     T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData UNION ALL Select СкладСсылка From #Temp_PickupPoints)
 		AND	T1._Fld23832 BETWEEN @P_DateTimeNow AND DateAdd(DAY,6,@P_DateTimeNow)
-		AND T1._Fld23831RRef IN (
-        SELECT
-            T2.СкладИсточника AS СкладИсточника
-        FROM
-            #Temp_Remains T2 WITH(NOLOCK)) 
+		--AND T1._Fld23831RRef IN (
+        -- SELECT
+        --     T2.СкладИсточника AS СкладИсточника
+        -- FROM
+        --     #Temp_Remains T2 WITH(NOLOCK)) 
 GROUP BY T1._Fld23831RRef,
 T1._Fld23833RRef
-OPTION (OPTIMIZE FOR (@P_DateTimeNow='{1}'),KEEP PLAN, KEEPFIXED PLAN);
+OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimeNow='{1}'),KEEP PLAN, KEEPFIXED PLAN);
 
 
 SELECT
@@ -2730,7 +2714,7 @@ GROUP BY
     T2.ЦенаИсточника,
     T2.ЦенаИсточникаМинус,
     T2.ДатаДоступности
-OPTION (KEEP PLAN, KEEPFIXED PLAN);
+OPTION (HASH GROUP, KEEP PLAN, KEEPFIXED PLAN);
 
 With Temp_ClosestDate AS
 (SELECT
@@ -2923,7 +2907,7 @@ GROUP BY
     T1.ГруппаПланирования,
 	T1.ГруппаПланированияДобавляемоеВремя,
 	T1.Приоритет
-OPTION (KEEP PLAN, KEEPFIXED PLAN);
+OPTION (HASH GROUP, KEEP PLAN, KEEPFIXED PLAN);
 
 SELECT
     T1.НоменклатураСсылка,
