@@ -15,8 +15,11 @@ SET @login = 'exampleDomain\exampleLogin';
 DECLARE @pass nvarchar(30);
 SET @pass = 'examplePass';
 
+
+use triovist
+
 /*Checking and creating primary keys*/
-IF OBJECT_ID('dbo.[_Reference23294_VT26527]','PK') IS NULL 
+IF OBJECT_ID('dbo.[PK__Reference23294_VT26527]','PK') IS NULL 
 Begin
 BEGIN TRANSACTION
 SET QUOTED_IDENTIFIER ON
@@ -933,7 +936,7 @@ exec sp_addarticle @publication = @publ_name, @article = N'_Reference23612_VT236
 --GO
 use [triovist]
 exec sp_addarticle @publication = @publ_name, @article = N'_Reference23612_VT27054', @source_owner = N'dbo', @source_object = N'_Reference23612_VT27054', @type = N'logbased', @description = N'', @creation_script = N'', @pre_creation_cmd = N'drop', @schema_option = 0x000000000803508F, @identityrangemanagementoption = N'none', @destination_table = N'_Reference23612_VT27054', @destination_owner = N'dbo', @status = 24, @vertical_partition = N'false', @ins_cmd = N'CALL [sp_MSins_dbo_Reference23612_VT27054]', @del_cmd = N'CALL [sp_MSdel_dbo_Reference23612_VT27054]', @upd_cmd = N'SCALL [sp_MSupd_dbo_Reference23612_VT27054]'
-GO
+--GO
 use [triovist]
 exec sp_addarticle @publication = @publ_name, @article = N'_Reference256', @source_owner = N'dbo', @source_object = N'_Reference256', @type = N'logbased', @description = N'', @creation_script = N'', @pre_creation_cmd = N'drop', @schema_option = 0x000000000803508F, @identityrangemanagementoption = N'none', @destination_table = N'_Reference256', @destination_owner = N'dbo', @status = 24, @vertical_partition = N'true', @ins_cmd = N'CALL [sp_MSins_dbo_Reference256]', @del_cmd = N'CALL [sp_MSdel_dbo_Reference256]', @upd_cmd = N'SCALL [sp_MSupd_dbo_Reference256]'
 
