@@ -570,6 +570,22 @@ namespace DateTimeService.Controllers
             }
             watch.Stop();
 
+
+            if (conn == null)
+            {
+                logElementLoadBal.TimeSQLExecution = 0;
+                logElementLoadBal.ErrorDescription = "Не найдено доступное соединение к БД";
+                logElementLoadBal.Status = "Error";
+                logElementLoadBal.LoadBalancingExecution = watch.ElapsedMilliseconds;
+                var logstringElement1 = JsonSerializer.Serialize(logElementLoadBal);
+                _logger.LogInformation(logstringElement1);
+
+                Dictionary<string, string> errorDesc = new();
+                errorDesc.Add("ErrorDescription", "Не найдено доступное соединение к БД");
+
+                return StatusCode(500, errorDesc);
+            }
+
             ResponseIntervalList result = new();
 
 
