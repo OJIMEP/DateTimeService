@@ -48,6 +48,17 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/payload_interval"
+              },
+              "examples": {
+                "Интервалы для курьерской доставки": {
+                  "$ref": "#/components/examples/interval_courier"
+                },
+                "Интервалы для самовывоза с ПВЗ": {
+                  "$ref": "#/components/examples/interval_self"
+                },
+                "Интервалы по имеющемуся заказу (Creatio)": {
+                  "$ref": "#/components/examples/interval_byOrder"
+                }
               }
             }
           },
@@ -125,6 +136,14 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/payload_availabledate"
+              },
+              "examples": {
+                "Даты доступности без учета количества (листинг и т.д.)": {
+                  "$ref": "#/components/examples/availabledate_basic"
+                },
+                "Даты доступности с учетом количества (корзина)": {
+                  "$ref": "#/components/examples/availabledate_quantity"
+                }
               }
             }
           },
@@ -170,19 +189,19 @@
                   "data": {
                     "101937": {
                       "code": "101937",
-                      "courier": "2021-03-23T13:00:00",
-                      "self": "3999-11-11T00:00:00"
+                      "courier": "2021-03-23T00:00:00",
+                      "self": "2021-03-24T00:00:00"
                     },
                     "1020938": {
                       "code": "1020938",
-                      "courier": "2021-03-24T19:00:00",
-                      "self": "3999-11-11T00:00:00"
+                      "courier": "2021-03-24T00:00:00",
+                      "self": "2021-03-24T00:00:00"
                     },
                     "789734_2242670": {
                       "code": "789734",
                       "sales_code": "2242670",
                       "courier": "2021-05-05T00:00:00",
-                      "self": "3999-11-11T00:00:00"
+                      "self": "2021-05-06T00:00:00"
                     }
                   }
                 }
@@ -850,6 +869,10 @@
           },
           "delivery_type": {
             "type": "string",
+            "enum": [
+              "self",
+              "courier"
+            ],
             "description": "Вид доставки - самовывоз (self) или курьер (courier). Если не указан, то считается как доставка",
             "example": "self"
           },
@@ -865,8 +888,23 @@
           },
           "payment": {
             "type": "string",
+            "enum": [
+              "partly_pay",
+              "other"
+            ],
             "description": "Тип оплаты: partly_pay, other",
             "example": "other"
+          },
+          "order_date": {
+            "type": "string",
+            "description": "Дата оформленного заказа",
+            "format": "date-time",
+            "example": "2021-07-21T16:18:10"
+          },
+          "order_number": {
+            "type": "string",
+            "description": "Номер оформленного заказа",
+            "example": "100.500.900"
           },
           "order_items": {
             "type": "array",
@@ -907,7 +945,11 @@
             "type": "array",
             "description": "Вид доставки - самовывоз (self) или курьер (courier)",
             "items": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "self",
+                "courier"
+              ]
             },
             "example": [
               "self",
@@ -915,7 +957,7 @@
             ]
           },
           "check_quantity": {
-            "type": "bool",
+            "type": "boolean",
             "description": "Параметр проверки количества при расчете дат, необязательный - по умолчанию false.",
             "example": true
           },
@@ -972,7 +1014,6 @@
           }
         }
       },
-
       "orderitem": {
         "properties": {
           "code": {
@@ -1104,6 +1145,145 @@
               "type": "string"
             }
           }
+        }
+      }
+    },
+    "examples": {
+      "interval_courier": {
+        "value": {
+          "address_id": "47175",
+          "delivery_type": "courier",
+          "floor": 8,
+          "payment": "other",
+          "order_items": [
+            {
+              "code": "789734",
+              "sales_code": "2242670",
+              "quantity": 1
+            },
+            {
+              "code": "69516",
+              "quantity": 10
+            }
+          ]
+        }
+      },
+      "interval_self": {
+        "value": {
+          "pickup_point": "340",
+          "delivery_type": "self",
+          "payment": "other",
+          "order_items": [
+            {
+              "code": "789734",
+              "sales_code": "2242670",
+              "quantity": 1
+            },
+            {
+              "code": "69516",
+              "quantity": 10
+            }
+          ]
+        }
+      },
+      "interval_byOrder": {
+        "value": {
+          "order_date": "2021-07-21T16:18:10",
+          "order_number": "100.500.900"
+        }
+      },
+      "availabledate_basic": {
+        "value": {
+          "city_id": "17030",
+          "delivery_types": [
+            "self",
+            "courier"
+          ],
+          "codes": [
+            {
+              "code": "789734",
+              "sales_code": "2242670",
+              "pickup_points": [
+                "340",
+                "388",
+                "460",
+                "417",
+                "234",
+                "2"
+              ]
+            },
+            {
+              "code": "101937",
+              "pickup_points": [
+                "340",
+                "388",
+                "460",
+                "417",
+                "234",
+                "2"
+              ]
+            },
+            {
+              "code": "1020938",
+              "pickup_points": [
+                "340",
+                "388",
+                "460",
+                "417",
+                "234",
+                "2"
+              ]
+            }
+          ]
+        }
+      },
+      "availabledate_quantity": {
+        "value": {
+          "city_id": "17030",
+          "delivery_types": [
+            "self",
+            "courier"
+          ],
+          "check_quantity": true,
+          "codes": [
+            {
+              "code": "789734",
+              "sales_code": "2242670",
+              "quantity": 6,
+              "pickup_points": [
+                "340",
+                "388",
+                "460",
+                "417",
+                "234",
+                "2"
+              ]
+            },
+            {
+              "code": "101937",
+              "quantity": 5,
+              "pickup_points": [
+                "340",
+                "388",
+                "460",
+                "417",
+                "234",
+                "2"
+              ]
+            },
+            {
+              "code": "1020938",
+              "quantity": 5,
+              "pickup_points": [
+                "340",
+                "388",
+                "460",
+                "417",
+                "234",
+                "2"
+              ]
+            }
+          ]
         }
       }
     }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace DateTimeService.Models
@@ -20,6 +21,12 @@ namespace DateTimeService.Models
         [JsonPropertyName("payment")]
         public string Payment { get; set; }
 
+        [JsonPropertyName("order_number")]
+        public string OrderNumber { get; set; }
+
+        [JsonPropertyName("order_date")]
+        public DateTime OrderDate { get; set; }
+
         [JsonPropertyName("order_items")]
         public List<RequestDataCodeItemDTO> OrderItems { get; set; }
     }
@@ -40,6 +47,12 @@ namespace DateTimeService.Models
 
         [JsonPropertyName("payment")]
         public string Payment { get; set; }
+
+        [JsonPropertyName("order_number")]
+        public string OrderNumber { get; set; }
+
+        [JsonPropertyName("order_date")]
+        public DateTime OrderDate { get; set; }
 
         [JsonPropertyName("order_items")]
         public List<RequestDataCodeItem> OrderItems { get; set; }

@@ -641,12 +641,13 @@ namespace DateTimeService.Controllers
 
             string zoneId = "";
 
+            bool checkByOrder = !(String.IsNullOrEmpty(data.OrderNumber) && data.OrderDate != default);
 
             bool alwaysCheckGeozone = false;
 
             bool adressExists = false;
 
-            if (data.DeliveryType == "self")
+            if (data.DeliveryType == "self" || checkByOrder)
             {
                 adressExists = true;
                 alwaysCheckGeozone = false;
@@ -749,6 +750,12 @@ namespace DateTimeService.Controllers
 
                     cmd.Parameters.Add("@P_GeoCode", SqlDbType.NVarChar);
                     cmd.Parameters["@P_GeoCode"].Value = zoneId;
+
+                    cmd.Parameters.Add("@P_OrderDate", SqlDbType.DateTime);
+                    cmd.Parameters["@P_OrderDate"].Value = data.OrderDate.AddMonths(24000);
+
+                    cmd.Parameters.Add("@P_OrderNumber", SqlDbType.NVarChar, 11);
+                    cmd.Parameters["@P_OrderNumber"].Value = data.OrderNumber != null ? data.OrderNumber : DBNull.Value;
 
                     cmd.CommandTimeout = 5;
 
