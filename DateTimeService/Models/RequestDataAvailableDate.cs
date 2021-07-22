@@ -116,7 +116,7 @@ namespace DateTimeService.Models
                     errors.Add("quantity", "При включенной проверке количества, поле количества должно быть больше нуля");
                 }
 
-                if (item.SalesCode.Trim() == "")
+                if (item.SalesCode != null && item.SalesCode.Trim() == "")
                 {
                     errors.Add("sales_code", "Поле уценки не должно быть пустой строкой - либо заполнено, либо поле в принципе отсутствует");
                 }
