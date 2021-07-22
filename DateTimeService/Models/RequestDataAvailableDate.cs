@@ -80,5 +80,49 @@ namespace DateTimeService.Models
             }
             Codes = items.ToArray();
         }
+
+        public Dictionary<string, string> LogicalCheckInputData()
+        {
+            var errors = new Dictionary<string, string>();
+
+            if (String.IsNullOrEmpty(CityId))
+            {
+                errors.Add("city_id", "Должен быть указан код города");
+            }
+
+            if (DeliveryTypes.Length == 0)
+            {
+                errors.Add("delivery_types", "Должен быть указан хоть один тип доставки");
+            }
+
+            foreach (var item in DeliveryTypes)
+            {
+                if (item != "self" && item != "courier")
+                {
+                    errors.Add("delivery_types", "Указан некорректный тип доставки");
+                }
+            }
+
+
+            foreach (var item in Codes)
+            {
+                if (item.Quantity != 0 && !CheckQuantity)
+                {
+                    errors.Add("quantity", "При отключенной проверке количества, поле количества должно отсутствовать или быть равным нулю");
+                }
+
+                if (item.Quantity == 0 && CheckQuantity)
+                {
+                    errors.Add("quantity", "При включенной проверке количества, поле количества должно быть больше нуля");
+                }
+
+                if (item.SalesCode.Trim() == "")
+                {
+                    errors.Add("sales_code", "Поле уценки не должно быть пустой строкой - либо заполнено, либо поле в принципе отсутствует");
+                }
+            }           
+
+            return errors;
+        }
     }
 }

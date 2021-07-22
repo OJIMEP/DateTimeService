@@ -56,5 +56,87 @@ namespace DateTimeService.Models
 
         [JsonPropertyName("order_items")]
         public List<RequestDataCodeItem> OrderItems { get; set; }
+
+
+        public Dictionary<string,string> LogicalCheckInputData()
+        {
+            var errors = new Dictionary<string, string>();
+
+            if (String.IsNullOrEmpty(DeliveryType) && String.IsNullOrEmpty(OrderNumber))
+            {
+                errors.Add("delivery_type", "Должен быть указан тип доставки или номер имеющегося заказа");
+            }
+
+            if (DeliveryType == "courier")
+            {
+                if (String.IsNullOrEmpty(AddressId))
+                {
+                    errors.Add("address_id", "При курьерской доставке должен быть заполнен код адреса");
+                }
+                if (!String.IsNullOrEmpty(PickupPoint))
+                {
+                    errors.Add("pickup_point", "При курьерской доставке код ПВЗ должен отсутствовать");
+                }
+                if (!String.IsNullOrEmpty(OrderNumber))
+                {
+                    errors.Add("order_number", "При курьерской доставке номер заказа должен отсутствовать");
+                }
+                if (OrderDate != default)
+                {
+                    errors.Add("order_date", "При курьерской доставке дата заказа должна отсутствовать");
+                }
+            }
+            if (DeliveryType == "self")
+            {
+                if (!String.IsNullOrEmpty(AddressId))
+                {
+                    errors.Add("address_id", "При самовывозе код адреса должен отсутствовать");
+                }
+                if (Floor != null)
+                {
+                    errors.Add("floor", "При самовывозе этаж должен отсутствовать");
+                }
+                if (String.IsNullOrEmpty(PickupPoint))
+                {
+                    errors.Add("pickup_point", "При самовывозе код ПВЗ должен быть заполнен");
+                }
+                if (!String.IsNullOrEmpty(OrderNumber))
+                {
+                    errors.Add("order_number", "При самовывозе номер заказа должен отсутствовать");
+                }
+                if (OrderDate != default)
+                {
+                    errors.Add("order_date", "При самовывозе дата заказа должна отсутствовать");
+                }
+            }
+
+            if (!String.IsNullOrEmpty(OrderNumber)|| OrderDate != default)
+            {
+                if (String.IsNullOrEmpty(OrderNumber))
+                {
+                    errors.Add("order_number", "При указании времени заказа, должен быть указан и номер");
+                }
+                if (OrderDate == default)
+                {
+                    errors.Add("order_date", "При указании номера заказа, должна быть указана и дата");
+                }
+
+                if (!String.IsNullOrEmpty(AddressId))
+                {
+                    errors.Add("address_id", "При указании имеющегося заказа код адреса должен отсутствовать");
+                }
+                if (Floor != null)
+                {
+                    errors.Add("floor", "При указании имеющегося заказа этаж должен отсутствовать");
+                }
+                if (!String.IsNullOrEmpty(PickupPoint))
+                {
+                    errors.Add("pickup_point", "При указании имеющегося заказа код ПВЗ должен отсутствовать");
+                }
+            }
+
+            return errors;
+        }
+
     }
 }

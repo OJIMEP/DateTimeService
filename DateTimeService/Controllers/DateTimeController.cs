@@ -239,6 +239,20 @@ namespace DateTimeService.Controllers
             logElement.AdditionalData.Add("RemoteIpAddress", Request.HttpContext.Connection.RemoteIpAddress.ToString());
 
 
+            var dataErrors = data.LogicalCheckInputData();
+            if (dataErrors.Count > 0)
+            {
+                logElement.TimeSQLExecution = 0;
+                logElement.ErrorDescription = "Некорректные входные данные";
+                logElement.Status = "Error";
+                logElement.AdditionalData.Add("InputErrors", JsonSerializer.Serialize(dataErrors));
+                var logstringElement1 = JsonSerializer.Serialize(logElement);
+
+                _logger.LogInformation(logstringElement1);
+
+                return StatusCode(400, dataErrors);
+            }
+
             watch.Reset();
 
             var Parameters1C = new List<GlobalParam1C>
@@ -603,6 +617,20 @@ namespace DateTimeService.Controllers
             logElement.AdditionalData.Add("Referer", Request.Headers["Referer"].ToString());
             logElement.AdditionalData.Add("User-Agent", Request.Headers["Referer"].ToString());
             logElement.AdditionalData.Add("RemoteIpAddress", Request.HttpContext.Connection.RemoteIpAddress.ToString());
+
+            var dataErrors = data.LogicalCheckInputData();
+            if (dataErrors.Count > 0)
+            {
+                logElement.TimeSQLExecution = 0;
+                logElement.ErrorDescription = "Некорректные входные данные";
+                logElement.Status = "Error";
+                logElement.AdditionalData.Add("InputErrors", JsonSerializer.Serialize(dataErrors));
+                var logstringElement1 = JsonSerializer.Serialize(logElement);
+
+                _logger.LogInformation(logstringElement1);
+
+                return StatusCode(400, dataErrors);
+            }
 
             watch.Reset();
 
