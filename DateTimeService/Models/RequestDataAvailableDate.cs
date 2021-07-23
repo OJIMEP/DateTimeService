@@ -111,10 +111,10 @@ namespace DateTimeService.Models
                     errors.Add("quantity", "При отключенной проверке количества, поле количества должно отсутствовать или быть равным нулю");
                 }
 
-                if (item.Quantity == 0 && CheckQuantity)
-                {
-                    errors.Add("quantity", "При включенной проверке количества, поле количества должно быть больше нуля");
-                }
+                //if (item.Quantity == 0 && CheckQuantity)
+                //{
+                //    errors.Add("quantity", "При включенной проверке количества, поле количества должно быть больше нуля");
+                //}
 
                 if (item.SalesCode != null && item.SalesCode.Trim() == "")
                 {
