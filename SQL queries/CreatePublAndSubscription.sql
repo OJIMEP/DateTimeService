@@ -612,158 +612,41 @@ exec sp_addarticle @publication = @publ_name, @article = N'_Document317', @sourc
 
 -- Adding the article's partition column(s)
 exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_IDRRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Version', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Marked', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
 exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Date_Time', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_NumberPrefix', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
 exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Number', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Posted', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8196RRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8223', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8203RRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8227', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8197RRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8229', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8213', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
 exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8205RRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8215', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8201RRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8217RRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8207RRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8219RRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8199RRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8221', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8209_TYPE', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8209_RTRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8209_RRRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8225', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8211', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8231RRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8232RRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8233RRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8234RRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8235RRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8236RRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8237RRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8238_TYPE', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8238_RTRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8238_RRRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8239RRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8240RRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
 exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8241RRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8242RRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
 exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8243RRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
 exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8244', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
 exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8245', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8246', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8247', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8248', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8249', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8250RRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8251RRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8252RRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8253', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8254', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8255RRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8256', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8257', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8198RRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8200RRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8262', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8263RRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8202', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8204', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8206', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8208', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8210RRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8212RRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8214', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8216RRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8218RRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8220', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8222', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8224RRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8226RRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8228', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8230RRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
 exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8260RRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8261RRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8264RRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8265RRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8266', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8268', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8269', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8270', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8271RRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld8272', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld17896RRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld17897', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld19183RRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld21953', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld21954', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld21955', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld21956', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld21957', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld21958', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld19184', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld19185', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld21670', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld19552', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld21116', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld19940', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld20861', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld21671', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld21088', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld21089', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld21117', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
 exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld21917RRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld21648', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld21649', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
 exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld21650', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld21672RRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld21673', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld19186', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld21689RRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld21752', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld21863', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld21864', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld21865', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld21874', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld21881', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld22003', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld22678RRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld22906', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld22920', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld22921', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld23110', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld23157', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld23453', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld23792', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
 exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld25158', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
 exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld25159', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld25160', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld25189', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld25207', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld25208', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld25395', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld25446', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld25503', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld25786RRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld25787', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld25788', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld20849', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld26519RRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld26520RRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld26868', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld26869', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317', @column = N'_Fld26870', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
+
+-- Adding the article filter
+exec sp_articlefilter @publication = @publ_name, @article = N'_Document317', @filter_name = N'FLTR__Document317_1__3762', @filter_clause = N'[_Date_Time]  > ''4021-07-01T00:00:00''', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
 
 -- Adding the article synchronization object
-exec sp_articleview @publication = @publ_name, @article = N'_Document317', @view_name = N'syncobj_0x4531443345414435', @filter_clause = N'', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
-GO
+exec sp_articleview @publication = @publ_name, @article = N'_Document317', @view_name = N'syncobj_0x4531443345414435', @filter_clause = N'[_Date_Time]  > ''4021-07-01T00:00:00''', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
+--GO
 use [triovist]
-exec sp_addarticle @publication = @publ_name, @article = N'_Document317_VT8273', @source_owner = N'dbo', @source_object = N'_Document317_VT8273', @type = N'logbased', @description = N'', @creation_script = N'', @pre_creation_cmd = N'drop', @schema_option = 0x000000000803508F, @identityrangemanagementoption = N'none', @destination_table = N'_Document317_VT8273', @destination_owner = N'dbo', @status = 24, @vertical_partition = N'false', @ins_cmd = N'CALL [sp_MSins_dbo_Document317_VT8273]', @del_cmd = N'CALL [sp_MSdel_dbo_Document317_VT8273]', @upd_cmd = N'SCALL [sp_MSupd_dbo_Document317_VT8273]'
-GO
+exec sp_addarticle @publication = @publ_name, @article = N'_Document317_VT8273', @source_owner = N'dbo', @source_object = N'_Document317_VT8273', @type = N'logbased', @description = null, @creation_script = null, @pre_creation_cmd = N'drop', @schema_option = 0x000000000803508F, @identityrangemanagementoption = N'manual', @destination_table = N'_Document317_VT8273', @destination_owner = N'dbo', @vertical_partition = N'true', @ins_cmd = N'CALL sp_MSins_dbo_Document317_VT8273', @del_cmd = N'CALL sp_MSdel_dbo_Document317_VT8273', @upd_cmd = N'SCALL sp_MSupd_dbo_Document317_VT8273', @filter_clause = N'[_Fld25264] > ''4021-07-01T00:00:00'' OR  [_Fld25264] = ''2001-01-01T00:00:00'''
+
+-- Adding the article's partition column(s)
+exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317_VT8273', @column = N'_Document317_IDRRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
+exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317_VT8273', @column = N'_KeyField', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
+exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317_VT8273', @column = N'_Fld8276RRef', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
+exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317_VT8273', @column = N'_Fld8280', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
+exec sp_articlecolumn @publication = @publ_name, @article = N'_Document317_VT8273', @column = N'_Fld25264', @operation = N'add', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
+
+-- Adding the article filter
+exec sp_articlefilter @publication = @publ_name, @article = N'_Document317_VT8273', @filter_name = N'FLTR__Document317_VT8273_1__3762', @filter_clause = N'[_Fld25264] > ''4021-07-01T00:00:00'' OR  [_Fld25264] = ''2001-01-01T00:00:00''', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
+
+-- Adding the article synchronization object
+exec sp_articleview @publication = @publ_name, @article = N'_Document317_VT8273', @view_name = N'SYNC__Document317_VT8273_1__3762', @filter_clause = N'[_Fld25264] > ''4021-07-01T00:00:00'' OR  [_Fld25264] = ''2001-01-01T00:00:00''', @force_invalidate_snapshot = 1, @force_reinit_subscription = 1
+--GO
 use [triovist]
 exec sp_addarticle @publication = @publ_name, @article = N'_InfoRg21711', @source_owner = N'dbo', @source_object = N'_InfoRg21711', @type = N'logbased', @description = N'', @creation_script = N'', @pre_creation_cmd = N'drop', @schema_option = 0x000000000803508F, @identityrangemanagementoption = N'none', @destination_table = N'_InfoRg21711', @destination_owner = N'dbo', @status = 24, @vertical_partition = N'false', @ins_cmd = N'CALL [sp_MSins_dbo_InfoRg21711]', @del_cmd = N'CALL [sp_MSdel_dbo_InfoRg21711]', @upd_cmd = N'SCALL [sp_MSupd_dbo_InfoRg21711]'
 --GO
