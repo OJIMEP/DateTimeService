@@ -203,7 +203,7 @@ namespace DateTimeService.Data
 
                         if (percentile95rate > criteria.Percentile_95
                             && database.Type != "main"
-                            && (database.LastFreeProcCacheCommand == default || DateTimeOffset.Now - database.LastFreeProcCacheCommand > TimeSpan.FromSeconds(90)))
+                            && (database.LastFreeProcCacheCommand == default || DateTimeOffset.Now - database.LastFreeProcCacheCommand > TimeSpan.FromSeconds(180)))
                         {
 
                             try
