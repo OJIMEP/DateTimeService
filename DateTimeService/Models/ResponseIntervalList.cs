@@ -35,6 +35,8 @@ namespace DateTimeService.Models
 
         [JsonPropertyName("end")]
         public DateTime End { get; set; }
+        [JsonPropertyName("bonus")]
+        public bool Bonus { get; set; }
     }
 
     public class ResponseIntervalListElementWithOffSet
@@ -44,5 +46,7 @@ namespace DateTimeService.Models
 
         [JsonPropertyName("end")]
         public DateTimeOffset End { get; set; }
+        [JsonPropertyName("bonus")]
+        public bool Bonus { get; set; }
     }
 }
