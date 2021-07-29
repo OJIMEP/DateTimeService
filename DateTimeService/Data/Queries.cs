@@ -1419,7 +1419,7 @@ From
 		ON T1.code is NULL and T1.Article = Номенклатура._Fld3480
 	Left Join #Temp_PickupPoints  
 		ON T1.PickupPoint = #Temp_PickupPoints.ERPКодСклада
-        Inner Join dbo._Reference256 Упаковки With (NOLOCK)
+    Inner Join dbo._Reference256 Упаковки With (NOLOCK)
 		On 
 		Упаковки._OwnerID_TYPE = 0x08  
 		AND Упаковки.[_OwnerID_RTRef] = 0x00000095
@@ -1427,7 +1427,7 @@ From
 		Номенклатура._IDRRef = Упаковки._OwnerID_RRRef		
 		And Упаковки._Fld6003RRef = Номенклатура._Fld3489RRef
 		AND Упаковки._Marked = 0x00
-union
+union all
 Select 
 	Номенклатура._IDRRef,
 	Номенклатура._Code,
@@ -2358,6 +2358,7 @@ select
 from #Temp_GoodsRaw t1
 	cross apply 
 		string_split(IsNull(t1.PickupPoint,'-'), ',')
+Where t1.quantity > 0
 )
 Select 
 	Номенклатура._IDRRef AS НоменклатураСсылка,
@@ -2388,7 +2389,7 @@ From
 		Номенклатура._IDRRef = Упаковки._OwnerID_RRRef		
 		And Упаковки._Fld6003RRef = Номенклатура._Fld3489RRef
 		AND Упаковки._Marked = 0x00
-union
+union all
 Select 
 	Номенклатура._IDRRef,
 	Номенклатура._Code,
@@ -2631,11 +2632,6 @@ FROM
 WHERE
     T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData UNION ALL Select СкладСсылка From #Temp_PickupPoints)
 		AND	T1._Fld23832 BETWEEN @P_DateTimeNow AND DateAdd(DAY,6,@P_DateTimeNow)
-		--AND T1._Fld23831RRef IN (
-        -- SELECT
-        --     T2.СкладИсточника AS СкладИсточника
-        -- FROM
-        --     #Temp_Remains T2 WITH(NOLOCK)) 
 GROUP BY T1._Fld23831RRef,
 T1._Fld23833RRef
 OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimeNow='{1}'),KEEP PLAN, KEEPFIXED PLAN);
@@ -3241,6 +3237,7 @@ into #Temp_IntervalsAll
 FROM
     dbo._AccumRg25110 T5 With (NOLOCK)
     Inner Join PlanningGroups ON PlanningGroups.ГруппаПланирования = T5._Fld25112RRef
+    --Inner Join GeoData ON GeoData.Геозона = T5._Fld25111RRef
 WHERE
     T5._Period BETWEEN @P_DateTimePeriodBegin AND @P_DateTimePeriodEnd --begin +2
     AND T5._Fld25111RRef in (Select Геозона From #Temp_GeoData) 

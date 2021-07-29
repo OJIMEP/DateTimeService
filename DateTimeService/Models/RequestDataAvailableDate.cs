@@ -106,7 +106,7 @@ namespace DateTimeService.Models
 
             foreach (var item in Codes)
             {
-                if (item.Quantity != 0 && !CheckQuantity)
+                if (item.Quantity != 0 && !CheckQuantity && !errors.ContainsKey("quantity"))
                 {
                     errors.Add("quantity", "При отключенной проверке количества, поле количества должно отсутствовать или быть равным нулю");
                 }
@@ -116,7 +116,7 @@ namespace DateTimeService.Models
                 //    errors.Add("quantity", "При включенной проверке количества, поле количества должно быть больше нуля");
                 //}
 
-                if (item.SalesCode != null && item.SalesCode.Trim() == "")
+                if (item.SalesCode != null && item.SalesCode.Trim() == "" && !errors.ContainsKey("sales_code"))
                 {
                     errors.Add("sales_code", "Поле уценки не должно быть пустой строкой - либо заполнено, либо поле в принципе отсутствует");
                 }
