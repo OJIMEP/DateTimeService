@@ -669,7 +669,7 @@ namespace DateTimeService.Controllers
 
             string zoneId = "";
 
-            bool checkByOrder = !(String.IsNullOrEmpty(data.OrderNumber) && data.OrderDate != default);
+            bool checkByOrder = !String.IsNullOrEmpty(data.OrderNumber) && data.OrderDate != default;
 
             bool alwaysCheckGeozone = false;
 
