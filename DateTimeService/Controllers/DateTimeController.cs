@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using System.Diagnostics;
 using System.Linq;
 using System.Text.Json;
@@ -669,7 +669,7 @@ namespace DateTimeService.Controllers
 
             string zoneId = "";
 
-            bool checkByOrder = !(String.IsNullOrEmpty(data.OrderNumber) && data.OrderDate != default);
+            bool checkByOrder = !String.IsNullOrEmpty(data.OrderNumber) && data.OrderDate != default;
 
             bool alwaysCheckGeozone = false;
 
