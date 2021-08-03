@@ -825,17 +825,20 @@ namespace DateTimeService.Controllers
                         {
                             var begin = dr.GetDateTime(0).AddMonths(-24000);
                             var end = dr.GetDateTime(1).AddMonths(-24000);
-
+                            var bonus = dr.GetInt32(3) == 1;
+                           
                             result.Data.Add(new ResponseIntervalListElement
                             {
                                 Begin = begin,
-                                End = end
+                                End = end,
+                                Bonus = bonus
                             });
 
                             resultLog.Data.Add(new ResponseIntervalListElementWithOffSet
                             {
                                 Begin = new(begin),
-                                End = new(end)
+                                End = new(end),
+                                Bonus = bonus
                             });
                         }
                     }

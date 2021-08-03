@@ -1167,7 +1167,8 @@ DATEADD(
         ),
         #Temp_IntervalsAll.Период
     ) AS ВремяОкончания,
-	Sum(#Temp_IntervalsAll.КоличествоЗаказовЗаИнтервалВремени) AS КоличествоЗаказовЗаИнтервалВремени,
+	Sum(#Temp_IntervalsAll.КоличествоЗаказовЗаИнтервалВремени) AS КоличествоЗаказовЗаИнтервалВремени, 
+    Case when DATEPART(hour,ГеоЗонаВременныеИнтервалы._Fld25128) = 9 then 1 else 0 End AS Стимулировать,
 #Temp_IntervalsAll.Период,
 #Temp_IntervalsAll.ГруппаПланирования,
 #Temp_IntervalsAll.Геозона,
@@ -1211,6 +1212,7 @@ DATEADD(
         #Temp_IntervalsAll.Период
     ) AS ВремяОкончания,
 	Sum(#Temp_IntervalsAll.КоличествоЗаказовЗаИнтервалВремени) AS КоличествоЗаказовЗаИнтервалВремени,
+Case when DATEPART(hour,ГеоЗонаВременныеИнтервалы._Fld25128) = 9 then 1 else 0 End AS Стимулировать,
 #Temp_IntervalsAll.Период,
 #Temp_IntervalsAll.ГруппаПланирования,
 #Temp_IntervalsAll.Геозона,
@@ -1253,6 +1255,7 @@ DATEADD(
         #Temp_IntervalsAll.Период
     ) AS ВремяОкончания,
 	Sum(#Temp_IntervalsAll.КоличествоЗаказовЗаИнтервалВремени) AS КоличествоЗаказовЗаИнтервалВремени,
+Case when DATEPART(hour,ГеоЗонаВременныеИнтервалы._Fld25128) = 9 then 1 else 0 End AS Стимулировать,
     #Temp_IntervalsAll.Период,
     #Temp_IntervalsAll.ГруппаПланирования,
     #Temp_IntervalsAll.Геозона,
@@ -1303,7 +1306,8 @@ select
 	SUM(
 	#Temp_Intervals.КоличествоЗаказовЗаИнтервалВремени
 	) 
-	AS КоличествоЗаказовЗаИнтервалВремени 
+	AS КоличествоЗаказовЗаИнтервалВремени,
+    #Temp_Intervals.Стимулировать
 From
 #Temp_Intervals With (NOLOCK)
 Inner Join #Temp_DateAvailable With (NOLOCK) 
@@ -1315,7 +1319,8 @@ Group By
 	#Temp_Intervals.ВремяНачала,
 	#Temp_Intervals.ВремяОкончания,
 	#Temp_Intervals.Период,
-	#Temp_TimeService.ВремяВыполнения
+	#Temp_TimeService.ВремяВыполнения,
+    #Temp_Intervals.Стимулировать
 Having SUM(#Temp_Intervals.КоличествоЗаказовЗаИнтервалВремени) > #Temp_TimeService.ВремяВыполнения
 
 Union
@@ -1336,7 +1341,8 @@ SELECT
         ),
         date
     ) As ВремяОкончания,
-	0 AS КоличествоЗаказовЗаИнтервалВремени
+	0 AS КоличествоЗаказовЗаИнтервалВремени,
+    Case when DATEPART(hour,ГеоЗонаВременныеИнтервалы._Fld25128) = 9 then 1 else 0 End AS Стимулировать
 FROM
     T 
 	Inner Join _Reference114_VT25126 AS ГеоЗонаВременныеИнтервалы  With (NOLOCK) On ГеоЗонаВременныеИнтервалы._Reference114_IDRRef In (Select Геозона From #Temp_GeoData)
@@ -1351,7 +1357,8 @@ UNION ALL
 Select 
 	#Temp_AvailablePickUp.ВремяНачала,
 	#Temp_AvailablePickUp.ВремяОкончания,
-	0
+	0,
+    0
 From #Temp_AvailablePickUp
 Order by ВремяНачала
 OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'), KEEP PLAN, KEEPFIXED PLAN);
