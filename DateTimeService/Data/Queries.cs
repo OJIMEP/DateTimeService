@@ -8,7 +8,7 @@
 	Article nvarchar(20), 
 	code nvarchar(20), 
     PickupPoint nvarchar(45),
-    quantity int
+    quantity int 
 )
 ;";
 
@@ -1168,7 +1168,7 @@ DATEADD(
         #Temp_IntervalsAll.Период
     ) AS ВремяОкончания,
 	Sum(#Temp_IntervalsAll.КоличествоЗаказовЗаИнтервалВремени) AS КоличествоЗаказовЗаИнтервалВремени, 
-    Case when DATEPART(hour,ГеоЗонаВременныеИнтервалы._Fld25128) = 9 then 1 else 0 End AS Стимулировать,
+    Case when ГеоЗонаВременныеИнтервалы._Fld27342 = 0x01 then 1 else 0 End AS Стимулировать,
 #Temp_IntervalsAll.Период,
 #Temp_IntervalsAll.ГруппаПланирования,
 #Temp_IntervalsAll.Геозона,
@@ -1192,7 +1192,8 @@ Group By
 	#Temp_IntervalsAll.ГруппаПланирования,
 	#Temp_IntervalsAll.Геозона,
 	--T2._Fld25137,
-	#Temp_IntervalsAll.Приоритет
+	#Temp_IntervalsAll.Приоритет,
+    ГеоЗонаВременныеИнтервалы._Fld27342
 OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}'), KEEP PLAN, KEEPFIXED PLAN);
 
 INsert into #Temp_Intervals
@@ -1212,7 +1213,7 @@ DATEADD(
         #Temp_IntervalsAll.Период
     ) AS ВремяОкончания,
 	Sum(#Temp_IntervalsAll.КоличествоЗаказовЗаИнтервалВремени) AS КоличествоЗаказовЗаИнтервалВремени,
-Case when DATEPART(hour,ГеоЗонаВременныеИнтервалы._Fld25128) = 9 then 1 else 0 End AS Стимулировать,
+Case when ГеоЗонаВременныеИнтервалы._Fld27342 = 0x01 then 1 else 0 End AS Стимулировать,
 #Temp_IntervalsAll.Период,
 #Temp_IntervalsAll.ГруппаПланирования,
 #Temp_IntervalsAll.Геозона,
@@ -1235,7 +1236,8 @@ Group By
 	#Temp_IntervalsAll.Период,
 	#Temp_IntervalsAll.ГруппаПланирования,
 	#Temp_IntervalsAll.Геозона,
-	#Temp_IntervalsAll.Приоритет
+	#Temp_IntervalsAll.Приоритет,
+    ГеоЗонаВременныеИнтервалы._Fld27342
 OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}'), KEEP PLAN, KEEPFIXED PLAN); 
 
 INsert into #Temp_Intervals
@@ -1255,7 +1257,7 @@ DATEADD(
         #Temp_IntervalsAll.Период
     ) AS ВремяОкончания,
 	Sum(#Temp_IntervalsAll.КоличествоЗаказовЗаИнтервалВремени) AS КоличествоЗаказовЗаИнтервалВремени,
-Case when DATEPART(hour,ГеоЗонаВременныеИнтервалы._Fld25128) = 9 then 1 else 0 End AS Стимулировать,
+Case when ГеоЗонаВременныеИнтервалы._Fld27342 = 0x01 then 1 else 0 End AS Стимулировать,
     #Temp_IntervalsAll.Период,
     #Temp_IntervalsAll.ГруппаПланирования,
     #Temp_IntervalsAll.Геозона,
@@ -1273,7 +1275,8 @@ Group By
 	#Temp_IntervalsAll.Период,
 	#Temp_IntervalsAll.ГруппаПланирования,
 	#Temp_IntervalsAll.Геозона,
-	#Temp_IntervalsAll.Приоритет
+	#Temp_IntervalsAll.Приоритет,
+    ГеоЗонаВременныеИнтервалы._Fld27342
 OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'), KEEP PLAN, KEEPFIXED PLAN);
 
 select Период, Max(Приоритет) AS Приоритет into #Temp_PlanningGroupPriority from #Temp_Intervals Group by Период;
@@ -1342,7 +1345,7 @@ SELECT
         date
     ) As ВремяОкончания,
 	0 AS КоличествоЗаказовЗаИнтервалВремени,
-    Case when DATEPART(hour,ГеоЗонаВременныеИнтервалы._Fld25128) = 9 then 1 else 0 End AS Стимулировать
+    Case when ГеоЗонаВременныеИнтервалы._Fld27342 = 0x01 then 1 else 0 End AS Стимулировать
 FROM
     T 
 	Inner Join _Reference114_VT25126 AS ГеоЗонаВременныеИнтервалы  With (NOLOCK) On ГеоЗонаВременныеИнтервалы._Reference114_IDRRef In (Select Геозона From #Temp_GeoData)
