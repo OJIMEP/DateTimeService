@@ -473,8 +473,8 @@ SELECT
     SUM(T2._Fld21411) - SUM(T2._Fld21412) AS Количество
 Into #Temp_Remains
 FROM
-    dbo._AccumRgT21444 T2 With (NOLOCK)
-	Left Join _AccumRg21407 Цены With (NOLOCK)
+    dbo._AccumRgT21444 T2 With (READCOMMITTED)
+	Left Join _AccumRg21407 Цены With (READCOMMITTED)
 		Inner Join Temp_ExchangeRates With (NOLOCK)
 			On Цены._Fld21443RRef = Temp_ExchangeRates.Валюта 
 		On T2._Fld21408RRef = Цены._Fld21408RRef
@@ -521,7 +521,7 @@ SELECT Distinct
     T1._Fld23833RRef AS СкладНазначения
 Into #Temp_WarehouseDates
 FROM
-    dbo._InfoRg23830 T1 With (NOLOCK)
+    dbo._InfoRg23830 T1 With (READCOMMITTED)
 	Inner Join #Temp_Remains With (NOLOCK)
 	ON T1._Fld23831RRef = #Temp_Remains.СкладИсточника
 	AND T1._Fld23832 = #Temp_Remains.ДатаСобытия
@@ -541,7 +541,7 @@ SELECT
 	MIN(T1._Fld23834) AS ДатаПрибытия 
 Into #Temp_MinimumWarehouseDates
 FROM
-    dbo._InfoRg23830 T1 With (NOLOCK, INDEX([_InfoRg23830_Custom2])) 	
+    dbo._InfoRg23830 T1 With (READCOMMITTED, INDEX([_InfoRg23830_Custom2])) 	
 	Inner Join SourceWarehouses On T1._Fld23831RRef = SourceWarehouses.СкладИсточника
 WHERE
 	T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData UNION ALL Select СкладСсылка From #Temp_PickupPoints)
@@ -678,7 +678,7 @@ SELECT
 Into #Temp_SourcesWithPrices
 FROM
     #Temp_Sources T1 WITH(NOLOCK)
-    INNER JOIN dbo._AccumRg21407 Резервирование WITH(NOLOCK)
+    INNER JOIN dbo._AccumRg21407 Резервирование WITH(READCOMMITTED)
     LEFT OUTER JOIN Temp_ExchangeRates T3 WITH(NOLOCK)
 		ON (Резервирование._Fld21443RRef = T3.Валюта) 
 	ON (T1.НоменклатураСсылка = Резервирование._Fld21408RRef)
@@ -1132,10 +1132,6 @@ Select Distinct
 	#Temp_ShipmentDatesDeliveryCourier.ГруппаПланирования,
 	#Temp_ShipmentDatesDeliveryCourier.Приоритет
 From #Temp_ShipmentDatesDeliveryCourier
-),
-GeoData As 
-(
-Select Геозона From #Temp_GeoData
 )
 SELECT
     T5._Period AS Период,
@@ -1153,12 +1149,11 @@ SELECT
 	PlanningGroups.Приоритет
 into #Temp_IntervalsAll
 FROM
-    dbo._AccumRg25110 T5 With (NOLOCK)
+    dbo._AccumRg25110 T5 With (READCOMMITTED)
 	Inner Join PlanningGroups ON PlanningGroups.ГруппаПланирования = T5._Fld25112RRef
-	Inner Join GeoData ON GeoData.Геозона = T5._Fld25111RRef
 WHERE
     T5._Period BETWEEN @P_DateTimePeriodBegin AND @P_DateTimePeriodEnd --begin +2
-    --AND T5._Fld25111RRef in (Select Геозона From #Temp_GeoData) 
+    AND T5._Fld25111RRef in (Select Геозона From #Temp_GeoData) 
 GROUP BY
     T5._Period,
     T5._Fld25112RRef,
@@ -1300,7 +1295,7 @@ SELECT
     ) AS ВремяНаОбслуживаниеОборот,
     CAST(CAST(МощностиДоставки._Period  AS DATE) AS DATETIME) AS Дата
 FROM
-    dbo._AccumRg25104 МощностиДоставки With (NOLOCK)
+    dbo._AccumRg25104 МощностиДоставки With (READCOMMITTED)
 WHERE
     МощностиДоставки._Period BETWEEN @P_DateTimePeriodBegin AND @P_DateTimePeriodEnd
 	AND МощностиДоставки._Fld25105RRef IN (Select ЗонаДоставкиРодительСсылка From  #Temp_GeoData)
@@ -1331,7 +1326,7 @@ CASE
 Into #Temp_AvailableCourier
 FROM
     #Temp_ShipmentDatesDeliveryCourier T1 WITH(NOLOCK)
-    Left JOIN Temp_DeliveryPower T2 WITH(NOLOCK)
+    Left JOIN Temp_DeliveryPower T2 --WITH(NOLOCK)
     Inner JOIN #Temp_Intervals T3 WITH(NOLOCK)
 		Inner Join Temp_PlanningGroupPriority With (NOLOCK) ON T3.Период = Temp_PlanningGroupPriority.Период AND T3.Приоритет = Temp_PlanningGroupPriority.Приоритет
 		ON T3.Период = T2.Дата
