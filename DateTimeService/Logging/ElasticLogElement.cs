@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using DateTimeService.Data;
+using System.Collections.Generic;
 
 namespace DateTimeService
 {
@@ -21,9 +22,11 @@ namespace DateTimeService
         public long LoadBalancingExecution { get; set; }
         public long GlobalParametersExecution { get; set; }
         public Dictionary<string, string> AdditionalData { get; set; }
+        public string Enviroment { get; set; }
 
         public ElasticLogElement()
         {
+            Enviroment = DatabaseList.Enviroment==null ? "Unset" : DatabaseList.Enviroment;
             AdditionalData = new();
         }
     }

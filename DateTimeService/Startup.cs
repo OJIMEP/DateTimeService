@@ -148,7 +148,7 @@ namespace DateTimeService
 
             //loggerFactory = LoggerFactory.Create(builder => builder.ClearProviders());
 
-            loggerFactory.AddHttp(Configuration["loggerHost"], Configuration.GetValue<int>("loggerPortUdp"), Configuration.GetValue<int>("loggerPortHttp"));
+            loggerFactory.AddHttp(Configuration["loggerHost"], Configuration.GetValue<int>("loggerPortUdp"), Configuration.GetValue<int>("loggerPortHttp"), Configuration["loggerEnv"]);
             var logger = loggerFactory.CreateLogger("HttpLogger");
 
 

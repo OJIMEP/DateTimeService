@@ -1,4 +1,5 @@
-﻿using DateTimeService.Logging;
+﻿using DateTimeService.Data;
+using DateTimeService.Logging;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Net.Http;
@@ -16,13 +17,14 @@ namespace DateTimeService
         readonly UdpClient udpClient;
         readonly HttpClient httpClient;
 
-        public HttpLogger(string host, int port, int portHttp)
+        public HttpLogger(string host, int port, int portHttp, string _env)
         {
             logsHost = host;
             logsPortUdp = port;
             logsPortHttp = portHttp;
             udpClient = new UdpClient(logsHost, logsPortUdp);
             httpClient = new HttpClient();
+            DatabaseList.Enviroment = _env;
         }
         public IDisposable BeginScope<TState>(TState state)
         {

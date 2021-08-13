@@ -17,6 +17,8 @@ namespace DateTimeService.Data
 
         public static readonly object locker = new();
 
+        public static string Enviroment { get; set; }
+
         static DatabaseList()
         {
             Databases = new();
