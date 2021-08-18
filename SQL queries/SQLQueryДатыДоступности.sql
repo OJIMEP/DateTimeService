@@ -63,10 +63,10 @@ SET @PickupPoint6 = '2';
 DECLARE @P_DaysToShow numeric(2);
  Set @P_DaysToShow = 7;
 
- Set @P_DateTimeNow = '4021-07-08T15:40:00' 
- Set @P_DateTimePeriodBegin = '4021-07-08T00:00:00'
- Set @P_DateTimePeriodEnd = '4021-07-12T00:00:00'
- Set @P_TimeNow = '2001-01-01T15:40:00'
+ Set @P_DateTimeNow = '4021-08-17T15:30:00' 
+ Set @P_DateTimePeriodBegin = '4021-08-17T00:00:00'
+ Set @P_DateTimePeriodEnd = '4021-08-21T00:00:00'
+ Set @P_TimeNow = '2001-01-01T15:30:00'
  Set @P_EmptyDate = '2001-01-01T00:00:00'
  Set @P_MaxDate = '5999-11-11T00:00:00'
 
@@ -446,7 +446,7 @@ HAVING
     (SUM(T2._Fld21412) <> 0.0
     OR SUM(T2._Fld21411) <> 0.0)
 	AND SUM(T2._Fld21411) - SUM(T2._Fld21412) > 0.0
-OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimeNow='4021-07-08T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
+OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimeNow='4021-08-17T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
 
 SELECT Distinct
     T1._Fld23831RRef AS СкладИсточника,
@@ -482,7 +482,7 @@ WHERE
 		AND	T1._Fld23832 BETWEEN @P_DateTimeNow AND DateAdd(DAY,6,@P_DateTimeNow)
 GROUP BY T1._Fld23831RRef,
 T1._Fld23833RRef
-OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimeNow='4021-07-08T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
+OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimeNow='4021-08-17T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
 
 
 SELECT
@@ -959,45 +959,35 @@ Select Distinct
 From #Temp_ShipmentDatesDeliveryCourier
 )
 SELECT
-    T5._Period AS Период,
-    T5._Fld25112RRef As ГруппаПланирования, 
-	T5._Fld25111RRef As Геозона,
-	T5._Fld25202 As ВремяНачалаНачальное,
-	T5._Fld25203 As ВремяОкончанияНачальное,
+    T5.Период AS Период,
+    T5.ГруппаПланирования As ГруппаПланирования, 
+	T5.Геозона As Геозона,
+	T5.ВремяНачала As ВремяНачалаНачальное,
+	T5.ВремяОкончания As ВремяОкончанияНачальное,
     DATEADD(
         SECOND,
         CAST(
-            DATEDIFF(SECOND, @P_EmptyDate, T5._Fld25202) AS NUMERIC(12)
+            DATEDIFF(SECOND, @P_EmptyDate, T5.ВремяНачала) AS NUMERIC(12)
         ),
-        T5._Period
+        T5.Период
     ) As ВремяНачала,
 	PlanningGroups.Приоритет
 into #Temp_IntervalsAll
 FROM
-    dbo._AccumRg25110 T5 With (READCOMMITTED)
-	Inner Join PlanningGroups ON PlanningGroups.ГруппаПланирования = T5._Fld25112RRef
+    [dbo].[IntervalsAggregate] T5 With (READCOMMITTED)
+	Inner Join PlanningGroups ON PlanningGroups.ГруппаПланирования = T5.ГруппаПланирования
 WHERE
-    T5._Period BETWEEN @P_DateTimePeriodBegin AND @P_DateTimePeriodEnd --begin +2
-    AND T5._Fld25111RRef in (Select Геозона From #Temp_GeoData) 
+    T5.Период BETWEEN @P_DateTimePeriodBegin AND @P_DateTimePeriodEnd --begin +2
+    AND T5.Геозона in (Select Геозона From #Temp_GeoData) 
+	AND T5.КоличествоЗаказовЗаИнтервалВремени > 0
 GROUP BY
-    T5._Period,
-    T5._Fld25112RRef,
-    T5._Fld25111RRef,
-    T5._Fld25202,
-	T5._Fld25203,
+    T5.Период,
+    T5.ГруппаПланирования,
+    T5.Геозона,
+    T5.ВремяНачала,
+	T5.ВремяОкончания,
 	PlanningGroups.Приоритет
-HAVING
-    (
-        CAST(
-            SUM(
-                CASE
-                    WHEN (T5._RecordKind = 0.0) THEN T5._Fld25113
-                    ELSE -(T5._Fld25113)
-                END
-            ) AS NUMERIC(16, 0)
-        ) > 0.0
-    )
-OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-07-08T00:00:00',@P_DateTimePeriodEnd='4021-07-12T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
+OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-08-17T00:00:00',@P_DateTimePeriodEnd='4021-08-21T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
 ;
 
 select
@@ -1032,7 +1022,7 @@ Group By
 	#Temp_IntervalsAll.Геозона,
 	T2._Fld25137,
 	#Temp_IntervalsAll.Приоритет
-OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-07-08T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-08-17T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
 
 INsert into #Temp_Intervals
 select
@@ -1066,7 +1056,7 @@ Group By
 	#Temp_IntervalsAll.ГруппаПланирования,
 	#Temp_IntervalsAll.Геозона,
 	#Temp_IntervalsAll.Приоритет
-OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-07-08T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-08-17T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
 
 INsert into #Temp_Intervals
 select
@@ -1095,37 +1085,20 @@ Group By
 	#Temp_IntervalsAll.ГруппаПланирования,
 	#Temp_IntervalsAll.Геозона,
 	#Temp_IntervalsAll.Приоритет
-OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-07-08T00:00:00',@P_DateTimePeriodEnd='4021-07-12T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-08-17T00:00:00',@P_DateTimePeriodEnd='4021-08-21T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
 
 With Temp_DeliveryPower AS
 (
 SELECT   
-        SUM(
-            CASE
-                WHEN (МощностиДоставки._RecordKind = 0.0) THEN МощностиДоставки._Fld25107
-                ELSE -(МощностиДоставки._Fld25107)
-        END        
-    ) AS МассаОборот,    
-        SUM(
-            CASE
-                WHEN (МощностиДоставки._RecordKind = 0.0) THEN МощностиДоставки._Fld25108
-                ELSE -(МощностиДоставки._Fld25108)
-        END        
-    ) AS ОбъемОборот,    
-        SUM(
-            CASE
-                WHEN (МощностиДоставки._RecordKind = 0.0) THEN МощностиДоставки._Fld25201
-                ELSE -(МощностиДоставки._Fld25201)
-        END        
-    ) AS ВремяНаОбслуживаниеОборот,
-    CAST(CAST(МощностиДоставки._Period  AS DATE) AS DATETIME) AS Дата
+        МощностиДоставки.МассаОборот AS МассаОборот,    
+        МощностиДоставки.ОбъемОборот AS ОбъемОборот,    
+   МощностиДоставки.ВремяНаОбслуживаниеОборот AS ВремяНаОбслуживаниеОборот,
+   МощностиДоставки.Период AS Дата
 FROM
-    dbo._AccumRg25104 МощностиДоставки With (READCOMMITTED)
+    [dbo].[DeliveryPowerAggregate] МощностиДоставки With (READCOMMITTED)
 WHERE
-    МощностиДоставки._Period BETWEEN @P_DateTimePeriodBegin AND @P_DateTimePeriodEnd
-	AND МощностиДоставки._Fld25105RRef IN (Select ЗонаДоставкиРодительСсылка From  #Temp_GeoData)
-GROUP BY
-    CAST(CAST(МощностиДоставки._Period  AS DATE) AS DATETIME)
+    МощностиДоставки.Период BETWEEN @P_DateTimePeriodBegin AND @P_DateTimePeriodEnd
+	AND МощностиДоставки.ЗонаДоставки IN (Select ЗонаДоставкиРодительСсылка From  #Temp_GeoData)
 ), 
 Temp_PlanningGroupPriority AS
 (
@@ -1167,7 +1140,7 @@ GROUP BY
 	T1.НоменклатураСсылка,
     T1.article,
 	T1.code
-OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-07-08T00:00:00',@P_DateTimePeriodEnd='4021-07-12T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
+OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-08-17T00:00:00',@P_DateTimePeriodEnd='4021-08-21T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
 
 Select 
 	IsNull(#Temp_AvailableCourier.article,#Temp_AvailablePickUp.article) AS article,
