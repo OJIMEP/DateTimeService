@@ -127,7 +127,14 @@ begin
     begin tran;
 
     declare @result int;
-    exec @result = sys.sp_getapplock @Resource = N'[dbo].[buffering_table_deliverypower]', @LockMode = 'Exclusive', @LockOwner = 'Transaction', @LockTimeout = 100;
+    DECLARE @exec_count int;
+    set @exec_count = 5;
+    WHILE @exec_count > 0 AND @result < 0
+    BEGIN
+       set @exec_count = @exec_count +1;
+       exec @result = sys.sp_getapplock @Resource = N'[dbo].[buffering_table_deliverypower]', @LockMode = 'Exclusive', @LockOwner = 'Transaction', @LockTimeout = 1000;
+    END;
+    
     if @result < 0
 	THROW 51000, 'Cant get lock for delete', 1;
 
@@ -181,7 +188,14 @@ begin
     begin tran;
 
     declare @result int;
-    exec @result = sys.sp_getapplock @Resource = N'[dbo].[buffering_table_intervals]', @LockMode = 'Exclusive', @LockOwner = 'Transaction', @LockTimeout = 100;
+    DECLARE @exec_count int;
+    set @exec_count = 5;
+    WHILE @exec_count > 0 AND @result < 0
+    BEGIN
+       set @exec_count = @exec_count +1;
+       exec @result = sys.sp_getapplock @Resource = N'[dbo].[buffering_table_intervals]', @LockMode = 'Exclusive', @LockOwner = 'Transaction', @LockTimeout = 1000;
+    END;
+    
     if @result < 0
 	THROW 51000, 'Cant get lock for delete', 1;
 
