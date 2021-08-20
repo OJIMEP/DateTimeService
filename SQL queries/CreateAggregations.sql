@@ -524,3 +524,99 @@ EndSave:
 GO
 
 
+CREATE OR ALTER   procedure [dbo].[spCheckAggregates]
+as
+begin
+    set nocount on;
+    set xact_abort on;
+
+		SELECT
+		T5._Period AS Период,
+		T5._Fld25112RRef As ГруппаПланирования, 
+		T5._Fld25111RRef As Геозона,
+		T5._Fld25202 As ВремяНачала,
+		T5._Fld25203 As ВремяОкончания,
+		SUM(
+					CASE
+						WHEN (T5._RecordKind = 0.0) THEN T5._Fld25113
+						ELSE -(T5._Fld25113)
+					END
+				) AS КоличествоЗаказовЗаИнтервалВремени
+	into #Temp_IntervalsAll_old
+	FROM
+		dbo._AccumRg25110 T5 With (READCOMMITTED)
+	GROUP BY
+		T5._Period,
+		T5._Fld25112RRef,
+		T5._Fld25111RRef,
+		T5._Fld25202,
+		T5._Fld25203
+
+	select
+		Case when T1.КоличествоЗаказовЗаИнтервалВремени <> IsNull(T2.[КоличествоЗаказовЗаИнтервалВремени],9999999) then 1 else 0 End As CheckAgg,
+		T1.Период,
+		T1.[ГруппаПланирования],
+		T1.[Геозона],
+		T1.[ВремяНачала],
+		T1.[ВремяОкончания]
+	Into #ErrorsIntervals
+	From #Temp_IntervalsAll_old T1
+		Left Join dbo.IntervalsAggregate T2 on
+			T1.Период = T2.Период
+			And T1.[ГруппаПланирования] = T2.[ГруппаПланирования]
+			And T1.[Геозона] = T2.[Геозона]
+			And T1.[ВремяНачала] = T2.[ВремяНачала]
+			And T1.[ВремяОкончания] = T2.[ВремяОкончания]
+	Where T1.КоличествоЗаказовЗаИнтервалВремени <> IsNull(T2.[КоличествоЗаказовЗаИнтервалВремени],9999999)
+
+
+	SELECT   
+		   CAST(CAST(МощностиДоставки._Period  AS DATE) AS DATETIME) AS Период, 
+		   МощностиДоставки._Fld25105RRef As ЗонаДоставки,
+			SUM(
+				CASE
+					WHEN (МощностиДоставки._RecordKind = 0.0) THEN МощностиДоставки._Fld25107
+					ELSE -(МощностиДоставки._Fld25107)
+			END        
+		) AS МассаОборот,    
+			SUM(
+				CASE
+					WHEN (МощностиДоставки._RecordKind = 0.0) THEN МощностиДоставки._Fld25108
+					ELSE -(МощностиДоставки._Fld25108)
+			END        
+		) AS ОбъемОборот,    
+			SUM(
+				CASE
+					WHEN (МощностиДоставки._RecordKind = 0.0) THEN МощностиДоставки._Fld25201
+					ELSE -(МощностиДоставки._Fld25201)
+			END        
+		) AS ВремяНаОбслуживаниеОборот
+    
+	Into #DeliveryPowerOld	 
+	FROM
+		dbo._AccumRg25104 МощностиДоставки With (READCOMMITTED)
+	GROUP BY
+		CAST(CAST(МощностиДоставки._Period  AS DATE) AS DATETIME),
+		МощностиДоставки._Fld25105RRef
+
+
+	select
+		Case when T1.ВремяНаОбслуживаниеОборот <> IsNull(T2.ВремяНаОбслуживаниеОборот,9999999) then 1 else 0 End As CheckAgg,
+		Case when T1.МассаОборот <> IsNull(T2.МассаОборот,9999999) then 1 else 0 End As CheckAgg1,
+		Case when T1.ОбъемОборот <> IsNull(T2.ОбъемОборот,9999999) then 1 else 0 End As CheckAgg2,
+		T1.Период,
+		T1.ЗонаДоставки
+	Into #ErrorsDeliveryPower
+	From #DeliveryPowerOld T1
+		Left Join dbo.DeliveryPowerAggregate T2 on
+			T1.Период = T2.Период
+			And T1.ЗонаДоставки = T2.ЗонаДоставки
+	Where T1.ВремяНаОбслуживаниеОборот <> IsNull(T2.ВремяНаОбслуживаниеОборот,9999999) 
+	Or T1.МассаОборот <> IsNull(T2.МассаОборот,9999999)
+	Or T1.МассаОборот <> IsNull(T2.МассаОборот,9999999)
+
+	Select Sum(t1.c1) as ErrorCount From (Select COUNT(*) AS c1 from #ErrorsIntervals UNION All Select Count(*) From #ErrorsDeliveryPower) As t1
+
+
+end;
+GO

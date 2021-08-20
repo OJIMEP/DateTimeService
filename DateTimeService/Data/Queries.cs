@@ -22,7 +22,6 @@ VALUES
 	OPTION (KEEP PLAN, KEEPFIXED PLAN)
 ;";
 
-
         public const string IntervalList = @"
 Select 
 	_IDRRef AS ЗаказСсылка,
@@ -1367,8 +1366,7 @@ Order by ВремяНачала
 OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'), KEEP PLAN, KEEPFIXED PLAN);
 ";
 
-
-        public const string AvailableDate = @"
+        public const string AvailableDate1 = @"
 Select 
 	Склады._IDRRef AS СкладСсылка,
 	Склады._Fld19544 AS ERPКодСклада
@@ -2084,15 +2082,62 @@ Into #Temp_AvailablePickUp
 FROM
     #Temp_ShipmentDatesPickUp
 		Inner {6} JOIN #Temp_PickupWorkingHours
-		On #Temp_PickupWorkingHours.ВремяОкончания > #Temp_ShipmentDatesPickUp.ДатаСоСклада
-		And #Temp_PickupWorkingHours.СкладНазначения = #Temp_ShipmentDatesPickUp.СкладНазначения
+		On #Temp_PickupWorkingHours.СкладНазначения = #Temp_ShipmentDatesPickUp.СкладНазначения
+        And #Temp_PickupWorkingHours.ВремяОкончания > #Temp_ShipmentDatesPickUp.ДатаСоСклада
 Group by
 	#Temp_ShipmentDatesPickUp.НоменклатураСсылка,
 	#Temp_ShipmentDatesPickUp.article,
 	#Temp_ShipmentDatesPickUp.code
-OPTION (HASH GROUP, KEEP PLAN, KEEPFIXED PLAN);
+OPTION (HASH GROUP, KEEP PLAN, KEEPFIXED PLAN);";
 
-With PlanningGroups AS(
+        public const string AvailableDate2IntervalsBasic = @"With PlanningGroups AS(
+Select Distinct 
+	#Temp_ShipmentDatesDeliveryCourier.ГруппаПланирования,
+	#Temp_ShipmentDatesDeliveryCourier.Приоритет
+From #Temp_ShipmentDatesDeliveryCourier
+)
+SELECT
+    T5._Period AS Период,
+    T5._Fld25112RRef As ГруппаПланирования, 
+	T5._Fld25111RRef As Геозона,
+	T5._Fld25202 As ВремяНачалаНачальное,
+	T5._Fld25203 As ВремяОкончанияНачальное,
+    DATEADD(
+        SECOND,
+        CAST(
+            DATEDIFF(SECOND, @P_EmptyDate, T5._Fld25202) AS NUMERIC(12)
+        ),
+        T5._Period
+    ) As ВремяНачала,
+	PlanningGroups.Приоритет
+into #Temp_IntervalsAll
+FROM
+    dbo._AccumRg25110 T5 With (READCOMMITTED)
+    Inner Join PlanningGroups ON PlanningGroups.ГруппаПланирования = T5._Fld25112RRef
+WHERE
+    T5._Period BETWEEN @P_DateTimePeriodBegin AND @P_DateTimePeriodEnd --begin +2
+    AND T5._Fld25111RRef in (Select Геозона From #Temp_GeoData) 
+GROUP BY
+    T5._Period,
+    T5._Fld25112RRef,
+    T5._Fld25111RRef,
+    T5._Fld25202,
+	T5._Fld25203,
+	PlanningGroups.Приоритет
+HAVING
+    (
+        CAST(
+            SUM(
+                CASE
+                    WHEN (T5._RecordKind = 0.0) THEN T5._Fld25113
+                    ELSE -(T5._Fld25113)
+                END
+            ) AS NUMERIC(16, 0)
+        ) > 0.0
+    )
+OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'),KEEP PLAN, KEEPFIXED PLAN);";
+
+        public const string AvailableDate2IntervalsCustom = @"With PlanningGroups AS(
 Select Distinct 
 	#Temp_ShipmentDatesDeliveryCourier.ГруппаПланирования,
 	#Temp_ShipmentDatesDeliveryCourier.Приоритет
@@ -2127,8 +2172,9 @@ GROUP BY
 	T5.ВремяНачала,
 	T5.ВремяОкончания,
 	PlanningGroups.Приоритет
-OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'),KEEP PLAN, KEEPFIXED PLAN);
+OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'),KEEP PLAN, KEEPFIXED PLAN);";
 
+        public const string AvailableDate3 = @"
 select
 DATEADD(
         SECOND,
@@ -2224,9 +2270,40 @@ Group By
 	#Temp_IntervalsAll.ГруппаПланирования,
 	#Temp_IntervalsAll.Геозона,
     #Temp_IntervalsAll.Приоритет
-OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'), KEEP PLAN, KEEPFIXED PLAN);
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'), KEEP PLAN, KEEPFIXED PLAN);";
 
-With Temp_DeliveryPower AS
+        public const string AvailableDate4DeliveryPowerBasic = @"With Temp_DeliveryPower AS
+(
+SELECT
+    SUM(
+        CASE
+            WHEN (МощностиДоставки._RecordKind = 0.0) THEN МощностиДоставки._Fld25107
+            ELSE -(МощностиДоставки._Fld25107)
+        END        
+    ) AS МассаОборот,    
+    SUM(
+        CASE
+            WHEN (МощностиДоставки._RecordKind = 0.0) THEN МощностиДоставки._Fld25108
+            ELSE -(МощностиДоставки._Fld25108)
+        END        
+    ) AS ОбъемОборот,    
+    SUM(
+        CASE
+            WHEN (МощностиДоставки._RecordKind = 0.0) THEN МощностиДоставки._Fld25201
+            ELSE -(МощностиДоставки._Fld25201)
+        END        
+    ) AS ВремяНаОбслуживаниеОборот,
+    CAST(CAST(МощностиДоставки._Period  AS DATE) AS DATETIME) AS Дата
+FROM
+    dbo._AccumRg25104 МощностиДоставки With (READCOMMITTED)
+WHERE
+    МощностиДоставки._Period BETWEEN @P_DateTimePeriodBegin AND @P_DateTimePeriodEnd
+    AND МощностиДоставки._Fld25105RRef IN (Select ЗонаДоставкиРодительСсылка From  #Temp_GeoData)
+GROUP BY
+    CAST(CAST(МощностиДоставки._Period  AS DATE) AS DATETIME)
+), ";
+
+        public const string AvailableDate4DeliveryPowerCustom = @"With Temp_DeliveryPower AS
 (
 SELECT   
         МощностиДоставки.МассаОборот AS МассаОборот,    
@@ -2238,8 +2315,9 @@ FROM
 WHERE
     МощностиДоставки.Период BETWEEN @P_DateTimePeriodBegin AND @P_DateTimePeriodEnd
 	AND МощностиДоставки.ЗонаДоставки IN (Select ЗонаДоставкиРодительСсылка From  #Temp_GeoData)
-), 
-Temp_PlanningGroupPriority AS
+),";
+
+        public const string AvailableDate5 = @"Temp_PlanningGroupPriority AS
 (
 select Период, Max(Приоритет) AS Приоритет from #Temp_Intervals Group by Период
 )
@@ -2291,7 +2369,7 @@ From
 	FULL Join #Temp_AvailablePickUp 
 		On #Temp_AvailableCourier.НоменклатураСсылка = #Temp_AvailablePickUp.НоменклатураСсылка";
 
-        public const string AvailableDateWithCount = @"
+        public const string AvailableDateWithCount1 = @"
 Select 
 	Склады._IDRRef AS СкладСсылка,
 	Склады._Fld19544 AS ERPКодСклада
@@ -3188,207 +3266,7 @@ Group by
 	#Temp_ShipmentDatesPickUp.НоменклатураСсылка,
 	#Temp_ShipmentDatesPickUp.article,
 	#Temp_ShipmentDatesPickUp.code
-OPTION (HASH GROUP, KEEP PLAN, KEEPFIXED PLAN);
-
-With PlanningGroups AS(
-Select Distinct 
-	#Temp_ShipmentDatesDeliveryCourier.ГруппаПланирования,
-	#Temp_ShipmentDatesDeliveryCourier.Приоритет
-From #Temp_ShipmentDatesDeliveryCourier
-)
-SELECT
-	T5.Период AS Период,
-	T5.ГруппаПланирования As ГруппаПланирования, 
-	T5.Геозона As Геозона,
-	T5.ВремяНачала As ВремяНачалаНачальное,
-	T5.ВремяОкончания As ВремяОкончанияНачальное,
-	DATEADD(
-		SECOND,
-		CAST(
-			DATEDIFF(SECOND, @P_EmptyDate, T5.ВремяНачала) AS NUMERIC(12)
-		),
-		T5.Период
-	) As ВремяНачала,
-	PlanningGroups.Приоритет
-into #Temp_IntervalsAll
-FROM
-	[dbo].[IntervalsAggregate] T5 With (READCOMMITTED)
-	Inner Join PlanningGroups ON PlanningGroups.ГруппаПланирования = T5.ГруппаПланирования
-WHERE
-	T5.Период BETWEEN @P_DateTimePeriodBegin AND @P_DateTimePeriodEnd --begin +2
-	AND T5.Геозона in (Select Геозона From #Temp_GeoData) 
-	AND T5.КоличествоЗаказовЗаИнтервалВремени > 0
-GROUP BY
-	T5.Период,
-	T5.ГруппаПланирования,
-	T5.Геозона,
-	T5.ВремяНачала,
-	T5.ВремяОкончания,
-	PlanningGroups.Приоритет
-OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'),KEEP PLAN, KEEPFIXED PLAN);
-
-select
-DATEADD(
-        SECOND,
-        CAST(
-            DATEDIFF(SECOND, @P_EmptyDate, ГеоЗонаВременныеИнтервалы._Fld25128) AS NUMERIC(12)
-        ),
-        #Temp_IntervalsAll.Период
-    ) As ВремяНачала,
-#Temp_IntervalsAll.Период,
-#Temp_IntervalsAll.ГруппаПланирования,
-#Temp_IntervalsAll.Геозона,
-#Temp_IntervalsAll.Приоритет
-into #Temp_Intervals
-from #Temp_IntervalsAll
-	Inner Join _Reference114_VT25126 ГеоЗонаВременныеИнтервалы With (NOLOCK)
-		On #Temp_IntervalsAll.Геозона = ГеоЗонаВременныеИнтервалы._Reference114_IDRRef
-		And #Temp_IntervalsAll.ВремяНачалаНачальное >= ГеоЗонаВременныеИнтервалы._Fld25128
-		And #Temp_IntervalsAll.ВремяНачалаНачальное < ГеоЗонаВременныеИнтервалы._Fld25129
-   INNER JOIN dbo._Reference23294 T2 With (NOLOCK) 
-		ON (#Temp_IntervalsAll.ГруппаПланирования = T2._IDRRef)
-		AND (ГеоЗонаВременныеИнтервалы._Fld25128 >= T2._Fld25137)
-		AND (NOT (((@P_TimeNow >= T2._Fld25138))))
-WHERE
-    #Temp_IntervalsAll.Период = @P_DateTimePeriodBegin
-Group By 
-	ГеоЗонаВременныеИнтервалы._Fld25128,
-	ГеоЗонаВременныеИнтервалы._Fld25129,
-	#Temp_IntervalsAll.Период,
-	#Temp_IntervalsAll.ГруппаПланирования,
-	#Temp_IntervalsAll.Геозона,
-	T2._Fld25137,
-	#Temp_IntervalsAll.Приоритет
-OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}'), KEEP PLAN, KEEPFIXED PLAN);
-
-INsert into #Temp_Intervals
-select
-DATEADD(
-        SECOND,
-        CAST(
-            DATEDIFF(SECOND, @P_EmptyDate, ГеоЗонаВременныеИнтервалы._Fld25128) AS NUMERIC(12)
-        ),
-        #Temp_IntervalsAll.Период
-    ) As ВремяНачала,
-#Temp_IntervalsAll.Период,
-#Temp_IntervalsAll.ГруппаПланирования,
-#Temp_IntervalsAll.Геозона,
-#Temp_IntervalsAll.Приоритет
-from #Temp_IntervalsAll
-	Inner Join _Reference114_VT25126 ГеоЗонаВременныеИнтервалы With (NOLOCK)
-		On #Temp_IntervalsAll.Геозона = ГеоЗонаВременныеИнтервалы._Reference114_IDRRef
-		And #Temp_IntervalsAll.ВремяНачалаНачальное >= ГеоЗонаВременныеИнтервалы._Fld25128
-		And #Temp_IntervalsAll.ВремяНачалаНачальное < ГеоЗонаВременныеИнтервалы._Fld25129
-  INNER JOIN dbo._Reference23294 T4 With (NOLOCK) ON (#Temp_IntervalsAll.ГруппаПланирования = T4._IDRRef)
-    AND (
-        (@P_TimeNow < T4._Fld25140)
-        OR (ГеоЗонаВременныеИнтервалы._Fld25128 >= T4._Fld25139)
-    )
-WHERE
-    #Temp_IntervalsAll.Период = DATEADD(DAY, 1, @P_DateTimePeriodBegin)
-Group By 
-	ГеоЗонаВременныеИнтервалы._Fld25128,
-	ГеоЗонаВременныеИнтервалы._Fld25129,
-	#Temp_IntervalsAll.Период,
-	#Temp_IntervalsAll.ГруппаПланирования,
-	#Temp_IntervalsAll.Геозона,
-    #Temp_IntervalsAll.Приоритет
-OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}'), KEEP PLAN, KEEPFIXED PLAN);
-
-INsert into #Temp_Intervals
-select
-DATEADD(
-        SECOND,
-        CAST(
-            DATEDIFF(SECOND, @P_EmptyDate, ГеоЗонаВременныеИнтервалы._Fld25128) AS NUMERIC(12)
-        ),
-        #Temp_IntervalsAll.Период
-    ) As ВремяНачала,
-#Temp_IntervalsAll.Период,
-#Temp_IntervalsAll.ГруппаПланирования,
-#Temp_IntervalsAll.Геозона,
-#Temp_IntervalsAll.Приоритет
-from #Temp_IntervalsAll
-	Inner Join _Reference114_VT25126 ГеоЗонаВременныеИнтервалы With (NOLOCK)
-		On #Temp_IntervalsAll.Геозона = ГеоЗонаВременныеИнтервалы._Reference114_IDRRef
-		And #Temp_IntervalsAll.ВремяНачалаНачальное >= ГеоЗонаВременныеИнтервалы._Fld25128
-		And #Temp_IntervalsAll.ВремяНачалаНачальное < ГеоЗонаВременныеИнтервалы._Fld25129
-WHERE
-	#Temp_IntervalsAll.Период BETWEEN DATEADD(DAY, 2, @P_DateTimePeriodBegin) AND @P_DateTimePeriodEnd --begin +2
-Group By 
-	ГеоЗонаВременныеИнтервалы._Fld25128,
-	ГеоЗонаВременныеИнтервалы._Fld25129,
-	#Temp_IntervalsAll.Период,
-	#Temp_IntervalsAll.ГруппаПланирования,
-	#Temp_IntervalsAll.Геозона,
-    #Temp_IntervalsAll.Приоритет
-OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'), KEEP PLAN, KEEPFIXED PLAN);
-
-With Temp_DeliveryPower AS
-(
-SELECT   
-        МощностиДоставки.МассаОборот AS МассаОборот,    
-        МощностиДоставки.ОбъемОборот AS ОбъемОборот,    
-   МощностиДоставки.ВремяНаОбслуживаниеОборот AS ВремяНаОбслуживаниеОборот,
-   МощностиДоставки.Период AS Дата
-FROM
-    [dbo].[DeliveryPowerAggregate] МощностиДоставки With (READCOMMITTED)
-WHERE
-    МощностиДоставки.Период BETWEEN @P_DateTimePeriodBegin AND @P_DateTimePeriodEnd
-	AND МощностиДоставки.ЗонаДоставки IN (Select ЗонаДоставкиРодительСсылка From  #Temp_GeoData)
-), 
-Temp_PlanningGroupPriority AS
-(
-select Период, Max(Приоритет) AS Приоритет from #Temp_Intervals Group by Период
-)
-SELECT
-    T1.НоменклатураСсылка,
-    T1.article,
-    T1.code,
-    MIN(
-        ISNULL(
-            T3.ВремяНачала,
-CASE
-                WHEN (T1.ДатаСоСклада > DATEADD(SECOND,-1,@P_DateTimePeriodEnd)) THEN DATEADD(
-                    DAY,
-                    1.0,
-                    CAST(CAST(T1.ДатаСоСклада AS DATE) AS DATETIME)
-                )
-                ELSE DATEADD(DAY,1,@P_DateTimePeriodEnd)
-            END
-        )
-    ) AS ДатаКурьерскойДоставки
-Into #Temp_AvailableCourier
-FROM
-    #Temp_ShipmentDatesDeliveryCourier T1 WITH(NOLOCK)
-    Left JOIN Temp_DeliveryPower T2 --WITH(NOLOCK)
-    Inner JOIN #Temp_Intervals T3 WITH(NOLOCK)
-    Inner Join Temp_PlanningGroupPriority With (NOLOCK) ON T3.Период = Temp_PlanningGroupPriority.Период AND T3.Приоритет = Temp_PlanningGroupPriority.Приоритет
-		ON T3.Период = T2.Дата
-	ON T2.МассаОборот >= T1.Вес
-    AND T2.ОбъемОборот >= T1.Объем
-    AND T2.ВремяНаОбслуживаниеОборот >= T1.ВремяНаОбслуживание
-    AND T2.Дата >= 
-		CAST(CAST(T1.ДатаСоСклада AS DATE) AS DATETIME)    
-    AND T3.ГруппаПланирования = T1.ГруппаПланирования
-    AND T3.ВремяНачала >= T1.ДатаСоСклада
-	AND T1.PickUp = 0
-GROUP BY
-	T1.НоменклатураСсылка,
-    T1.article,
-	T1.code
-OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'),KEEP PLAN, KEEPFIXED PLAN);
-
-Select 
-	IsNull(#Temp_AvailableCourier.article,#Temp_AvailablePickUp.article) AS article,
-	IsNull(#Temp_AvailableCourier.code,#Temp_AvailablePickUp.code) AS code,
-	IsNull(#Temp_AvailableCourier.ДатаКурьерскойДоставки,@P_MaxDate) AS available_date_courier,
-	IsNull(#Temp_AvailablePickUp.ВремяНачала,@P_MaxDate) AS available_date_self
-From
-	#Temp_AvailableCourier 
-	FULL Join #Temp_AvailablePickUp 
-		On #Temp_AvailableCourier.НоменклатураСсылка = #Temp_AvailablePickUp.НоменклатураСсылка";
-
+OPTION (HASH GROUP, KEEP PLAN, KEEPFIXED PLAN);";
 
         public const string DatebaseBalancingReplicaFull = @"select datediff(ms, last_commit_time, getdate())
 from [master].[sys].[dm_hadr_database_replica_states]";
@@ -3396,5 +3274,8 @@ from [master].[sys].[dm_hadr_database_replica_states]";
         public const string DatebaseBalancingMain = @"select top (1) _IDRRef from dbo._Reference112";
 
         public const string DatebaseBalancingReplicaTables = @"Select TOP(1) _IDRRef FROM dbo._Reference99";
+
+        public const string CheckAggregations = @"EXEC	[dbo].[spCheckAggregates]";
+
     }
 }

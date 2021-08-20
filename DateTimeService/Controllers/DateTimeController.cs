@@ -47,7 +47,7 @@ namespace DateTimeService.Controllers
 
 
             var dbConnection = await _loadBalacing.GetDatabaseConnectionAsync();
-            var conn = dbConnection.connection;
+            var conn = dbConnection.Connection;
 
 
             var result = new List<ResponseMaxAvailableCount>();
@@ -168,6 +168,7 @@ namespace DateTimeService.Controllers
 
             var data = _mapper.Map<RequestDataAvailableDate>(inputDataJson);
             string databaseType = "";
+            bool customAggs = false;
             Stopwatch stopwatchExecution = new();
             stopwatchExecution.Start();
 
@@ -189,9 +190,9 @@ namespace DateTimeService.Controllers
             {
                 //connString = await _loadBalacing.GetDatabaseConnectionAsync();
                 var dbConnection = await _loadBalacing.GetDatabaseConnectionAsync();
-                conn = dbConnection.connection;
-                databaseType = dbConnection.databaseType;
-
+                conn = dbConnection.Connection;
+                databaseType = dbConnection.DatabaseType;
+                customAggs = dbConnection.UseAggregations;
             }
             catch (Exception ex)
             {
@@ -296,14 +297,16 @@ namespace DateTimeService.Controllers
                 //open connection
                 //conn.Open();
                 string query = "";
-                if (data.CheckQuantity==true)
-                {
-                    query = Queries.AvailableDateWithCount;
-                }
-                else
-                {
-                    query = Queries.AvailableDate;
-                }
+
+                List<string> queryParts=new();
+
+                queryParts.Add(data.CheckQuantity == true ? Queries.AvailableDateWithCount1 : Queries.AvailableDate1);
+                queryParts.Add(customAggs == true ? Queries.AvailableDate2IntervalsCustom : Queries.AvailableDate2IntervalsBasic);
+                queryParts.Add(Queries.AvailableDate3);
+                queryParts.Add(customAggs == true ? Queries.AvailableDate4DeliveryPowerCustom : Queries.AvailableDate4DeliveryPowerBasic);
+                queryParts.Add(Queries.AvailableDate5);
+
+                query = String.Join("", queryParts);
 
                 var DateMove = DateTime.Now.AddMonths(24000);
                 var TimeNow = new DateTime(2001, 1, 1, DateMove.Hour, DateMove.Minute, DateMove.Second);
@@ -548,6 +551,7 @@ namespace DateTimeService.Controllers
         {
             var data = _mapper.Map<RequestIntervalList>(inputData);
             string databaseType = "";
+            bool customAggs = false;
             Stopwatch stopwatchExecution = new();
             stopwatchExecution.Start();
 
@@ -569,8 +573,9 @@ namespace DateTimeService.Controllers
                 //connString = await _loadBalacing.GetDatabaseConnectionAsync();
                 //conn = await _loadBalacing.GetDatabaseConnectionAsync("");
                 var dbConnection = await _loadBalacing.GetDatabaseConnectionAsync();
-                conn = dbConnection.connection;
-                databaseType = dbConnection.databaseType;
+                conn = dbConnection.Connection;
+                databaseType = dbConnection.DatabaseType;
+                customAggs = dbConnection.UseAggregations;
             }
             catch (Exception ex)
             {
