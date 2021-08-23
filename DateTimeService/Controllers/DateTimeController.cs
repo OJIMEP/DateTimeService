@@ -301,10 +301,12 @@ namespace DateTimeService.Controllers
                 List<string> queryParts=new();
 
                 queryParts.Add(data.CheckQuantity == true ? Queries.AvailableDateWithCount1 : Queries.AvailableDate1);
-                queryParts.Add(customAggs == true ? Queries.AvailableDate2IntervalsCustom : Queries.AvailableDate2IntervalsBasic);
-                queryParts.Add(Queries.AvailableDate3);
-                queryParts.Add(customAggs == true ? Queries.AvailableDate4DeliveryPowerCustom : Queries.AvailableDate4DeliveryPowerBasic);
+                queryParts.Add(customAggs == true ? Queries.AvailableDate2MinimumWarehousesCustom : Queries.AvailableDate2MinimumWarehousesBasic);
+                queryParts.Add(data.CheckQuantity == true ? Queries.AvailableDateWithCount3 : Queries.AvailableDate3);
+                queryParts.Add(customAggs == true ? Queries.AvailableDate4IntervalsCustom : Queries.AvailableDate4IntervalsBasic);
                 queryParts.Add(Queries.AvailableDate5);
+                queryParts.Add(customAggs == true ? Queries.AvailableDate6DeliveryPowerCustom : Queries.AvailableDate6DeliveryPowerBasic);
+                queryParts.Add(Queries.AvailableDate7);
 
                 query = String.Join("", queryParts);
 
@@ -381,7 +383,7 @@ namespace DateTimeService.Controllers
                 var pickupWorkingHoursJoinType = _configuration.GetValue<string>("pickupWorkingHoursJoinType");
 
                 string useIndexHint = _configuration.GetValue<string>("useIndexHintWarehouseDates");// @", INDEX([_InfoRg23830_Custom2])";
-                if (databaseType != "replica_tables")
+                if (databaseType != "replica_tables" || customAggs)
                 {
                     useIndexHint = "";
                 }

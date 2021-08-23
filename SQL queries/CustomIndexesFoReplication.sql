@@ -246,6 +246,15 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
+USE [triovist_repl]
+GO
+
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
 /* Создаем таблицы аггрегации */
 IF  EXISTS (SELECT *
 FROM sys.objects
@@ -292,6 +301,28 @@ CREATE TABLE [dbo].[IntervalsAggregate]
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
+
+
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[WarehouseDatesAggregate]') AND type in (N'U'))
+DROP TABLE [dbo].[WarehouseDatesAggregate]
+GO
+
+CREATE TABLE [dbo].[WarehouseDatesAggregate](
+	[СкладИсточника] [binary](16) NOT NULL,
+	[СкладНазначения] [binary](16) NOT NULL,
+	[ДатаПрибытия] [datetime] NOT NULL,
+	[ДатаСобытия] [datetime] NOT NULL
+) ON [PRIMARY]
+GO
+
+CREATE NONCLUSTERED INDEX [WarehouseDatesAggregate_Custom1] ON [dbo].[WarehouseDatesAggregate]
+(
+	[СкладИсточника] ASC,
+	[ДатаСобытия] ASC
+)
+INCLUDE([СкладНазначения],[ДатаПрибытия]) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+
 
 /* Создаем буферные таблицы */
 IF  EXISTS (SELECT *
@@ -466,6 +497,59 @@ begin
 end;
 GO
 
+CREATE OR ALTER    procedure [dbo].[spUpdateAggregateWarehouseDates]
+as
+begin
+    set nocount on;
+    set xact_abort on;
+
+   
+    if @@trancount > 0
+  begin
+        raiserror('Outer transaction detected', 16, 1);
+        return;
+    end;
+
+    begin tran;
+
+    declare @result int;
+    DECLARE @exec_count int;
+    set @exec_count = 5;
+    WHILE @exec_count > 0 AND @result < 0
+    BEGIN
+       set @exec_count = @exec_count +1;
+       exec @result = sys.sp_getapplock @Resource = N'[dbo].[WarehouseDatesAggregate]', @LockMode = 'Exclusive', @LockOwner = 'Transaction', @LockTimeout = 1000;
+    END;
+    
+    if @result < 0
+	THROW 51000, 'Cant get lock for delete', 1;
+
+    truncate table [dbo].[WarehouseDatesAggregate];
+	
+	with t (СкладИсточника, СкладНазначения, ДатаПрибытия,ДатаСобытия, RN) as (
+	SELECT Distinct
+	  T1._Fld23831RRef AS СкладИсточника, 
+	  T1._Fld23833RRef AS СкладНазначения, 
+	  T1._Fld23834 AS ДатаПрибытия, 
+	  T1._Fld23832 AS ДатаСобытия,
+	  ROW_NUMBER() OVER(Partition by _Fld23831RRef,_Fld23833RRef order by _Fld23834) as RN 
+	FROM 
+		dbo._InfoRg23830 T1
+	Where T1._Fld23832 >= DateAdd(Minute, -5, DateAdd(YEAR,2000,GETDATE()))
+	Group by 
+		T1._Fld23831RRef,
+		 T1._Fld23833RRef,
+  T1._Fld23834,
+  T1._Fld23832
+	)	 
+	Insert Into [dbo].[WarehouseDatesAggregate]
+	select СкладИсточника, СкладНазначения, ДатаПрибытия, ДатаСобытия
+	from t where RN <= 10;
+
+
+    commit;
+end;
+GO
 
 /*Создаем триггеры */
 CREATE OR ALTER trigger [dbo].[_AccumRg25104_aggregate_trigger]
@@ -762,7 +846,97 @@ QuitWithRollback:
 EndSave:
 GO
 
-CREATE OR ALTER   procedure [dbo].[spCheckAggregates]
+USE [msdb]
+GO
+
+/****** Object:  Job [UpdateAggs1min]    Script Date: 23.08.2021 15:31:01 ******/
+EXEC msdb.dbo.sp_delete_job @job_id=N'3710e681-19c0-4db7-956d-52983ef83730', @delete_unused_schedule=1
+GO
+
+/****** Object:  Job [UpdateAggs1min]    Script Date: 23.08.2021 15:31:01 ******/
+BEGIN TRANSACTION
+DECLARE @ReturnCode INT
+SELECT @ReturnCode = 0
+/****** Object:  JobCategory [Data Collector]    Script Date: 23.08.2021 15:31:01 ******/
+IF NOT EXISTS (SELECT name FROM msdb.dbo.syscategories WHERE name=N'Data Collector' AND category_class=1)
+BEGIN
+EXEC @ReturnCode = msdb.dbo.sp_add_category @class=N'JOB', @type=N'LOCAL', @name=N'Data Collector'
+IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
+
+END
+
+DECLARE @jobId BINARY(16)
+EXEC @ReturnCode =  msdb.dbo.sp_add_job @job_name=N'UpdateAggs1min', 
+		@enabled=1, 
+		@notify_level_eventlog=0, 
+		@notify_level_email=0, 
+		@notify_level_netsend=0, 
+		@notify_level_page=0, 
+		@delete_level=0, 
+		@description=N'Описание недоступно.', 
+		@category_name=N'Data Collector', 
+		@owner_login_name=N'21VEK\a.borodavko', @job_id = @jobId OUTPUT
+IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
+/****** Object:  Step [cc]    Script Date: 23.08.2021 15:31:01 ******/
+EXEC @ReturnCode = msdb.dbo.sp_add_jobstep @job_id=@jobId, @step_name=N'cc', 
+		@step_id=1, 
+		@cmdexec_success_code=0, 
+		@on_success_action=1, 
+		@on_success_step_id=0, 
+		@on_fail_action=2, 
+		@on_fail_step_id=0, 
+		@retry_attempts=0, 
+		@retry_interval=0, 
+		@os_run_priority=0, @subsystem=N'TSQL', 
+		@command=N'exec [dbo].[spUpdateAggregateWarehouseDates]
+', 
+		@database_name=N'triovist_repl', 
+		@flags=0
+IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
+EXEC @ReturnCode = msdb.dbo.sp_update_job @job_id = @jobId, @start_step_id = 1
+IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
+EXEC @ReturnCode = msdb.dbo.sp_add_jobschedule @job_id=@jobId, @name=N'autostart schedule', 
+		@enabled=1, 
+		@freq_type=64, 
+		@freq_interval=0, 
+		@freq_subday_type=0, 
+		@freq_subday_interval=0, 
+		@freq_relative_interval=0, 
+		@freq_recurrence_factor=0, 
+		@active_start_date=20210818, 
+		@active_end_date=99991231, 
+		@active_start_time=0, 
+		@active_end_time=235959, 
+		@schedule_uid=N'4f5faf5d-a1cc-4bcc-b473-f513546274a0'
+IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
+EXEC @ReturnCode = msdb.dbo.sp_add_jobschedule @job_id=@jobId, @name=N'recurring schedule', 
+		@enabled=1, 
+		@freq_type=4, 
+		@freq_interval=1, 
+		@freq_subday_type=4, 
+		@freq_subday_interval=1, 
+		@freq_relative_interval=0, 
+		@freq_recurrence_factor=0, 
+		@active_start_date=20210818, 
+		@active_end_date=99991231, 
+		@active_start_time=0, 
+		@active_end_time=235959, 
+		@schedule_uid=N'c2fa3a84-6176-4c19-88b8-febd8ef63a2a'
+IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
+EXEC @ReturnCode = msdb.dbo.sp_add_jobserver @job_id = @jobId, @server_name = N'(local)'
+IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
+COMMIT TRANSACTION
+GOTO EndSave
+QuitWithRollback:
+    IF (@@TRANCOUNT > 0) ROLLBACK TRANSACTION
+EndSave:
+GO
+
+
+USE [triovist_repl]
+GO
+
+CREATE OR ALTER     procedure [dbo].[spCheckAggregates]
 as
 begin
     set nocount on;
@@ -853,10 +1027,56 @@ begin
 	Or T1.МассаОборот <> IsNull(T2.МассаОборот,9999999)
 	Or T1.МассаОборот <> IsNull(T2.МассаОборот,9999999)
 
-	Select Sum(t1.c1) as ErrorCount From (Select COUNT(*) AS c1 from #ErrorsIntervals UNION All Select Count(*) From #ErrorsDeliveryPower) As t1
+	SELECT
+		T1._Fld23831RRef AS СкладИсточника,
+		T1._Fld23833RRef AS СкладНазначения,
+		MIN(T1._Fld23834) AS ДатаПрибытия 
+	Into #Temp_MinimumWarehouseDatesOld
+	FROM
+		dbo._InfoRg23830 T1 With (READCOMMITTED, INDEX([_InfoRg23830_Custom2]))
+	WHERE
+    
+				T1._Fld23832 >= DateAdd(YEAR,2000,GETDATE())
+	GROUP BY T1._Fld23831RRef,
+	T1._Fld23833RRef
 
+	SELECT
+		T1.СкладИсточника AS СкладИсточника,
+		T1.СкладНазначения AS СкладНазначения,
+		MIN(T1.ДатаПрибытия) AS ДатаПрибытия 
+	Into #Temp_MinimumWarehouseDatesNew
+	FROM
+		[dbo].[WarehouseDatesAggregate] T1 
+    
+	WHERE
+	   T1.ДатаСобытия >= DateAdd(YEAR,2000,GETDATE()) 
+	GROUP BY T1.СкладИсточника,
+	T1.СкладНазначения
+
+	Select Top 1000
+		#Temp_MinimumWarehouseDatesOld.ДатаПрибытия ,
+		 ISNULL(#Temp_MinimumWarehouseDatesNew.ДатаПрибытия, GETDATE()) AS ДатаПрибытияNew
+	Into #ErrorsWarehouseDates
+	From
+		#Temp_MinimumWarehouseDatesOld
+		Left Join #Temp_MinimumWarehouseDatesNew On
+			#Temp_MinimumWarehouseDatesOld.СкладИсточника = #Temp_MinimumWarehouseDatesNew.СкладИсточника
+			And #Temp_MinimumWarehouseDatesOld.СкладНазначения = #Temp_MinimumWarehouseDatesNew.СкладНазначения
+	Where #Temp_MinimumWarehouseDatesOld.ДатаПрибытия <> ISNULL(#Temp_MinimumWarehouseDatesNew.ДатаПрибытия, GETDATE())
+
+
+	Select Sum(t1.c1) as ErrorCount From (
+		Select COUNT(*) AS c1 from #ErrorsIntervals 
+		UNION All Select Count(*) From #ErrorsDeliveryPower 
+		UNION All Select Count(*) From #ErrorsWarehouseDates) As t1
 
 end;
 GO
+
+
+
+
+
+
 
 dbcc freeproccache

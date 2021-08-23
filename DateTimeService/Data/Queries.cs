@@ -1598,9 +1598,9 @@ FROM
 	ON T1._Fld23831RRef = #Temp_Remains.СкладИсточника
 	AND T1._Fld23832 = #Temp_Remains.ДатаСобытия
 	AND T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData UNION ALL Select СкладСсылка From #Temp_PickupPoints)
-OPTION (KEEP PLAN, KEEPFIXED PLAN);
+OPTION (KEEP PLAN, KEEPFIXED PLAN);";
 
-With SourceWarehouses AS
+        public const string AvailableDate2MinimumWarehousesBasic = @"With SourceWarehouses AS
 (
 SELECT Distinct
 	T2.СкладИсточника AS СкладИсточника
@@ -1620,10 +1620,30 @@ WHERE
 		AND	T1._Fld23832 BETWEEN @P_DateTimeNow AND DateAdd(DAY,6,@P_DateTimeNow)
 GROUP BY T1._Fld23831RRef,
 T1._Fld23833RRef
-OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimeNow='{1}'), KEEP PLAN, KEEPFIXED PLAN);
-
-
+OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimeNow='{1}'), KEEP PLAN, KEEPFIXED PLAN);";
+        public const string AvailableDate2MinimumWarehousesCustom = @"With SourceWarehouses AS
+(
+SELECT Distinct
+	T2.СкладИсточника AS СкладИсточника
+FROM
+	#Temp_Remains T2 WITH(NOLOCK)
+)
 SELECT
+	T1.СкладИсточника AS СкладИсточника,
+	T1.СкладНазначения AS СкладНазначения,
+	MIN(T1.ДатаПрибытия) AS ДатаПрибытия  
+Into #Temp_MinimumWarehouseDates
+FROM
+    [dbo].[WarehouseDatesAggregate] T1 With (READCOMMITTED{7})
+    Inner Join SourceWarehouses On T1.СкладИсточника = SourceWarehouses.СкладИсточника
+WHERE
+    T1.СкладНазначения IN (Select СкладСсылка From #Temp_GeoData UNION ALL Select СкладСсылка From #Temp_PickupPoints)
+		AND	T1.ДатаСобытия BETWEEN @P_DateTimeNow AND DateAdd(DAY,6,@P_DateTimeNow)
+GROUP BY T1.СкладИсточника,
+T1.СкладНазначения
+OPTION (OPTIMIZE FOR (@P_DateTimeNow='{1}'), KEEP PLAN, KEEPFIXED PLAN);";
+
+        public const string AvailableDate3 = @"SELECT
     T1.НоменклатураСсылка,
     T1.Количество,
     T1.Источник_TYPE,
@@ -2090,7 +2110,7 @@ Group by
 	#Temp_ShipmentDatesPickUp.code
 OPTION (HASH GROUP, KEEP PLAN, KEEPFIXED PLAN);";
 
-        public const string AvailableDate2IntervalsBasic = @"With PlanningGroups AS(
+        public const string AvailableDate4IntervalsBasic = @"With PlanningGroups AS(
 Select Distinct 
 	#Temp_ShipmentDatesDeliveryCourier.ГруппаПланирования,
 	#Temp_ShipmentDatesDeliveryCourier.Приоритет
@@ -2137,7 +2157,7 @@ HAVING
     )
 OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'),KEEP PLAN, KEEPFIXED PLAN);";
 
-        public const string AvailableDate2IntervalsCustom = @"With PlanningGroups AS(
+        public const string AvailableDate4IntervalsCustom = @"With PlanningGroups AS(
 Select Distinct 
 	#Temp_ShipmentDatesDeliveryCourier.ГруппаПланирования,
 	#Temp_ShipmentDatesDeliveryCourier.Приоритет
@@ -2174,7 +2194,7 @@ GROUP BY
 	PlanningGroups.Приоритет
 OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'),KEEP PLAN, KEEPFIXED PLAN);";
 
-        public const string AvailableDate3 = @"
+        public const string AvailableDate5 = @"
 select
 DATEADD(
         SECOND,
@@ -2272,7 +2292,7 @@ Group By
     #Temp_IntervalsAll.Приоритет
 OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'), KEEP PLAN, KEEPFIXED PLAN);";
 
-        public const string AvailableDate4DeliveryPowerBasic = @"With Temp_DeliveryPower AS
+        public const string AvailableDate6DeliveryPowerBasic = @"With Temp_DeliveryPower AS
 (
 SELECT
     SUM(
@@ -2303,7 +2323,7 @@ GROUP BY
     CAST(CAST(МощностиДоставки._Period  AS DATE) AS DATETIME)
 ), ";
 
-        public const string AvailableDate4DeliveryPowerCustom = @"With Temp_DeliveryPower AS
+        public const string AvailableDate6DeliveryPowerCustom = @"With Temp_DeliveryPower AS
 (
 SELECT   
         МощностиДоставки.МассаОборот AS МассаОборот,    
@@ -2317,7 +2337,7 @@ WHERE
 	AND МощностиДоставки.ЗонаДоставки IN (Select ЗонаДоставкиРодительСсылка From  #Temp_GeoData)
 ),";
 
-        public const string AvailableDate5 = @"Temp_PlanningGroupPriority AS
+        public const string AvailableDate7 = @"Temp_PlanningGroupPriority AS
 (
 select Период, Max(Приоритет) AS Приоритет from #Temp_Intervals Group by Период
 )
@@ -2667,32 +2687,9 @@ FROM
 	ON T1._Fld23831RRef = #Temp_Remains.СкладИсточника
 	AND T1._Fld23832 = #Temp_Remains.ДатаСобытия
 	AND T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData UNION ALL Select СкладСсылка From #Temp_PickupPoints)
-OPTION (KEEP PLAN, KEEPFIXED PLAN);
+OPTION (KEEP PLAN, KEEPFIXED PLAN);";
 
-With SourceWarehouses AS
-(
-SELECT Distinct
-	T2.СкладИсточника AS СкладИсточника
-FROM
-	#Temp_Remains T2 WITH(NOLOCK)
-)
-SELECT
-	T1._Fld23831RRef AS СкладИсточника,
-	T1._Fld23833RRef AS СкладНазначения,
-	MIN(T1._Fld23834) AS ДатаПрибытия 
-Into #Temp_MinimumWarehouseDates
-FROM
-    dbo._InfoRg23830 T1 With (READCOMMITTED{7})
-    Inner Join SourceWarehouses On T1._Fld23831RRef = SourceWarehouses.СкладИсточника
-WHERE
-    T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData UNION ALL Select СкладСсылка From #Temp_PickupPoints)
-		AND	T1._Fld23832 BETWEEN @P_DateTimeNow AND DateAdd(DAY,6,@P_DateTimeNow)
-GROUP BY T1._Fld23831RRef,
-T1._Fld23833RRef
-OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimeNow='{1}'), KEEP PLAN, KEEPFIXED PLAN);
-
-
-SELECT
+        public const string AvailableDateWithCount3 = @"SELECT
     T1.НоменклатураСсылка,
     T1.Количество,
     T1.Источник_TYPE,

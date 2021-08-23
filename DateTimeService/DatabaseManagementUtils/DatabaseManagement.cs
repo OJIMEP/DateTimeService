@@ -393,9 +393,17 @@ namespace DateTimeService.Data
                 //open connection
                 conn.Open();
 
+                List<string> queryParts=new();
 
-                string query = Queries.AvailableDate1 + Queries.AvailableDate2IntervalsBasic + Queries.AvailableDate3 
-                    + Queries.AvailableDate4DeliveryPowerBasic + Queries.AvailableDate5;
+                queryParts.Add(Queries.AvailableDate1);
+                queryParts.Add(Queries.AvailableDate2MinimumWarehousesBasic);
+                queryParts.Add(Queries.AvailableDate3);
+                queryParts.Add(Queries.AvailableDate4IntervalsBasic);
+                queryParts.Add(Queries.AvailableDate5);
+                queryParts.Add(Queries.AvailableDate6DeliveryPowerBasic);
+                queryParts.Add(Queries.AvailableDate7);
+
+                string query = String.Join("", queryParts);
 
                 var DateMove = DateTime.Now.AddMonths(24000);
                 var TimeNow = new DateTime(2001, 1, 1, DateMove.Hour, DateMove.Minute, DateMove.Second);
