@@ -14,6 +14,8 @@ namespace DateTimeService.Models
         public DateTimeOffset LastCheckPerfomance { get; set; }
         public int ActualPriority { get; set; }
         public bool ExistsInFile { get; set; }
+        public bool CustomAggregationsAvailable { get; set; }
+
 
         public DatabaseInfo(DatabaseConnectionParameter connectionParameter)
         {

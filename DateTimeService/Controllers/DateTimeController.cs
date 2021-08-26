@@ -47,7 +47,7 @@ namespace DateTimeService.Controllers
 
 
             var dbConnection = await _loadBalacing.GetDatabaseConnectionAsync();
-            var conn = dbConnection.connection;
+            var conn = dbConnection.Connection;
 
 
             var result = new List<ResponseMaxAvailableCount>();
@@ -168,6 +168,7 @@ namespace DateTimeService.Controllers
 
             var data = _mapper.Map<RequestDataAvailableDate>(inputDataJson);
             string databaseType = "";
+            bool customAggs = false;
             Stopwatch stopwatchExecution = new();
             stopwatchExecution.Start();
 
@@ -189,9 +190,9 @@ namespace DateTimeService.Controllers
             {
                 //connString = await _loadBalacing.GetDatabaseConnectionAsync();
                 var dbConnection = await _loadBalacing.GetDatabaseConnectionAsync();
-                conn = dbConnection.connection;
-                databaseType = dbConnection.databaseType;
-
+                conn = dbConnection.Connection;
+                databaseType = dbConnection.DatabaseType;
+                customAggs = dbConnection.UseAggregations;
             }
             catch (Exception ex)
             {
@@ -296,14 +297,18 @@ namespace DateTimeService.Controllers
                 //open connection
                 //conn.Open();
                 string query = "";
-                if (data.CheckQuantity==true)
-                {
-                    query = Queries.AvailableDateWithCount;
-                }
-                else
-                {
-                    query = Queries.AvailableDate;
-                }
+
+                List<string> queryParts=new();
+
+                queryParts.Add(data.CheckQuantity == true ? Queries.AvailableDateWithCount1 : Queries.AvailableDate1);
+                queryParts.Add(customAggs == true ? Queries.AvailableDate2MinimumWarehousesCustom : Queries.AvailableDate2MinimumWarehousesBasic);
+                queryParts.Add(data.CheckQuantity == true ? Queries.AvailableDateWithCount3 : Queries.AvailableDate3);
+                queryParts.Add(customAggs == true ? Queries.AvailableDate4IntervalsCustom : Queries.AvailableDate4IntervalsBasic);
+                queryParts.Add(Queries.AvailableDate5);
+                queryParts.Add(customAggs == true ? Queries.AvailableDate6DeliveryPowerCustom : Queries.AvailableDate6DeliveryPowerBasic);
+                queryParts.Add(Queries.AvailableDate7);
+
+                query = String.Join("", queryParts);
 
                 var DateMove = DateTime.Now.AddMonths(24000);
                 var TimeNow = new DateTime(2001, 1, 1, DateMove.Hour, DateMove.Minute, DateMove.Second);
@@ -378,7 +383,7 @@ namespace DateTimeService.Controllers
                 var pickupWorkingHoursJoinType = _configuration.GetValue<string>("pickupWorkingHoursJoinType");
 
                 string useIndexHint = _configuration.GetValue<string>("useIndexHintWarehouseDates");// @", INDEX([_InfoRg23830_Custom2])";
-                if (databaseType != "replica_tables")
+                if (databaseType != "replica_tables" || customAggs)
                 {
                     useIndexHint = "";
                 }
@@ -548,6 +553,7 @@ namespace DateTimeService.Controllers
         {
             var data = _mapper.Map<RequestIntervalList>(inputData);
             string databaseType = "";
+            bool customAggs = false;
             Stopwatch stopwatchExecution = new();
             stopwatchExecution.Start();
 
@@ -569,8 +575,9 @@ namespace DateTimeService.Controllers
                 //connString = await _loadBalacing.GetDatabaseConnectionAsync();
                 //conn = await _loadBalacing.GetDatabaseConnectionAsync("");
                 var dbConnection = await _loadBalacing.GetDatabaseConnectionAsync();
-                conn = dbConnection.connection;
-                databaseType = dbConnection.databaseType;
+                conn = dbConnection.Connection;
+                databaseType = dbConnection.DatabaseType;
+                customAggs = dbConnection.UseAggregations;
             }
             catch (Exception ex)
             {

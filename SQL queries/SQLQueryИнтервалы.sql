@@ -587,7 +587,7 @@ FROM
 		On T2._Fld21408RRef = Цены._Fld21408RRef
 		AND T2._Fld21410_RTRef = 0x00000153
 		AND Цены._Fld21410_RTRef = 0x00000153 --Цены.Регистратор ССЫЛКА Документ.мегапрайсРегистрацияПрайса
-		AND T2._Fld21410_RRRef = Цены._Fld21410_RRRef 
+		AND T2._Fld21410_RRRef = Цены._Fld21410_RRRef
 		And Цены._Fld21442<>0 AND (Цены._Fld21442 * Temp_ExchangeRates.Курс / Temp_ExchangeRates.Кратность >= Цены._Fld21982 OR Цены._Fld21411 >= Цены._Fld21616)
 		And Цены._Fld21408RRef IN(SELECT
                 НоменклатураСсылка
@@ -611,8 +611,8 @@ GROUP BY
     T2._Fld21410_RTRef,
     T2._Fld21410_RRRef,
 	Цены._Fld21410_TYPE,
-    Цены._Fld21410_RTRef,
-    Цены._Fld21410_RRRef,
+	Цены._Fld21410_RTRef,
+	Цены._Fld21410_RRRef,
     T2._Fld23568RRef,
     T2._Fld21424
 HAVING
@@ -636,7 +636,7 @@ FROM
 	Inner Join #Temp_GoodsOrder On
 		Резервирование._RecorderRRef = #Temp_GoodsOrder.ЗаказСсылка
 		And Резервирование._Fld21408RRef = #Temp_GoodsOrder.НоменклатураСсылка
-OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimeNow='4021-07-20T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
+OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimeNow='4021-08-17T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
 
 SELECT Distinct
     T1._Fld23831RRef AS СкладИсточника,
@@ -665,14 +665,14 @@ SELECT
 	MIN(T1._Fld23834) AS ДатаПрибытия 
 Into #Temp_MinimumWarehouseDates
 FROM
-    dbo._InfoRg23830 T1 With (READCOMMITTED, INDEX([_InfoRg23830_Custom2])) 	
-    Inner Join SourceWarehouses On T1._Fld23831RRef = SourceWarehouses.СкладИсточника	
+    dbo._InfoRg23830 T1 With (READCOMMITTED, INDEX([_InfoRg23830_Custom2]))
+	Inner Join SourceWarehouses On T1._Fld23831RRef = SourceWarehouses.СкладИсточника
 WHERE
 	T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData UNION ALL Select СкладСсылка From #Temp_PickupPoints)
 		AND	T1._Fld23832 BETWEEN @P_DateTimeNow AND DateAdd(DAY,6,@P_DateTimeNow)
 GROUP BY T1._Fld23831RRef,
 T1._Fld23833RRef
-OPTION (OPTIMIZE FOR (@P_DateTimeNow='4021-07-20T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
+OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimeNow='4021-08-17T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
 
 
 SELECT
@@ -697,7 +697,7 @@ FROM
     AND (T1.ДатаСобытия = '2001-01-01 00:00:00')
 WHERE
     T1.Количество > 0 And
-	T1.Источник_RTRef = 0x000000E2 OR T1.Источник_RTRef = 0x00000150	
+	T1.Источник_RTRef = 0x000000E2 OR T1.Источник_RTRef = 0x00000150
 
 UNION
 ALL
@@ -710,7 +710,6 @@ SELECT
     T4.СкладИсточника,
     T4.ДатаСобытия,
 	DATEADD(SECOND, DATEDIFF(SECOND, @P_EmptyDate, IsNull(#Temp_PlanningGroups.ГруппаПланированияДобавляемоеВремя,@P_EmptyDate)), T5.ДатаПрибытия),
-    --T5.ДатаПрибытия,
     2,
     T5.СкладНазначения
 FROM
@@ -734,7 +733,6 @@ SELECT
     T6.СкладИсточника,
     T6.ДатаСобытия,
 	DATEADD(SECOND, DATEDIFF(SECOND, @P_EmptyDate, IsNull(#Temp_PlanningGroups.ГруппаПланированияДобавляемоеВремя,@P_EmptyDate)), T7.ДатаПрибытия),
-    --T7.ДатаПрибытия,
     3,
     T7.СкладНазначения
 FROM
@@ -842,7 +840,7 @@ FROM
     #Temp_Sources T1 WITH(NOLOCK)
     INNER JOIN dbo._AccumRg21407 Резервирование WITH(READCOMMITTED)
     LEFT OUTER JOIN Temp_ExchangeRates T3 WITH(NOLOCK)
-        ON (Резервирование._Fld21443RRef = T3.Валюта) 
+        ON (Резервирование._Fld21443RRef = T3.Валюта)
     ON (T1.НоменклатураСсылка = Резервирование._Fld21408RRef)
     AND (
         T1.Источник_TYPE = 0x08

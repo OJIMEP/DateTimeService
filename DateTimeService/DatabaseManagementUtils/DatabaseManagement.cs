@@ -258,6 +258,17 @@ namespace DateTimeService.Data
 
                             database.AvailableToUse = checkResult;
 
+                            if (database.Type == "replica_tables")
+                            {
+                                var aggResult = await CheckAggregationsAvailability(database.Connection, cancellationToken, (int)criteriaMaxTime.Percentile_95);
+
+                                database.CustomAggregationsAvailable = aggResult;
+                            }
+                            else
+                                database.CustomAggregationsAvailable = false;
+
+
+
 
                             var logElement = new ElasticLogElement
                             {
@@ -267,6 +278,7 @@ namespace DateTimeService.Data
                                 DatabaseConnection = database.ConnectionWithoutCredentials
                             };
                             logElement.AdditionalData.Add("Available", checkResult.ToString());
+                            logElement.AdditionalData.Add("AvailableAggs", database.CustomAggregationsAvailable.ToString());
                             var logstringElement = JsonSerializer.Serialize(logElement);
 
                             _logger.LogInformation(logstringElement);
@@ -335,8 +347,17 @@ namespace DateTimeService.Data
 
                     var checkResult = await CheckDatabaseAvailability(item.Connection, cancellationToken);
 
-
                     item.AvailableToUse = checkResult;
+
+                    if (item.Type == "replica_tables")
+                    {
+                        var aggResult = await CheckAggregationsAvailability(item.Connection, cancellationToken);
+
+                        item.CustomAggregationsAvailable = aggResult;
+                    }
+                    else
+                        item.CustomAggregationsAvailable = false;
+
 
 
                     item.LastCheckAvailability = DateTimeOffset.Now;
@@ -349,6 +370,7 @@ namespace DateTimeService.Data
                         DatabaseConnection = item.ConnectionWithoutCredentials
                     };
                     logElement.AdditionalData.Add("Available", checkResult.ToString());
+                    logElement.AdditionalData.Add("AvailableAggs", item.CustomAggregationsAvailable.ToString());
                     var logstringElement = JsonSerializer.Serialize(logElement);
 
                     _logger.LogInformation(logstringElement);
@@ -371,7 +393,17 @@ namespace DateTimeService.Data
                 //open connection
                 conn.Open();
 
-                string query = Queries.AvailableDate;
+                List<string> queryParts=new();
+
+                queryParts.Add(Queries.AvailableDate1);
+                queryParts.Add(Queries.AvailableDate2MinimumWarehousesBasic);
+                queryParts.Add(Queries.AvailableDate3);
+                queryParts.Add(Queries.AvailableDate4IntervalsBasic);
+                queryParts.Add(Queries.AvailableDate5);
+                queryParts.Add(Queries.AvailableDate6DeliveryPowerBasic);
+                queryParts.Add(Queries.AvailableDate7);
+
+                string query = String.Join("", queryParts);
 
                 var DateMove = DateTime.Now.AddMonths(24000);
                 var TimeNow = new DateTime(2001, 1, 1, DateMove.Hour, DateMove.Minute, DateMove.Second);
@@ -466,7 +498,7 @@ namespace DateTimeService.Data
 
                 var pickupWorkingHoursJoinType = _configuration.GetValue<string>("pickupWorkingHoursJoinType");
 
-               
+
 
                 cmd.CommandText = queryTextBegin + string.Format(query, string.Join(",", pickupParameters),
                     dateTimeNowOptimizeString,
@@ -507,5 +539,74 @@ namespace DateTimeService.Data
 
             return result >= 0;
         }
+
+        public async Task<bool> CheckAggregationsAvailability(string connstring, CancellationToken cancellationToken, int executionLimit = 3000)
+        {
+            int result = -1;
+
+            Stopwatch watch = new();
+            watch.Start();
+            try
+            {
+                using SqlConnection conn = new(connstring);
+
+                //open connection
+                conn.Open();
+
+                string query = Queries.CheckAggregations;
+
+
+
+                SqlCommand cmd = new(query, conn);
+
+                cmd.CommandTimeout = 3;
+
+
+
+                cmd.CommandText = query;
+
+
+                //execute the SQLCommand
+                var dataReader = await cmd.ExecuteReaderAsync(cancellationToken);
+                if (dataReader.HasRows)
+                {
+                    if (dataReader.Read())
+                    {
+
+                        if (dataReader.GetInt32(0) == 0)
+                        {
+                            result = 0;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                result = -1;
+
+                var logElement = new ElasticLogElement
+                {
+                    LoadBalancingExecution = 0,
+                    ErrorDescription = ex.Message,
+                    Status = "Error",
+                    DatabaseConnection = LoadBalancing.RemoveCredentialsFromConnectionString(connstring)
+                };
+
+                var logstringElement = JsonSerializer.Serialize(logElement);
+
+                _logger.LogInformation(logstringElement);
+
+            }
+            watch.Stop();
+
+            if (watch.ElapsedMilliseconds > executionLimit)
+            {
+                result = -1;
+            }
+
+
+            return result >= 0;
+        }
+
     }
 }

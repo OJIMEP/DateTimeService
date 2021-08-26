@@ -91,9 +91,10 @@ namespace DateTimeService.Data
 
                             //close connection
                             //conn.Close();
-                            result.connection = conn;
+                            result.Connection = conn;
                             resultString = connParametr.Connection;
-                            result.databaseType = connParametr.Type;
+                            result.DatabaseType = connParametr.Type;
+                            result.UseAggregations = connParametr.CustomAggregationsAvailable;
                             break;
                         }
                         catch (Exception ex)
@@ -161,8 +162,9 @@ namespace DateTimeService.Data
 
     public class DbConnection
     {
-        public SqlConnection connection { get; set; }
-        public string databaseType { get; set; }
+        public SqlConnection Connection { get; set; }
+        public string DatabaseType { get; set; }
+        public bool UseAggregations { get; set; }
     }
 
 
