@@ -261,7 +261,7 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-/* РЎРѕР·РґР°РµРј С‚Р°Р±Р»РёС†С‹ Р°РіРіСЂРµРіР°С†РёРё */
+/* Создаем таблицы аггрегации */
 IF  EXISTS (SELECT *
 FROM sys.objects
 WHERE object_id = OBJECT_ID(N'[dbo].[DeliveryPowerAggregate]') AND type in (N'U'))
@@ -270,15 +270,15 @@ GO
 
 CREATE TABLE [dbo].[DeliveryPowerAggregate]
 (
-    [РџРµСЂРёРѕРґ] [datetime] NOT NULL,
-    [Р—РѕРЅР°Р”РѕСЃС‚Р°РІРєРё] [binary](16) NOT NULL,
-    [РњР°СЃСЃР°РћР±РѕСЂРѕС‚] [numeric](10, 3) NOT NULL,
-    [РћР±СЉРµРјРћР±РѕСЂРѕС‚] [numeric](10, 3) NOT NULL,
-    [Р’СЂРµРјСЏРќР°РћР±СЃР»СѓР¶РёРІР°РЅРёРµРћР±РѕСЂРѕС‚] [numeric](10, 3) NOT NULL,
+    [Период] [datetime] NOT NULL,
+    [ЗонаДоставки] [binary](16) NOT NULL,
+    [МассаОборот] [numeric](10, 3) NOT NULL,
+    [ОбъемОборот] [numeric](10, 3) NOT NULL,
+    [ВремяНаОбслуживаниеОборот] [numeric](10, 3) NOT NULL,
     CONSTRAINT [PK_DeliveryPowerAggregate] PRIMARY KEY CLUSTERED 
 (
-	[РџРµСЂРёРѕРґ] ASC,
-	[Р—РѕРЅР°Р”РѕСЃС‚Р°РІРєРё] ASC
+	[Период] ASC,
+	[ЗонаДоставки] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
@@ -291,19 +291,19 @@ GO
 
 CREATE TABLE [dbo].[IntervalsAggregate]
 (
-    [РџРµСЂРёРѕРґ] [datetime] NOT NULL,
-    [Р“СЂСѓРїРїР°РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏ] [binary](16) NOT NULL,
-    [Р“РµРѕР·РѕРЅР°] [binary](16) NOT NULL,
-    [Р’СЂРµРјСЏРќР°С‡Р°Р»Р°] [datetime] NOT NULL,
-    [Р’СЂРµРјСЏРћРєРѕРЅС‡Р°РЅРёСЏ] [datetime] NOT NULL,
-    [РљРѕР»РёС‡РµСЃС‚РІРѕР—Р°РєР°Р·РѕРІР—Р°РРЅС‚РµСЂРІР°Р»Р’СЂРµРјРµРЅРё] [numeric](10, 0) NOT NULL,
+    [Период] [datetime] NOT NULL,
+    [ГруппаПланирования] [binary](16) NOT NULL,
+    [Геозона] [binary](16) NOT NULL,
+    [ВремяНачала] [datetime] NOT NULL,
+    [ВремяОкончания] [datetime] NOT NULL,
+    [КоличествоЗаказовЗаИнтервалВремени] [numeric](10, 0) NOT NULL,
     CONSTRAINT [PK_IntervalsAggregate] PRIMARY KEY CLUSTERED 
 (
-	[РџРµСЂРёРѕРґ] ASC,
-	[Р“СЂСѓРїРїР°РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏ] ASC,
-	[Р“РµРѕР·РѕРЅР°] ASC,
-	[Р’СЂРµРјСЏРќР°С‡Р°Р»Р°] ASC,
-	[Р’СЂРµРјСЏРћРєРѕРЅС‡Р°РЅРёСЏ] ASC
+	[Период] ASC,
+	[ГруппаПланирования] ASC,
+	[Геозона] ASC,
+	[ВремяНачала] ASC,
+	[ВремяОкончания] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
@@ -314,23 +314,23 @@ DROP TABLE [dbo].[WarehouseDatesAggregate]
 GO
 
 CREATE TABLE [dbo].[WarehouseDatesAggregate](
-	[РЎРєР»Р°РґРСЃС‚РѕС‡РЅРёРєР°] [binary](16) NOT NULL,
-	[РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ] [binary](16) NOT NULL,
-	[Р”Р°С‚Р°РџСЂРёР±С‹С‚РёСЏ] [datetime] NOT NULL,
-	[Р”Р°С‚Р°РЎРѕР±С‹С‚РёСЏ] [datetime] NOT NULL
+	[СкладИсточника] [binary](16) NOT NULL,
+	[СкладНазначения] [binary](16) NOT NULL,
+	[ДатаПрибытия] [datetime] NOT NULL,
+	[ДатаСобытия] [datetime] NOT NULL
 ) ON [PRIMARY]
 GO
 
 CREATE NONCLUSTERED INDEX [WarehouseDatesAggregate_Custom1] ON [dbo].[WarehouseDatesAggregate]
 (
-	[РЎРєР»Р°РґРСЃС‚РѕС‡РЅРёРєР°] ASC,
-	[Р”Р°С‚Р°РЎРѕР±С‹С‚РёСЏ] ASC
+	[СкладИсточника] ASC,
+	[ДатаСобытия] ASC
 )
-INCLUDE([РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ],[Р”Р°С‚Р°РџСЂРёР±С‹С‚РёСЏ]) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+INCLUDE([СкладНазначения],[ДатаПрибытия]) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 GO
 
 
-/* РЎРѕР·РґР°РµРј Р±СѓС„РµСЂРЅС‹Рµ С‚Р°Р±Р»РёС†С‹ */
+/* Создаем буферные таблицы */
 IF  EXISTS (SELECT *
 FROM sys.objects
 WHERE object_id = OBJECT_ID(N'[dbo].[buffering_table_deliverypower]') AND type in (N'U'))
@@ -340,11 +340,11 @@ GO
 CREATE TABLE [dbo].[buffering_table_deliverypower]
 (
     [id] [numeric](18, 0) IDENTITY(1,1) NOT NULL,
-    [РџРµСЂРёРѕРґ] [date] NOT NULL,
-    [Р—РѕРЅР°Р”РѕСЃС‚Р°РІРєРё] [binary](16) NOT NULL,
-    [РњР°СЃСЃР°РћР±РѕСЂРѕС‚] [numeric](10, 3) NOT NULL,
-    [РћР±СЉРµРјРћР±РѕСЂРѕС‚] [numeric](10, 3) NOT NULL,
-    [Р’СЂРµРјСЏРќР°РћР±СЃР»СѓР¶РёРІР°РЅРёРµРћР±РѕСЂРѕС‚] [numeric](10, 3) NOT NULL,
+    [Период] [date] NOT NULL,
+    [ЗонаДоставки] [binary](16) NOT NULL,
+    [МассаОборот] [numeric](10, 3) NOT NULL,
+    [ОбъемОборот] [numeric](10, 3) NOT NULL,
+    [ВремяНаОбслуживаниеОборот] [numeric](10, 3) NOT NULL,
     PRIMARY KEY CLUSTERED 
 (
 	[id] ASC
@@ -361,12 +361,12 @@ GO
 CREATE TABLE [dbo].[buffering_table_intervals]
 (
     [id] [numeric](18, 0) IDENTITY(1,1) NOT NULL,
-    [РџРµСЂРёРѕРґ] [datetime] NOT NULL,
-    [Р“СЂСѓРїРїР°РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏ] [binary](16) NOT NULL,
-    [Р“РµРѕР·РѕРЅР°] [binary](16) NOT NULL,
-    [Р’СЂРµРјСЏРќР°С‡Р°Р»Р°] [datetime] NOT NULL,
-    [Р’СЂРµРјСЏРћРєРѕРЅС‡Р°РЅРёСЏ] [datetime] NOT NULL,
-    [РљРѕР»РёС‡РµСЃС‚РІРѕР—Р°РєР°Р·РѕРІР—Р°РРЅС‚РµСЂРІР°Р»Р’СЂРµРјРµРЅРё] [numeric](10, 0) NOT NULL,
+    [Период] [datetime] NOT NULL,
+    [ГруппаПланирования] [binary](16) NOT NULL,
+    [Геозона] [binary](16) NOT NULL,
+    [ВремяНачала] [datetime] NOT NULL,
+    [ВремяОкончания] [datetime] NOT NULL,
+    [КоличествоЗаказовЗаИнтервалВремени] [numeric](10, 0) NOT NULL,
     PRIMARY KEY CLUSTERED 
 (
 	[id] ASC
@@ -377,7 +377,7 @@ GO
 
 
 
-/* РЎРѕР·РґР°РµРј С…СЂР°РЅРёРјРєРё РѕР±РЅРѕРІР»РµРЅРёСЏ Р°РіРіСЂРµРіР°С†РёР№ */
+/* Создаем хранимки обновления аггрегаций */
 CREATE OR ALTER   procedure [dbo].[spUpdateAggregateDeliveryPower]
 as
 
@@ -387,11 +387,11 @@ begin
 
     create table #t
     (
-        [РџРµСЂРёРѕРґ] [date] ,
-        [Р—РѕРЅР°Р”РѕСЃС‚Р°РІРєРё] [binary](16) ,
-        [РњР°СЃСЃР°РћР±РѕСЂРѕС‚] [numeric](10, 3) ,
-        [РћР±СЉРµРјРћР±РѕСЂРѕС‚] [numeric](10, 3) ,
-        [Р’СЂРµРјСЏРќР°РћР±СЃР»СѓР¶РёРІР°РЅРёРµРћР±РѕСЂРѕС‚] [numeric](10, 3)
+        [Период] [date] ,
+        [ЗонаДоставки] [binary](16) ,
+        [МассаОборот] [numeric](10, 3) ,
+        [ОбъемОборот] [numeric](10, 3) ,
+        [ВремяНаОбслуживаниеОборот] [numeric](10, 3)
     );
 
     if @@trancount > 0
@@ -415,25 +415,25 @@ begin
 	THROW 51000, 'Cant get lock for delete', 1;
 
     delete from [dbo].[buffering_table_deliverypower] 
-	output deleted.[РџРµСЂРёРѕРґ],deleted.[Р—РѕРЅР°Р”РѕСЃС‚Р°РІРєРё],deleted.[РњР°СЃСЃР°РћР±РѕСЂРѕС‚],deleted.[РћР±СЉРµРјРћР±РѕСЂРѕС‚],deleted.[Р’СЂРµРјСЏРќР°РћР±СЃР»СѓР¶РёРІР°РЅРёРµРћР±РѕСЂРѕС‚] into #t;
+	output deleted.[Период],deleted.[ЗонаДоставки],deleted.[МассаОборот],deleted.[ОбъемОборот],deleted.[ВремяНаОбслуживаниеОборот] into #t;
 
     with
-        s ([РџРµСЂРёРѕРґ], [Р—РѕРЅР°Р”РѕСЃС‚Р°РІРєРё], [РњР°СЃСЃР°РћР±РѕСЂРѕС‚_delta], [РћР±СЉРµРјРћР±РѕСЂРѕС‚_delta], [Р’СЂРµРјСЏРќР°РћР±СЃР»СѓР¶РёРІР°РЅРёРµРћР±РѕСЂРѕС‚_delta])
+        s ([Период], [ЗонаДоставки], [МассаОборот_delta], [ОбъемОборот_delta], [ВремяНаОбслуживаниеОборот_delta])
         as
         (
             select
-                [РџРµСЂРёРѕРґ], [Р—РѕРЅР°Р”РѕСЃС‚Р°РІРєРё], sum([РњР°СЃСЃР°РћР±РѕСЂРѕС‚]), sum([РћР±СЉРµРјРћР±РѕСЂРѕС‚]), sum([Р’СЂРµРјСЏРќР°РћР±СЃР»СѓР¶РёРІР°РЅРёРµРћР±РѕСЂРѕС‚])
+                [Период], [ЗонаДоставки], sum([МассаОборот]), sum([ОбъемОборот]), sum([ВремяНаОбслуживаниеОборот])
             from
                 #t
             Group by
-	[РџРµСЂРёРѕРґ],
-	[Р—РѕРЅР°Р”РѕСЃС‚Р°РІРєРё]
+	[Период],
+	[ЗонаДоставки]
         )
  merge into [dbo].[DeliveryPowerAggregate] t
- using s on s.[РџРµСЂРёРѕРґ] = t.[РџРµСЂРёРѕРґ] and s.[Р—РѕРЅР°Р”РѕСЃС‚Р°РІРєРё] = t.[Р—РѕРЅР°Р”РѕСЃС‚Р°РІРєРё]
- when not matched then insert ([РџРµСЂРёРѕРґ],[Р—РѕРЅР°Р”РѕСЃС‚Р°РІРєРё],[РњР°СЃСЃР°РћР±РѕСЂРѕС‚],[РћР±СЉРµРјРћР±РѕСЂРѕС‚],[Р’СЂРµРјСЏРќР°РћР±СЃР»СѓР¶РёРІР°РЅРёРµРћР±РѕСЂРѕС‚]) 
-	values (s.[РџРµСЂРёРѕРґ],s.[Р—РѕРЅР°Р”РѕСЃС‚Р°РІРєРё], s.[РњР°СЃСЃР°РћР±РѕСЂРѕС‚_delta], s.[РћР±СЉРµРјРћР±РѕСЂРѕС‚_delta],s.[Р’СЂРµРјСЏРќР°РћР±СЃР»СѓР¶РёРІР°РЅРёРµРћР±РѕСЂРѕС‚_delta])
- when matched then update set [РњР°СЃСЃР°РћР±РѕСЂРѕС‚] += s.[РњР°СЃСЃР°РћР±РѕСЂРѕС‚_delta], [РћР±СЉРµРјРћР±РѕСЂРѕС‚] += s.[РћР±СЉРµРјРћР±РѕСЂРѕС‚_delta], [Р’СЂРµРјСЏРќР°РћР±СЃР»СѓР¶РёРІР°РЅРёРµРћР±РѕСЂРѕС‚] += s.[Р’СЂРµРјСЏРќР°РћР±СЃР»СѓР¶РёРІР°РЅРёРµРћР±РѕСЂРѕС‚_delta];
+ using s on s.[Период] = t.[Период] and s.[ЗонаДоставки] = t.[ЗонаДоставки]
+ when not matched then insert ([Период],[ЗонаДоставки],[МассаОборот],[ОбъемОборот],[ВремяНаОбслуживаниеОборот]) 
+	values (s.[Период],s.[ЗонаДоставки], s.[МассаОборот_delta], s.[ОбъемОборот_delta],s.[ВремяНаОбслуживаниеОборот_delta])
+ when matched then update set [МассаОборот] += s.[МассаОборот_delta], [ОбъемОборот] += s.[ОбъемОборот_delta], [ВремяНаОбслуживаниеОборот] += s.[ВремяНаОбслуживаниеОборот_delta];
 
     commit;
 end;
@@ -447,12 +447,12 @@ begin
 
     create table #t
     (
-        [РџРµСЂРёРѕРґ] [datetime] NOT NULL,
-	    [Р“СЂСѓРїРїР°РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏ] [binary](16) NOT NULL,
-	    [Р“РµРѕР·РѕРЅР°] [binary](16) NOT NULL,
-	    [Р’СЂРµРјСЏРќР°С‡Р°Р»Р°] [datetime] NOT NULL,
-	    [Р’СЂРµРјСЏРћРєРѕРЅС‡Р°РЅРёСЏ] [datetime] NOT NULL,
-	    [РљРѕР»РёС‡РµСЃС‚РІРѕР—Р°РєР°Р·РѕРІР—Р°РРЅС‚РµСЂРІР°Р»Р’СЂРµРјРµРЅРё] [numeric](10, 0) NOT NULL
+        [Период] [datetime] NOT NULL,
+	    [ГруппаПланирования] [binary](16) NOT NULL,
+	    [Геозона] [binary](16) NOT NULL,
+	    [ВремяНачала] [datetime] NOT NULL,
+	    [ВремяОкончания] [datetime] NOT NULL,
+	    [КоличествоЗаказовЗаИнтервалВремени] [numeric](10, 0) NOT NULL
     );
 
     if @@trancount > 0
@@ -476,28 +476,28 @@ begin
 	THROW 51000, 'Cant get lock for delete', 1;
 
     delete from [dbo].[buffering_table_intervals] 
-	output deleted.[РџРµСЂРёРѕРґ],deleted.[Р“СЂСѓРїРїР°РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏ],deleted.[Р“РµРѕР·РѕРЅР°],deleted.[Р’СЂРµРјСЏРќР°С‡Р°Р»Р°],deleted.[Р’СЂРµРјСЏРћРєРѕРЅС‡Р°РЅРёСЏ], deleted.[РљРѕР»РёС‡РµСЃС‚РІРѕР—Р°РєР°Р·РѕРІР—Р°РРЅС‚РµСЂРІР°Р»Р’СЂРµРјРµРЅРё] into #t;
+	output deleted.[Период],deleted.[ГруппаПланирования],deleted.[Геозона],deleted.[ВремяНачала],deleted.[ВремяОкончания], deleted.[КоличествоЗаказовЗаИнтервалВремени] into #t;
 
     with
-        s ([РџРµСЂРёРѕРґ], [Р“СЂСѓРїРїР°РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏ], [Р“РµРѕР·РѕРЅР°], [Р’СЂРµРјСЏРќР°С‡Р°Р»Р°], [Р’СЂРµРјСЏРћРєРѕРЅС‡Р°РЅРёСЏ], [РљРѕР»РёС‡РµСЃС‚РІРѕР—Р°РєР°Р·РѕРІР—Р°РРЅС‚РµСЂРІР°Р»Р’СЂРµРјРµРЅРё_delta] )
+        s ([Период], [ГруппаПланирования], [Геозона], [ВремяНачала], [ВремяОкончания], [КоличествоЗаказовЗаИнтервалВремени_delta] )
         as
         (
             select
-                [РџРµСЂРёРѕРґ], [Р“СЂСѓРїРїР°РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏ], [Р“РµРѕР·РѕРЅР°], [Р’СЂРµРјСЏРќР°С‡Р°Р»Р°], [Р’СЂРµРјСЏРћРєРѕРЅС‡Р°РЅРёСЏ], sum([РљРѕР»РёС‡РµСЃС‚РІРѕР—Р°РєР°Р·РѕРІР—Р°РРЅС‚РµСЂРІР°Р»Р’СЂРµРјРµРЅРё])
+                [Период], [ГруппаПланирования], [Геозона], [ВремяНачала], [ВремяОкончания], sum([КоличествоЗаказовЗаИнтервалВремени])
             from
                 #t
             Group by
-                [РџРµСЂРёРѕРґ], [Р“СЂСѓРїРїР°РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏ], [Р“РµРѕР·РѕРЅР°], [Р’СЂРµРјСЏРќР°С‡Р°Р»Р°], [Р’СЂРµРјСЏРћРєРѕРЅС‡Р°РЅРёСЏ]
+                [Период], [ГруппаПланирования], [Геозона], [ВремяНачала], [ВремяОкончания]
         )
  merge into [dbo].[IntervalsAggregate] t
- using s on s.[РџРµСЂРёРѕРґ] = t.[РџРµСЂРёРѕРґ] 
-    and s.[Р“СЂСѓРїРїР°РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏ] = t.[Р“СЂСѓРїРїР°РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏ]
-    and s.[Р“РµРѕР·РѕРЅР°] = t.[Р“РµРѕР·РѕРЅР°]
-    and s.[Р’СЂРµРјСЏРќР°С‡Р°Р»Р°] = t.[Р’СЂРµРјСЏРќР°С‡Р°Р»Р°]
-    and s.[Р’СЂРµРјСЏРћРєРѕРЅС‡Р°РЅРёСЏ] = t.[Р’СЂРµРјСЏРћРєРѕРЅС‡Р°РЅРёСЏ]
- when not matched then insert ([РџРµСЂРёРѕРґ], [Р“СЂСѓРїРїР°РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏ], [Р“РµРѕР·РѕРЅР°], [Р’СЂРµРјСЏРќР°С‡Р°Р»Р°], [Р’СЂРµРјСЏРћРєРѕРЅС‡Р°РЅРёСЏ], [РљРѕР»РёС‡РµСЃС‚РІРѕР—Р°РєР°Р·РѕРІР—Р°РРЅС‚РµСЂРІР°Р»Р’СЂРµРјРµРЅРё]) 
-	values (s.[РџРµСЂРёРѕРґ],s.[Р“СЂСѓРїРїР°РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏ], s.[Р“РµРѕР·РѕРЅР°], s.[Р’СЂРµРјСЏРќР°С‡Р°Р»Р°],s.[Р’СЂРµРјСЏРћРєРѕРЅС‡Р°РЅРёСЏ], s.[РљРѕР»РёС‡РµСЃС‚РІРѕР—Р°РєР°Р·РѕРІР—Р°РРЅС‚РµСЂРІР°Р»Р’СЂРµРјРµРЅРё_delta])
- when matched then update set [РљРѕР»РёС‡РµСЃС‚РІРѕР—Р°РєР°Р·РѕРІР—Р°РРЅС‚РµСЂРІР°Р»Р’СЂРµРјРµРЅРё] += s.[РљРѕР»РёС‡РµСЃС‚РІРѕР—Р°РєР°Р·РѕРІР—Р°РРЅС‚РµСЂРІР°Р»Р’СЂРµРјРµРЅРё_delta];
+ using s on s.[Период] = t.[Период] 
+    and s.[ГруппаПланирования] = t.[ГруппаПланирования]
+    and s.[Геозона] = t.[Геозона]
+    and s.[ВремяНачала] = t.[ВремяНачала]
+    and s.[ВремяОкончания] = t.[ВремяОкончания]
+ when not matched then insert ([Период], [ГруппаПланирования], [Геозона], [ВремяНачала], [ВремяОкончания], [КоличествоЗаказовЗаИнтервалВремени]) 
+	values (s.[Период],s.[ГруппаПланирования], s.[Геозона], s.[ВремяНачала],s.[ВремяОкончания], s.[КоличествоЗаказовЗаИнтервалВремени_delta])
+ when matched then update set [КоличествоЗаказовЗаИнтервалВремени] += s.[КоличествоЗаказовЗаИнтервалВремени_delta];
 
     commit;
 end;
@@ -520,12 +520,12 @@ begin
 
     delete from [dbo].[WarehouseDatesAggregate];
 	
-	with t ([РЎРєР»Р°РґРСЃС‚РѕС‡РЅРёРєР°], [РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ], [Р”Р°С‚Р°РџСЂРёР±С‹С‚РёСЏ],[Р”Р°С‚Р°РЎРѕР±С‹С‚РёСЏ], RN) as (
+	with t ([СкладИсточника], [СкладНазначения], [ДатаПрибытия],[ДатаСобытия], RN) as (
 	SELECT Distinct
-	  T1._Fld23831RRef AS [РЎРєР»Р°РґРСЃС‚РѕС‡РЅРёРєР°], 
-	  T1._Fld23833RRef AS [РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ], 
-	  T1._Fld23834 AS [Р”Р°С‚Р°РџСЂРёР±С‹С‚РёСЏ], 
-	  T1._Fld23832 AS [Р”Р°С‚Р°РЎРѕР±С‹С‚РёСЏ],
+	  T1._Fld23831RRef AS [СкладИсточника], 
+	  T1._Fld23833RRef AS [СкладНазначения], 
+	  T1._Fld23834 AS [ДатаПрибытия], 
+	  T1._Fld23832 AS [ДатаСобытия],
 	  ROW_NUMBER() OVER(Partition by _Fld23831RRef,_Fld23833RRef order by _Fld23834) as RN 
 	FROM 
 		dbo._InfoRg23830 T1
@@ -537,7 +537,7 @@ begin
   T1._Fld23832
 	)	 
 	Insert Into [dbo].[WarehouseDatesAggregate]
-	select [РЎРєР»Р°РґРСЃС‚РѕС‡РЅРёРєР°], [РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ], [Р”Р°С‚Р°РџСЂРёР±С‹С‚РёСЏ], [Р”Р°С‚Р°РЎРѕР±С‹С‚РёСЏ]
+	select [СкладИсточника], [СкладНазначения], [ДатаПрибытия], [ДатаСобытия]
 	from t where RN <= 10;
 
 
@@ -545,7 +545,7 @@ begin
 end;
 GO
 
-/*РЎРѕР·РґР°РµРј С‚СЂРёРіРіРµСЂС‹ */
+/*Создаем триггеры */
 CREATE OR ALTER trigger [dbo].[_AccumRg25104_aggregate_trigger]
 on [dbo].[_AccumRg25104]
 after insert, update, delete
@@ -558,62 +558,62 @@ exec @result = sys.sp_getapplock @Resource = N'[dbo].[buffering_table_deliverypo
 if @result < 0
 	THROW 51000, 'Cant get lock for insert', 1; 
 
- insert into [dbo].[buffering_table_deliverypower] ([РџРµСЂРёРѕРґ],[Р—РѕРЅР°Р”РѕСЃС‚Р°РІРєРё],[РњР°СЃСЃР°РћР±РѕСЂРѕС‚],[РћР±СЉРµРјРћР±РѕСЂРѕС‚],[Р’СЂРµРјСЏРќР°РћР±СЃР»СѓР¶РёРІР°РЅРёРµРћР±РѕСЂРѕС‚]) 
+ insert into [dbo].[buffering_table_deliverypower] ([Период],[ЗонаДоставки],[МассаОборот],[ОбъемОборот],[ВремяНаОбслуживаниеОборот]) 
  select   
-       CAST(CAST([РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё]._Period  AS DATE) AS DATETIME) AS [РџРµСЂРёРѕРґ], 
-	   [РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё]._Fld25105RRef As [Р—РѕРЅР°Р”РѕСЃС‚Р°РІРєРё],
+       CAST(CAST([МощностиДоставки]._Period  AS DATE) AS DATETIME) AS [Период], 
+	   [МощностиДоставки]._Fld25105RRef As [ЗонаДоставки],
 		SUM(
             CASE
-                WHEN ([РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё]._RecordKind = 0.0) THEN [РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё]._Fld25107
-                ELSE -([РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё]._Fld25107)
+                WHEN ([МощностиДоставки]._RecordKind = 0.0) THEN [МощностиДоставки]._Fld25107
+                ELSE -([МощностиДоставки]._Fld25107)
         END        
-    ) AS [РњР°СЃСЃР°РћР±РѕСЂРѕС‚],    
+    ) AS [МассаОборот],    
         SUM(
             CASE
-                WHEN ([РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё]._RecordKind = 0.0) THEN [РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё]._Fld25108
-                ELSE -([РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё]._Fld25108)
+                WHEN ([МощностиДоставки]._RecordKind = 0.0) THEN [МощностиДоставки]._Fld25108
+                ELSE -([МощностиДоставки]._Fld25108)
         END        
-    ) AS [РћР±СЉРµРјРћР±РѕСЂРѕС‚],    
+    ) AS [ОбъемОборот],    
         SUM(
             CASE
-                WHEN ([РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё]._RecordKind = 0.0) THEN [РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё]._Fld25201
-                ELSE -([РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё]._Fld25201)
+                WHEN ([МощностиДоставки]._RecordKind = 0.0) THEN [МощностиДоставки]._Fld25201
+                ELSE -([МощностиДоставки]._Fld25201)
         END        
-    ) AS [Р’СЂРµРјСЏРќР°РћР±СЃР»СѓР¶РёРІР°РЅРёРµРћР±РѕСЂРѕС‚]	 
+    ) AS [ВремяНаОбслуживаниеОборот]	 
 FROM
-    inserted As [РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё] With (READCOMMITTED)
+    inserted As [МощностиДоставки] With (READCOMMITTED)
 GROUP BY
-    CAST(CAST([РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё]._Period  AS DATE) AS DATETIME),
-	[РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё]._Fld25105RRef 
+    CAST(CAST([МощностиДоставки]._Period  AS DATE) AS DATETIME),
+	[МощностиДоставки]._Fld25105RRef 
 ;
 
- insert into [dbo].[buffering_table_deliverypower] ([РџРµСЂРёРѕРґ],[Р—РѕРЅР°Р”РѕСЃС‚Р°РІРєРё],[РњР°СЃСЃР°РћР±РѕСЂРѕС‚],[РћР±СЉРµРјРћР±РѕСЂРѕС‚],[Р’СЂРµРјСЏРќР°РћР±СЃР»СѓР¶РёРІР°РЅРёРµРћР±РѕСЂРѕС‚]) 
+ insert into [dbo].[buffering_table_deliverypower] ([Период],[ЗонаДоставки],[МассаОборот],[ОбъемОборот],[ВремяНаОбслуживаниеОборот]) 
  select   
-       CAST(CAST([РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё]._Period  AS DATE) AS DATETIME) AS РџРµСЂРёРѕРґ, 
-	   [РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё]._Fld25105RRef As [Р—РѕРЅР°Р”РѕСЃС‚Р°РІРєРё],
+       CAST(CAST([МощностиДоставки]._Period  AS DATE) AS DATETIME) AS Период, 
+	   [МощностиДоставки]._Fld25105RRef As [ЗонаДоставки],
 		-1*SUM(
             CASE
-                WHEN ([РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё]._RecordKind = 0.0) THEN [РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё]._Fld25107
-                ELSE -([РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё]._Fld25107)
+                WHEN ([МощностиДоставки]._RecordKind = 0.0) THEN [МощностиДоставки]._Fld25107
+                ELSE -([МощностиДоставки]._Fld25107)
         END        
-    ) AS [РњР°СЃСЃР°РћР±РѕСЂРѕС‚],    
+    ) AS [МассаОборот],    
         -1*SUM(
             CASE
-                WHEN ([РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё]._RecordKind = 0.0) THEN [РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё]._Fld25108
-                ELSE -([РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё]._Fld25108)
+                WHEN ([МощностиДоставки]._RecordKind = 0.0) THEN [МощностиДоставки]._Fld25108
+                ELSE -([МощностиДоставки]._Fld25108)
         END        
-    ) AS [РћР±СЉРµРјРћР±РѕСЂРѕС‚],    
+    ) AS [ОбъемОборот],    
         -1*SUM(
             CASE
-                WHEN ([РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё]._RecordKind = 0.0) THEN [РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё]._Fld25201
-                ELSE -([РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё]._Fld25201)
+                WHEN ([МощностиДоставки]._RecordKind = 0.0) THEN [МощностиДоставки]._Fld25201
+                ELSE -([МощностиДоставки]._Fld25201)
         END        
-    ) AS [Р’СЂРµРјСЏРќР°РћР±СЃР»СѓР¶РёРІР°РЅРёРµРћР±РѕСЂРѕС‚]	 
+    ) AS [ВремяНаОбслуживаниеОборот]	 
 FROM
-    deleted As [РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё] With (READCOMMITTED)
+    deleted As [МощностиДоставки] With (READCOMMITTED)
 GROUP BY
-    CAST(CAST([РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё]._Period  AS DATE) AS DATETIME),
-	[РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё]._Fld25105RRef
+    CAST(CAST([МощностиДоставки]._Period  AS DATE) AS DATETIME),
+	[МощностиДоставки]._Fld25105RRef
 ;
 
 end;
@@ -632,19 +632,19 @@ exec @result = sys.sp_getapplock @Resource = N'[dbo].[buffering_table_intervals]
 if @result < 0
 	THROW 51000, 'Cant get lock for insert', 1; 
 
- insert into [dbo].[buffering_table_intervals] ([РџРµСЂРёРѕРґ], [Р“СЂСѓРїРїР°РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏ], [Р“РµРѕР·РѕРЅР°], [Р’СЂРµРјСЏРќР°С‡Р°Р»Р°], [Р’СЂРµРјСЏРћРєРѕРЅС‡Р°РЅРёСЏ], [РљРѕР»РёС‡РµСЃС‚РІРѕР—Р°РєР°Р·РѕРІР—Р°РРЅС‚РµСЂРІР°Р»Р’СЂРµРјРµРЅРё]) 
+ insert into [dbo].[buffering_table_intervals] ([Период], [ГруппаПланирования], [Геозона], [ВремяНачала], [ВремяОкончания], [КоличествоЗаказовЗаИнтервалВремени]) 
  select   
-    T5._Period AS [РџРµСЂРёРѕРґ],
-    T5._Fld25112RRef As [Р“СЂСѓРїРїР°РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏ], 
-	T5._Fld25111RRef As [Р“РµРѕР·РѕРЅР°],
-	T5._Fld25202 As [Р’СЂРµРјСЏРќР°С‡Р°Р»Р°],
-	T5._Fld25203 As [Р’СЂРµРјСЏРћРєРѕРЅС‡Р°РЅРёСЏ],
+    T5._Period AS [Период],
+    T5._Fld25112RRef As [ГруппаПланирования], 
+	T5._Fld25111RRef As [Геозона],
+	T5._Fld25202 As [ВремяНачала],
+	T5._Fld25203 As [ВремяОкончания],
 	SUM(
                 CASE
                     WHEN (T5._RecordKind = 0.0) THEN T5._Fld25113
                     ELSE -(T5._Fld25113)
                 END
-            ) AS [РљРѕР»РёС‡РµСЃС‚РІРѕР—Р°РєР°Р·РѕРІР—Р°РРЅС‚РµСЂРІР°Р»Р’СЂРµРјРµРЅРё]	 
+            ) AS [КоличествоЗаказовЗаИнтервалВремени]	 
 FROM
     inserted As T5 With (READCOMMITTED)
 GROUP BY
@@ -655,19 +655,19 @@ GROUP BY
 	T5._Fld25203
 ;
 
- insert into [dbo].[buffering_table_intervals] ([РџРµСЂРёРѕРґ], [Р“СЂСѓРїРїР°РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏ], [Р“РµРѕР·РѕРЅР°], [Р’СЂРµРјСЏРќР°С‡Р°Р»Р°], [Р’СЂРµРјСЏРћРєРѕРЅС‡Р°РЅРёСЏ], [РљРѕР»РёС‡РµСЃС‚РІРѕР—Р°РєР°Р·РѕРІР—Р°РРЅС‚РµСЂРІР°Р»Р’СЂРµРјРµРЅРё]) 
+ insert into [dbo].[buffering_table_intervals] ([Период], [ГруппаПланирования], [Геозона], [ВремяНачала], [ВремяОкончания], [КоличествоЗаказовЗаИнтервалВремени]) 
  select   
-    T5._Period AS [РџРµСЂРёРѕРґ],
-    T5._Fld25112RRef As [Р“СЂСѓРїРїР°РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏ], 
-	T5._Fld25111RRef As [Р“РµРѕР·РѕРЅР°],
-	T5._Fld25202 As [Р’СЂРµРјСЏРќР°С‡Р°Р»Р°],
-	T5._Fld25203 As [Р’СЂРµРјСЏРћРєРѕРЅС‡Р°РЅРёСЏ],
+    T5._Period AS [Период],
+    T5._Fld25112RRef As [ГруппаПланирования], 
+	T5._Fld25111RRef As [Геозона],
+	T5._Fld25202 As [ВремяНачала],
+	T5._Fld25203 As [ВремяОкончания],
 	-1*SUM(
                 CASE
                     WHEN (T5._RecordKind = 0.0) THEN T5._Fld25113
                     ELSE -(T5._Fld25113)
                 END
-            ) AS [РљРѕР»РёС‡РµСЃС‚РІРѕР—Р°РєР°Р·РѕРІР—Р°РРЅС‚РµСЂРІР°Р»Р’СЂРµРјРµРЅРё]	 
+            ) AS [КоличествоЗаказовЗаИнтервалВремени]	 
 FROM
     deleted As T5 With (READCOMMITTED)
 GROUP BY
@@ -681,7 +681,7 @@ GROUP BY
 end;
 GO
 
-/*РРЅРёС†РёР°Р»РёР·РёСЂСѓРµРј С‚Р°Р±Р»РёС†С‹ Р°РіРіСЂРµРіР°С†РёРё, РѕС‡РёСЃС‚РёРІ РёС… Рё Р±СѓС„РµСЂРЅС‹Рµ С‚Р°Р±Р»РёС†С‹ РїРµСЂРµРґ СЌС‚РёРј*/
+/*Инициализируем таблицы аггрегации, очистив их и буферные таблицы перед этим*/
 begin tran
 alter table [dbo].[_AccumRg25104] disable trigger [_AccumRg25104_aggregate_trigger]
 alter table [dbo].[_AccumRg25110] disable trigger [_AccumRg25110_aggregate_trigger]
@@ -693,47 +693,47 @@ delete  from [dbo].[IntervalsAggregate] with (tablock)
 
 Insert into [dbo].[DeliveryPowerAggregate]
 SELECT   
-       CAST(CAST([РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё]._Period  AS DATE) AS DATETIME) AS [РџРµСЂРёРѕРґ], 
-	   [РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё]._Fld25105RRef As [Р—РѕРЅР°Р”РѕСЃС‚Р°РІРєРё],
+       CAST(CAST([МощностиДоставки]._Period  AS DATE) AS DATETIME) AS [Период], 
+	   [МощностиДоставки]._Fld25105RRef As [ЗонаДоставки],
 		SUM(
             CASE
-                WHEN ([РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё]._RecordKind = 0.0) THEN [РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё]._Fld25107
-                ELSE -([РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё]._Fld25107)
+                WHEN ([МощностиДоставки]._RecordKind = 0.0) THEN [МощностиДоставки]._Fld25107
+                ELSE -([МощностиДоставки]._Fld25107)
         END        
-    ) AS [РњР°СЃСЃР°РћР±РѕСЂРѕС‚],    
+    ) AS [МассаОборот],    
         SUM(
             CASE
-                WHEN ([РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё]._RecordKind = 0.0) THEN [РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё]._Fld25108
-                ELSE -([РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё]._Fld25108)
+                WHEN ([МощностиДоставки]._RecordKind = 0.0) THEN [МощностиДоставки]._Fld25108
+                ELSE -([МощностиДоставки]._Fld25108)
         END        
-    ) AS [РћР±СЉРµРјРћР±РѕСЂРѕС‚],    
+    ) AS [ОбъемОборот],    
         SUM(
             CASE
-                WHEN ([РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё]._RecordKind = 0.0) THEN [РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё]._Fld25201
-                ELSE -([РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё]._Fld25201)
+                WHEN ([МощностиДоставки]._RecordKind = 0.0) THEN [МощностиДоставки]._Fld25201
+                ELSE -([МощностиДоставки]._Fld25201)
         END        
-    ) AS [Р’СЂРµРјСЏРќР°РћР±СЃР»СѓР¶РёРІР°РЅРёРµРћР±РѕСЂРѕС‚]
+    ) AS [ВремяНаОбслуживаниеОборот]
     
 	 
 FROM
-    dbo._AccumRg25104 [РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё] With (READCOMMITTED)
+    dbo._AccumRg25104 [МощностиДоставки] With (READCOMMITTED)
 GROUP BY
-    CAST(CAST([РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё]._Period  AS DATE) AS DATETIME),
-	[РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё]._Fld25105RRef
+    CAST(CAST([МощностиДоставки]._Period  AS DATE) AS DATETIME),
+	[МощностиДоставки]._Fld25105RRef
 
 Insert into [dbo].[IntervalsAggregate]
 SELECT
-    T5._Period AS [РџРµСЂРёРѕРґ],
-    T5._Fld25112RRef As [Р“СЂСѓРїРїР°РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏ], 
-	T5._Fld25111RRef As [Р“РµРѕР·РѕРЅР°],
-	T5._Fld25202 As [Р’СЂРµРјСЏРќР°С‡Р°Р»Р°],
-	T5._Fld25203 As [Р’СЂРµРјСЏРћРєРѕРЅС‡Р°РЅРёСЏ],
+    T5._Period AS [Период],
+    T5._Fld25112RRef As [ГруппаПланирования], 
+	T5._Fld25111RRef As [Геозона],
+	T5._Fld25202 As [ВремяНачала],
+	T5._Fld25203 As [ВремяОкончания],
 	SUM(
                 CASE
                     WHEN (T5._RecordKind = 0.0) THEN T5._Fld25113
                     ELSE -(T5._Fld25113)
                 END
-            ) AS [РљРѕР»РёС‡РµСЃС‚РІРѕР—Р°РєР°Р·РѕРІР—Р°РРЅС‚РµСЂРІР°Р»Р’СЂРµРјРµРЅРё]
+            ) AS [КоличествоЗаказовЗаИнтервалВремени]
 
 FROM
     dbo._AccumRg25110 T5 With (READCOMMITTED)
@@ -748,7 +748,7 @@ alter table [dbo].[_AccumRg25104] enable trigger [_AccumRg25104_aggregate_trigge
 alter table [dbo].[_AccumRg25110] enable trigger [_AccumRg25110_aggregate_trigger]
 commit
 
-/* РЎРѕР·РґР°РґРёРј РґР¶РѕР± РґР»СЏ РѕР±РЅРѕРІР»РµРЅРёСЏ Р°РіРіСЂРµРіР°С†РёР№*/
+/* Создадим джоб для обновления аггрегаций*/
 USE [msdb]
 GO
 
@@ -783,7 +783,7 @@ EXEC @ReturnCode =  msdb.dbo.sp_add_job @job_name=N'UpdateAggregates',
 		@notify_level_netsend=0, 
 		@notify_level_page=0, 
 		@delete_level=0, 
-		@description=N'РћРїРёСЃР°РЅРёРµ РЅРµРґРѕСЃС‚СѓРїРЅРѕ.', 
+		@description=N'Описание недоступно.', 
 		@category_name=N'Data Collector', 
 		@owner_login_name=N'21VEK\a.borodavko', @job_id = @jobId OUTPUT
 IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
@@ -881,7 +881,7 @@ EXEC @ReturnCode =  msdb.dbo.sp_add_job @job_name=N'UpdateAggs1min',
 		@notify_level_netsend=0, 
 		@notify_level_page=0, 
 		@delete_level=0, 
-		@description=N'РћРїРёСЃР°РЅРёРµ РЅРµРґРѕСЃС‚СѓРїРЅРѕ.', 
+		@description=N'Описание недоступно.', 
 		@category_name=N'Data Collector', 
 		@owner_login_name=N'21VEK\a.borodavko', @job_id = @jobId OUTPUT
 IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
@@ -951,17 +951,17 @@ begin
     set xact_abort on;
 
 		SELECT
-		T5._Period AS [РџРµСЂРёРѕРґ],
-		T5._Fld25112RRef As [Р“СЂСѓРїРїР°РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏ], 
-		T5._Fld25111RRef As [Р“РµРѕР·РѕРЅР°],
-		T5._Fld25202 As [Р’СЂРµРјСЏРќР°С‡Р°Р»Р°],
-		T5._Fld25203 As [Р’СЂРµРјСЏРћРєРѕРЅС‡Р°РЅРёСЏ],
+		T5._Period AS [Период],
+		T5._Fld25112RRef As [ГруппаПланирования], 
+		T5._Fld25111RRef As [Геозона],
+		T5._Fld25202 As [ВремяНачала],
+		T5._Fld25203 As [ВремяОкончания],
 		SUM(
 					CASE
 						WHEN (T5._RecordKind = 0.0) THEN T5._Fld25113
 						ELSE -(T5._Fld25113)
 					END
-				) AS [РљРѕР»РёС‡РµСЃС‚РІРѕР—Р°РєР°Р·РѕРІР—Р°РРЅС‚РµСЂРІР°Р»Р’СЂРµРјРµРЅРё]
+				) AS [КоличествоЗаказовЗаИнтервалВремени]
 	into #Temp_IntervalsAll_old
 	FROM
 		dbo._AccumRg25110 T5 With (READCOMMITTED)
@@ -973,72 +973,72 @@ begin
 		T5._Fld25203
 
 	select
-		Case when T1.[РљРѕР»РёС‡РµСЃС‚РІРѕР—Р°РєР°Р·РѕРІР—Р°РРЅС‚РµСЂРІР°Р»Р’СЂРµРјРµРЅРё] <> IsNull(T2.[РљРѕР»РёС‡РµСЃС‚РІРѕР—Р°РєР°Р·РѕРІР—Р°РРЅС‚РµСЂРІР°Р»Р’СЂРµРјРµРЅРё],9999999) then 1 else 0 End As CheckAgg,
-		T1.[РџРµСЂРёРѕРґ],
-		T1.[Р“СЂСѓРїРїР°РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏ],
-		T1.[Р“РµРѕР·РѕРЅР°],
-		T1.[Р’СЂРµРјСЏРќР°С‡Р°Р»Р°],
-		T1.[Р’СЂРµРјСЏРћРєРѕРЅС‡Р°РЅРёСЏ]
+		Case when T1.[КоличествоЗаказовЗаИнтервалВремени] <> IsNull(T2.[КоличествоЗаказовЗаИнтервалВремени],9999999) then 1 else 0 End As CheckAgg,
+		T1.[Период],
+		T1.[ГруппаПланирования],
+		T1.[Геозона],
+		T1.[ВремяНачала],
+		T1.[ВремяОкончания]
 	Into #ErrorsIntervals
 	From #Temp_IntervalsAll_old T1
 		Left Join dbo.IntervalsAggregate T2 on
-			T1.[РџРµСЂРёРѕРґ] = T2.[РџРµСЂРёРѕРґ]
-			And T1.[Р“СЂСѓРїРїР°РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏ] = T2.[Р“СЂСѓРїРїР°РџР»Р°РЅРёСЂРѕРІР°РЅРёСЏ]
-			And T1.[Р“РµРѕР·РѕРЅР°] = T2.[Р“РµРѕР·РѕРЅР°]
-			And T1.[Р’СЂРµРјСЏРќР°С‡Р°Р»Р°] = T2.[Р’СЂРµРјСЏРќР°С‡Р°Р»Р°]
-			And T1.[Р’СЂРµРјСЏРћРєРѕРЅС‡Р°РЅРёСЏ] = T2.[Р’СЂРµРјСЏРћРєРѕРЅС‡Р°РЅРёСЏ]
-	Where T1.[РљРѕР»РёС‡РµСЃС‚РІРѕР—Р°РєР°Р·РѕРІР—Р°РРЅС‚РµСЂРІР°Р»Р’СЂРµРјРµРЅРё] <> IsNull(T2.[РљРѕР»РёС‡РµСЃС‚РІРѕР—Р°РєР°Р·РѕРІР—Р°РРЅС‚РµСЂРІР°Р»Р’СЂРµРјРµРЅРё],9999999)
+			T1.[Период] = T2.[Период]
+			And T1.[ГруппаПланирования] = T2.[ГруппаПланирования]
+			And T1.[Геозона] = T2.[Геозона]
+			And T1.[ВремяНачала] = T2.[ВремяНачала]
+			And T1.[ВремяОкончания] = T2.[ВремяОкончания]
+	Where T1.[КоличествоЗаказовЗаИнтервалВремени] <> IsNull(T2.[КоличествоЗаказовЗаИнтервалВремени],9999999)
 
 
 	SELECT   
-		   CAST(CAST([РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё]._Period  AS DATE) AS DATETIME) AS [РџРµСЂРёРѕРґ], 
-		   [РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё]._Fld25105RRef As [Р—РѕРЅР°Р”РѕСЃС‚Р°РІРєРё],
+		   CAST(CAST([МощностиДоставки]._Period  AS DATE) AS DATETIME) AS [Период], 
+		   [МощностиДоставки]._Fld25105RRef As [ЗонаДоставки],
 			SUM(
 				CASE
-					WHEN ([РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё]._RecordKind = 0.0) THEN [РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё]._Fld25107
-					ELSE -([РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё]._Fld25107)
+					WHEN ([МощностиДоставки]._RecordKind = 0.0) THEN [МощностиДоставки]._Fld25107
+					ELSE -([МощностиДоставки]._Fld25107)
 			END        
-		) AS [РњР°СЃСЃР°РћР±РѕСЂРѕС‚],    
+		) AS [МассаОборот],    
 			SUM(
 				CASE
-					WHEN ([РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё]._RecordKind = 0.0) THEN [РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё]._Fld25108
-					ELSE -([РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё]._Fld25108)
+					WHEN ([МощностиДоставки]._RecordKind = 0.0) THEN [МощностиДоставки]._Fld25108
+					ELSE -([МощностиДоставки]._Fld25108)
 			END        
-		) AS [РћР±СЉРµРјРћР±РѕСЂРѕС‚],    
+		) AS [ОбъемОборот],    
 			SUM(
 				CASE
-					WHEN ([РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё]._RecordKind = 0.0) THEN [РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё]._Fld25201
-					ELSE -([РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё]._Fld25201)
+					WHEN ([МощностиДоставки]._RecordKind = 0.0) THEN [МощностиДоставки]._Fld25201
+					ELSE -([МощностиДоставки]._Fld25201)
 			END        
-		) AS [Р’СЂРµРјСЏРќР°РћР±СЃР»СѓР¶РёРІР°РЅРёРµРћР±РѕСЂРѕС‚]
+		) AS [ВремяНаОбслуживаниеОборот]
     
 	Into #DeliveryPowerOld	 
 	FROM
-		dbo._AccumRg25104 [РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё] With (READCOMMITTED)
+		dbo._AccumRg25104 [МощностиДоставки] With (READCOMMITTED)
 	GROUP BY
-		CAST(CAST([РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё]._Period  AS DATE) AS DATETIME),
-		[РњРѕС‰РЅРѕСЃС‚РёР”РѕСЃС‚Р°РІРєРё]._Fld25105RRef
+		CAST(CAST([МощностиДоставки]._Period  AS DATE) AS DATETIME),
+		[МощностиДоставки]._Fld25105RRef
 
 
 	select
-		Case when T1.[Р’СЂРµРјСЏРќР°РћР±СЃР»СѓР¶РёРІР°РЅРёРµРћР±РѕСЂРѕС‚] <> IsNull(T2.[Р’СЂРµРјСЏРќР°РћР±СЃР»СѓР¶РёРІР°РЅРёРµРћР±РѕСЂРѕС‚],9999999) then 1 else 0 End As CheckAgg,
-		Case when T1.[РњР°СЃСЃР°РћР±РѕСЂРѕС‚] <> IsNull(T2.[РњР°СЃСЃР°РћР±РѕСЂРѕС‚],9999999) then 1 else 0 End As CheckAgg1,
-		Case when T1.[РћР±СЉРµРјРћР±РѕСЂРѕС‚] <> IsNull(T2.[РћР±СЉРµРјРћР±РѕСЂРѕС‚],9999999) then 1 else 0 End As CheckAgg2,
-		T1.[РџРµСЂРёРѕРґ],
-		T1.[Р—РѕРЅР°Р”РѕСЃС‚Р°РІРєРё]
+		Case when T1.[ВремяНаОбслуживаниеОборот] <> IsNull(T2.[ВремяНаОбслуживаниеОборот],9999999) then 1 else 0 End As CheckAgg,
+		Case when T1.[МассаОборот] <> IsNull(T2.[МассаОборот],9999999) then 1 else 0 End As CheckAgg1,
+		Case when T1.[ОбъемОборот] <> IsNull(T2.[ОбъемОборот],9999999) then 1 else 0 End As CheckAgg2,
+		T1.[Период],
+		T1.[ЗонаДоставки]
 	Into #ErrorsDeliveryPower
 	From #DeliveryPowerOld T1
 		Left Join dbo.DeliveryPowerAggregate T2 on
-			T1.[РџРµСЂРёРѕРґ] = T2.[РџРµСЂРёРѕРґ]
-			And T1.[Р—РѕРЅР°Р”РѕСЃС‚Р°РІРєРё] = T2.[Р—РѕРЅР°Р”РѕСЃС‚Р°РІРєРё]
-	Where T1.[Р’СЂРµРјСЏРќР°РћР±СЃР»СѓР¶РёРІР°РЅРёРµРћР±РѕСЂРѕС‚] <> IsNull(T2.[Р’СЂРµРјСЏРќР°РћР±СЃР»СѓР¶РёРІР°РЅРёРµРћР±РѕСЂРѕС‚],9999999) 
-	Or T1.[РњР°СЃСЃР°РћР±РѕСЂРѕС‚] <> IsNull(T2.[РњР°СЃСЃР°РћР±РѕСЂРѕС‚],9999999)
-	Or T1.[РњР°СЃСЃР°РћР±РѕСЂРѕС‚] <> IsNull(T2.[РњР°СЃСЃР°РћР±РѕСЂРѕС‚],9999999)
+			T1.[Период] = T2.[Период]
+			And T1.[ЗонаДоставки] = T2.[ЗонаДоставки]
+	Where T1.[ВремяНаОбслуживаниеОборот] <> IsNull(T2.[ВремяНаОбслуживаниеОборот],9999999) 
+	Or T1.[МассаОборот] <> IsNull(T2.[МассаОборот],9999999)
+	Or T1.[МассаОборот] <> IsNull(T2.[МассаОборот],9999999)
 
 	SELECT
-		T1._Fld23831RRef AS [РЎРєР»Р°РґРСЃС‚РѕС‡РЅРёРєР°],
-		T1._Fld23833RRef AS [РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ],
-		MIN(T1._Fld23834) AS [Р”Р°С‚Р°РџСЂРёР±С‹С‚РёСЏ]
+		T1._Fld23831RRef AS [СкладИсточника],
+		T1._Fld23833RRef AS [СкладНазначения],
+		MIN(T1._Fld23834) AS [ДатаПрибытия]
 	Into #Temp_MinimumWarehouseDatesOld
 	FROM
 		dbo._InfoRg23830 T1 With (READCOMMITTED, INDEX([_InfoRg23830_Custom2]))
@@ -1049,28 +1049,28 @@ begin
 	T1._Fld23833RRef
 
 	SELECT
-		T1.[РЎРєР»Р°РґРСЃС‚РѕС‡РЅРёРєР°] AS [РЎРєР»Р°РґРСЃС‚РѕС‡РЅРёРєР°],
-		T1.[РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ] AS [РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ],
-		MIN(T1.[Р”Р°С‚Р°РџСЂРёР±С‹С‚РёСЏ]) AS [Р”Р°С‚Р°РџСЂРёР±С‹С‚РёСЏ] 
+		T1.[СкладИсточника] AS [СкладИсточника],
+		T1.[СкладНазначения] AS [СкладНазначения],
+		MIN(T1.[ДатаПрибытия]) AS [ДатаПрибытия] 
 	Into #Temp_MinimumWarehouseDatesNew
 	FROM
 		[dbo].[WarehouseDatesAggregate] T1 
     
 	WHERE
-	   T1.[Р”Р°С‚Р°РЎРѕР±С‹С‚РёСЏ] >= DateAdd(YEAR,2000,GETDATE()) 
-	GROUP BY T1.[РЎРєР»Р°РґРСЃС‚РѕС‡РЅРёРєР°],
-	T1.[РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ]
+	   T1.[ДатаСобытия] >= DateAdd(YEAR,2000,GETDATE()) 
+	GROUP BY T1.[СкладИсточника],
+	T1.[СкладНазначения]
 
 	Select Top 1000
-		#Temp_MinimumWarehouseDatesOld.[Р”Р°С‚Р°РџСЂРёР±С‹С‚РёСЏ] ,
-		 ISNULL(#Temp_MinimumWarehouseDatesNew.[Р”Р°С‚Р°РџСЂРёР±С‹С‚РёСЏ], GETDATE()) AS [Р”Р°С‚Р°РџСЂРёР±С‹С‚РёСЏNew]
+		#Temp_MinimumWarehouseDatesOld.[ДатаПрибытия] ,
+		 ISNULL(#Temp_MinimumWarehouseDatesNew.[ДатаПрибытия], GETDATE()) AS [ДатаПрибытияNew]
 	Into #ErrorsWarehouseDates
 	From
 		#Temp_MinimumWarehouseDatesOld
 		Left Join #Temp_MinimumWarehouseDatesNew On
-			#Temp_MinimumWarehouseDatesOld.[РЎРєР»Р°РґРСЃС‚РѕС‡РЅРёРєР°] = #Temp_MinimumWarehouseDatesNew.[РЎРєР»Р°РґРСЃС‚РѕС‡РЅРёРєР°]
-			And #Temp_MinimumWarehouseDatesOld.[РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ] = #Temp_MinimumWarehouseDatesNew.[РЎРєР»Р°РґРќР°Р·РЅР°С‡РµРЅРёСЏ]
-	Where #Temp_MinimumWarehouseDatesOld.[Р”Р°С‚Р°РџСЂРёР±С‹С‚РёСЏ] <> ISNULL(#Temp_MinimumWarehouseDatesNew.[Р”Р°С‚Р°РџСЂРёР±С‹С‚РёСЏ], GETDATE())
+			#Temp_MinimumWarehouseDatesOld.[СкладИсточника] = #Temp_MinimumWarehouseDatesNew.[СкладИсточника]
+			And #Temp_MinimumWarehouseDatesOld.[СкладНазначения] = #Temp_MinimumWarehouseDatesNew.[СкладНазначения]
+	Where #Temp_MinimumWarehouseDatesOld.[ДатаПрибытия] <> ISNULL(#Temp_MinimumWarehouseDatesNew.[ДатаПрибытия], GETDATE())
 
 
 	Select Sum(t1.c1) as ErrorCount From (
