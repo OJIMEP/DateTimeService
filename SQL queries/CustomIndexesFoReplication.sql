@@ -4,6 +4,8 @@ GO
 SET ANSI_PADDING ON
 GO
 
+DROP INDEX IF EXISTS [_AccumRg21407_Custom1] ON [dbo].[_AccumRg21407]
+GO
 /****** Object:  Index [_AccumRg21407_Custom1]    Script Date: 26.05.2021 17:46:52 ******/
 CREATE NONCLUSTERED INDEX [_AccumRg21407_Custom1] ON [dbo].[_AccumRg21407]
 (
@@ -23,7 +25,8 @@ CREATE NONCLUSTERED INDEX [_AccumRg21407_Custom1] ON [dbo].[_AccumRg21407]
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 GO
 
-
+DROP INDEX IF EXISTS [CustomIndex_25104] ON [dbo].[_AccumRg25104]
+GO
 /****** Object:  Index [CustomIndex_25104]    Script Date: 26.05.2021 17:48:50 ******/
 CREATE NONCLUSTERED INDEX [CustomIndex_25104] ON [dbo].[_AccumRg25104]
 (
@@ -34,7 +37,8 @@ INCLUDE([_RecordKind],[_Fld25107],[_Fld25108],[_Fld25201]) WITH (PAD_INDEX = OFF
 GO
 
 
-
+DROP INDEX IF EXISTS [CUSTOM_25110_1] ON [dbo].[_AccumRg25110]
+GO
 /****** Object:  Index [CUSTOM_25110_1]    Script Date: 26.05.2021 17:49:42 ******/
 CREATE NONCLUSTERED INDEX [CUSTOM_25110_1] ON [dbo].[_AccumRg25110]
 (
@@ -46,7 +50,8 @@ CREATE NONCLUSTERED INDEX [CUSTOM_25110_1] ON [dbo].[_AccumRg25110]
 INCLUDE([_RecorderTRef],[_RecorderRRef],[_LineNo],[_Active],[_RecordKind],[_Fld25113],[_Fld25203]) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 GO
 
-
+DROP INDEX IF EXISTS [_AccumRgT21444_1] ON [dbo].[_AccumRgT21444]
+GO
 /****** Object:  Index [_AccumRgT21444_1]    Script Date: 26.05.2021 17:55:23 ******/
 CREATE CLUSTERED INDEX [_AccumRgT21444_1] ON [dbo].[_AccumRgT21444]
 (
@@ -61,6 +66,8 @@ CREATE CLUSTERED INDEX [_AccumRgT21444_1] ON [dbo].[_AccumRgT21444]
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 GO
 
+DROP INDEX IF EXISTS [_InfoRg21711_Custom1] ON [dbo].[_InfoRg21711]
+GO
 /****** Object:  Index [_InfoRg21711_Custom1]    Script Date: 07.06.2021 0:40:22 ******/
 CREATE NONCLUSTERED INDEX [_InfoRg21711_Custom1] ON [dbo].[_InfoRg21711]
 (
@@ -69,7 +76,8 @@ CREATE NONCLUSTERED INDEX [_InfoRg21711_Custom1] ON [dbo].[_InfoRg21711]
 )INCLUDE([_Period])WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 GO
 
-
+DROP INDEX IF EXISTS [_InfoRg22353_1] ON [dbo].[_InfoRg22353]
+GO
 /****** Object:  Index [_InfoRg22353_1]    Script Date: 26.05.2021 18:04:08 ******/
 CREATE NONCLUSTERED INDEX [_InfoRg22353_1] ON [dbo].[_InfoRg22353]
 (
@@ -77,7 +85,7 @@ CREATE NONCLUSTERED INDEX [_InfoRg22353_1] ON [dbo].[_InfoRg22353]
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 GO
 
-SET ANSI_PADDING ON
+DROP INDEX IF EXISTS [_InfoRg23320_Custom1] ON [dbo].[_InfoRg23320]
 GO
 /****** Object:  Index [_InfoRg23320_Custom1]    Script Date: 07.06.2021 0:40:22 ******/
 CREATE NONCLUSTERED INDEX [_InfoRg23320_Custom1] ON [dbo].[_InfoRg23320]
@@ -88,6 +96,8 @@ CREATE NONCLUSTERED INDEX [_InfoRg23320_Custom1] ON [dbo].[_InfoRg23320]
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 GO
 
+DROP INDEX IF EXISTS [_InfoRg23830_Custom1] ON [dbo].[_InfoRg23830]
+GO
 /****** Object:  Index [_InfoRg23830_Custom1]    Script Date: 01.06.2021 13:48:04 ******/
 CREATE NONCLUSTERED INDEX [_InfoRg23830_Custom1] ON [dbo].[_InfoRg23830]
 (
@@ -98,10 +108,8 @@ CREATE NONCLUSTERED INDEX [_InfoRg23830_Custom1] ON [dbo].[_InfoRg23830]
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 GO
 
-
-SET ANSI_PADDING ON
+DROP INDEX IF EXISTS [_InfoRg23830_Custom2] ON [dbo].[_InfoRg23830]
 GO
-
 /****** Object:  Index [_InfoRg23830_Custom2]    Script Date: 24.06.2021 16:53:45 ******/
 CREATE NONCLUSTERED INDEX [_InfoRg23830_Custom2] ON [dbo].[_InfoRg23830]
 (
@@ -111,6 +119,8 @@ CREATE NONCLUSTERED INDEX [_InfoRg23830_Custom2] ON [dbo].[_InfoRg23830]
 INCLUDE([_Fld23831RRef],[_Fld23834]) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 GO
 
+DROP INDEX IF EXISTS [_Reference112_5] ON [dbo].[_Reference112]
+GO
 /****** Object:  Index [_Reference112_5]    Script Date: 26.05.2021 18:05:16 ******/
 CREATE NONCLUSTERED INDEX [_Reference112_5] ON [dbo].[_Reference112]
 (
@@ -120,6 +130,8 @@ CREATE NONCLUSTERED INDEX [_Reference112_5] ON [dbo].[_Reference112]
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 GO
 
+DROP INDEX IF EXISTS [_Reference112_6] ON [dbo].[_Reference112]
+GO
 /****** Object:  Index [_Reference112_6]    Script Date: 26.05.2021 18:05:27 ******/
 CREATE NONCLUSTERED INDEX [_Reference112_6] ON [dbo].[_Reference112]
 (
@@ -129,19 +141,24 @@ CREATE NONCLUSTERED INDEX [_Reference112_6] ON [dbo].[_Reference112]
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 GO
 
---replace
+DROP INDEX IF EXISTS [_Reference149_Custom1] ON [dbo].[_Reference149]
+GO
 CREATE NONCLUSTERED INDEX [_Reference149_Custom1] ON [dbo].[_Reference149]
 (
 	[_Code] ASC
 )INCLUDE ([_IDRRef],[_Fld3480],[_Fld3489RRef],[_Fld3526RRef]) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 GO
 
+DROP INDEX IF EXISTS [_Reference149_Custom2] ON [dbo].[_Reference149]
+GO
 CREATE NONCLUSTERED INDEX [_Reference149_Custom2] ON [dbo].[_Reference149]
 (
 	[_Fld3480] ASC
 )INCLUDE ([_IDRRef],[_Code],[_Fld3489RRef],[_Fld3526RRef]) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 GO
 
+DROP INDEX IF EXISTS [_Reference226_Custom1] ON [dbo].[_Reference226]
+GO
 /****** Object:  Index [_Reference226_6]    Script Date: 26.05.2021 18:06:37 ******/
 CREATE NONCLUSTERED INDEX [_Reference226_Custom1] ON [dbo].[_Reference226]
 (
@@ -149,7 +166,8 @@ CREATE NONCLUSTERED INDEX [_Reference226_Custom1] ON [dbo].[_Reference226]
 ) INCLUDE([_IDRRef]) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 GO
 
-
+DROP INDEX IF EXISTS [_Reference256_Custom2] ON [dbo].[_Reference256]
+GO
 /****** Object:  Index [_Reference256_2]    Script Date: 26.05.2021 18:07:01 ******/
 CREATE NONCLUSTERED INDEX [_Reference256_Custom2] ON [dbo].[_Reference256]
 (
@@ -162,11 +180,7 @@ CREATE NONCLUSTERED INDEX [_Reference256_Custom2] ON [dbo].[_Reference256]
 INCLUDE([_IDRRef],[_Fld6000],[_Fld6006],[_Fld6001],[_Fld6002],[_Fld6009]) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF)
 GO
 
-
-
-
-
-SET ANSI_PADDING ON
+DROP INDEX IF EXISTS [_Reference114_VT23370_SK] ON [dbo].[_Reference114_VT23370]
 GO
 /****** Object:  Index [_Reference114_VT23370_SK]    Script Date: 07.06.2021 0:40:21 ******/
 CREATE CLUSTERED INDEX [_Reference114_VT23370_SK] ON [dbo].[_Reference114_VT23370]
@@ -176,7 +190,7 @@ CREATE CLUSTERED INDEX [_Reference114_VT23370_SK] ON [dbo].[_Reference114_VT2337
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 GO
 
-SET ANSI_PADDING ON
+DROP INDEX IF EXISTS [_Reference114_VT25126_SK] ON [dbo].[_Reference114_VT25126]
 GO
 /****** Object:  Index [_Reference114_VT25126_SK]    Script Date: 07.06.2021 0:40:21 ******/
 CREATE CLUSTERED INDEX [_Reference114_VT25126_SK] ON [dbo].[_Reference114_VT25126]
@@ -186,7 +200,7 @@ CREATE CLUSTERED INDEX [_Reference114_VT25126_SK] ON [dbo].[_Reference114_VT2512
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 GO
 
-SET ANSI_PADDING ON
+DROP INDEX IF EXISTS [_Reference23294_VT23309_SK] ON [dbo].[_Reference23294_VT23309]
 GO
 /****** Object:  Index [_Reference23294_VT23309_SK]    Script Date: 07.06.2021 0:40:22 ******/
 CREATE CLUSTERED INDEX [_Reference23294_VT23309_SK] ON [dbo].[_Reference23294_VT23309]
@@ -196,7 +210,7 @@ CREATE CLUSTERED INDEX [_Reference23294_VT23309_SK] ON [dbo].[_Reference23294_VT
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 GO
 
-SET ANSI_PADDING ON
+DROP INDEX IF EXISTS [_Reference23612_VT23613_SK] ON [dbo].[_Reference23612_VT23613]
 GO
 /****** Object:  Index [_Reference23612_VT23613_SK]    Script Date: 07.06.2021 0:40:22 ******/
 CREATE CLUSTERED INDEX [_Reference23612_VT23613_SK] ON [dbo].[_Reference23612_VT23613]
@@ -206,11 +220,8 @@ CREATE CLUSTERED INDEX [_Reference23612_VT23613_SK] ON [dbo].[_Reference23612_VT
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 GO
 
-
-
-SET ANSI_PADDING ON
+DROP INDEX IF EXISTS [_Reference23612_VT23613_Custom1] ON [dbo].[_Reference23612_VT23613]
 GO
-
 /****** Object:  Index [_Reference23612_VT23613_Custom1]    Script Date: 08.06.2021 17:54:12 ******/
 CREATE NONCLUSTERED INDEX [_Reference23612_VT23613_Custom1] ON [dbo].[_Reference23612_VT23613]
 (
@@ -221,6 +232,8 @@ CREATE NONCLUSTERED INDEX [_Reference23612_VT23613_Custom1] ON [dbo].[_Reference
 INCLUDE([_Fld23617],[_Fld23618]) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 GO
 
+DROP INDEX IF EXISTS [_Reference226_Custom2] ON [dbo].[_Reference226]
+GO
 /****** Object:  Index [_Reference226_Custom1]    Script Date: 08.06.2021 17:56:57 ******/
 CREATE NONCLUSTERED INDEX [_Reference226_Custom2] ON [dbo].[_Reference226]
 (
@@ -228,6 +241,8 @@ CREATE NONCLUSTERED INDEX [_Reference226_Custom2] ON [dbo].[_Reference226]
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 GO
 
+DROP INDEX IF EXISTS [_Document317_Custom1] ON [dbo].[_Document317]
+GO
 /****** Object:  Index [Custom_Document317]    Script Date: 22.07.2021 13:41:04 ******/
 CREATE NONCLUSTERED INDEX [_Document317_Custom1] ON [dbo].[_Document317]
 (
@@ -235,15 +250,6 @@ CREATE NONCLUSTERED INDEX [_Document317_Custom1] ON [dbo].[_Document317]
 	[_Number] ASC
 )
 INCLUDE([_IDRRef],[_Fld8205RRef],[_Fld8241RRef],[_Fld8243RRef],[_Fld8244],[_Fld8245],[_Fld8260RRef],[_Fld21917RRef],[_Fld21650],[_Fld25158],[_Fld25159]) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-GO
-
-USE [triovist_repl]
-GO
-
-SET ANSI_NULLS ON
-GO
-
-SET QUOTED_IDENTIFIER ON
 GO
 
 USE [triovist_repl]
@@ -409,25 +415,25 @@ begin
 	THROW 51000, 'Cant get lock for delete', 1;
 
     delete from [dbo].[buffering_table_deliverypower] 
-	output deleted.Период,deleted.ЗонаДоставки,deleted.МассаОборот,deleted.ОбъемОборот,deleted.ВремяНаОбслуживаниеОборот into #t;
+	output deleted.[Период],deleted.[ЗонаДоставки],deleted.[МассаОборот],deleted.[ОбъемОборот],deleted.[ВремяНаОбслуживаниеОборот] into #t;
 
     with
-        s (Период, ЗонаДоставки, МассаОборот_delta, ОбъемОборот_delta, ВремяНаОбслуживаниеОборот_delta)
+        s ([Период], [ЗонаДоставки], [МассаОборот_delta], [ОбъемОборот_delta], [ВремяНаОбслуживаниеОборот_delta])
         as
         (
             select
-                Период, ЗонаДоставки, sum(МассаОборот), sum(ОбъемОборот), sum(ВремяНаОбслуживаниеОборот)
+                [Период], [ЗонаДоставки], sum([МассаОборот]), sum([ОбъемОборот]), sum([ВремяНаОбслуживаниеОборот])
             from
                 #t
             Group by
-	Период,
-	ЗонаДоставки
+	[Период],
+	[ЗонаДоставки]
         )
  merge into [dbo].[DeliveryPowerAggregate] t
- using s on s.Период = t.Период and s.ЗонаДоставки = t.ЗонаДоставки
- when not matched then insert (Период,ЗонаДоставки,МассаОборот,ОбъемОборот,ВремяНаОбслуживаниеОборот) 
-	values (s.Период,s.ЗонаДоставки, s.МассаОборот_delta, s.ОбъемОборот_delta,s.ВремяНаОбслуживаниеОборот_delta)
- when matched then update set МассаОборот += s.МассаОборот_delta, ОбъемОборот += s.ОбъемОборот_delta, ВремяНаОбслуживаниеОборот += s.ВремяНаОбслуживаниеОборот_delta;
+ using s on s.[Период] = t.[Период] and s.[ЗонаДоставки] = t.[ЗонаДоставки]
+ when not matched then insert ([Период],[ЗонаДоставки],[МассаОборот],[ОбъемОборот],[ВремяНаОбслуживаниеОборот]) 
+	values (s.[Период],s.[ЗонаДоставки], s.[МассаОборот_delta], s.[ОбъемОборот_delta],s.[ВремяНаОбслуживаниеОборот_delta])
+ when matched then update set [МассаОборот] += s.[МассаОборот_delta], [ОбъемОборот] += s.[ОбъемОборот_delta], [ВремяНаОбслуживаниеОборот] += s.[ВремяНаОбслуживаниеОборот_delta];
 
     commit;
 end;
@@ -470,28 +476,28 @@ begin
 	THROW 51000, 'Cant get lock for delete', 1;
 
     delete from [dbo].[buffering_table_intervals] 
-	output deleted.Период,deleted.ГруппаПланирования,deleted.Геозона,deleted.ВремяНачала,deleted.ВремяОкончания, deleted.КоличествоЗаказовЗаИнтервалВремени into #t;
+	output deleted.[Период],deleted.[ГруппаПланирования],deleted.[Геозона],deleted.[ВремяНачала],deleted.[ВремяОкончания], deleted.[КоличествоЗаказовЗаИнтервалВремени] into #t;
 
     with
-        s (Период, ГруппаПланирования, Геозона, ВремяНачала, ВремяОкончания, КоличествоЗаказовЗаИнтервалВремени_delta )
+        s ([Период], [ГруппаПланирования], [Геозона], [ВремяНачала], [ВремяОкончания], [КоличествоЗаказовЗаИнтервалВремени_delta] )
         as
         (
             select
-                Период, ГруппаПланирования, Геозона, ВремяНачала, ВремяОкончания, sum(КоличествоЗаказовЗаИнтервалВремени)
+                [Период], [ГруппаПланирования], [Геозона], [ВремяНачала], [ВремяОкончания], sum([КоличествоЗаказовЗаИнтервалВремени])
             from
                 #t
             Group by
-                Период, ГруппаПланирования, Геозона, ВремяНачала, ВремяОкончания
+                [Период], [ГруппаПланирования], [Геозона], [ВремяНачала], [ВремяОкончания]
         )
  merge into [dbo].[IntervalsAggregate] t
- using s on s.Период = t.Период 
-    and s.ГруппаПланирования = t.ГруппаПланирования
-    and s.Геозона = t.Геозона
-    and s.ВремяНачала = t.ВремяНачала
-    and s.ВремяОкончания = t.ВремяОкончания
- when not matched then insert (Период, ГруппаПланирования, Геозона, ВремяНачала, ВремяОкончания, КоличествоЗаказовЗаИнтервалВремени) 
-	values (s.Период,s.ГруппаПланирования, s.Геозона, s.ВремяНачала,s.ВремяОкончания, s.КоличествоЗаказовЗаИнтервалВремени_delta)
- when matched then update set КоличествоЗаказовЗаИнтервалВремени += s.КоличествоЗаказовЗаИнтервалВремени_delta;
+ using s on s.[Период] = t.[Период] 
+    and s.[ГруппаПланирования] = t.[ГруппаПланирования]
+    and s.[Геозона] = t.[Геозона]
+    and s.[ВремяНачала] = t.[ВремяНачала]
+    and s.[ВремяОкончания] = t.[ВремяОкончания]
+ when not matched then insert ([Период], [ГруппаПланирования], [Геозона], [ВремяНачала], [ВремяОкончания], [КоличествоЗаказовЗаИнтервалВремени]) 
+	values (s.[Период],s.[ГруппаПланирования], s.[Геозона], s.[ВремяНачала],s.[ВремяОкончания], s.[КоличествоЗаказовЗаИнтервалВремени_delta])
+ when matched then update set [КоличествоЗаказовЗаИнтервалВремени] += s.[КоличествоЗаказовЗаИнтервалВремени_delta];
 
     commit;
 end;
@@ -512,26 +518,14 @@ begin
 
     begin tran;
 
-    declare @result int;
-    DECLARE @exec_count int;
-    set @exec_count = 5;
-    WHILE @exec_count > 0 AND @result < 0
-    BEGIN
-       set @exec_count = @exec_count +1;
-       exec @result = sys.sp_getapplock @Resource = N'[dbo].[WarehouseDatesAggregate]', @LockMode = 'Exclusive', @LockOwner = 'Transaction', @LockTimeout = 1000;
-    END;
-    
-    if @result < 0
-	THROW 51000, 'Cant get lock for delete', 1;
-
-    truncate table [dbo].[WarehouseDatesAggregate];
+    delete from [dbo].[WarehouseDatesAggregate];
 	
-	with t (СкладИсточника, СкладНазначения, ДатаПрибытия,ДатаСобытия, RN) as (
+	with t ([СкладИсточника], [СкладНазначения], [ДатаПрибытия],[ДатаСобытия], RN) as (
 	SELECT Distinct
-	  T1._Fld23831RRef AS СкладИсточника, 
-	  T1._Fld23833RRef AS СкладНазначения, 
-	  T1._Fld23834 AS ДатаПрибытия, 
-	  T1._Fld23832 AS ДатаСобытия,
+	  T1._Fld23831RRef AS [СкладИсточника], 
+	  T1._Fld23833RRef AS [СкладНазначения], 
+	  T1._Fld23834 AS [ДатаПрибытия], 
+	  T1._Fld23832 AS [ДатаСобытия],
 	  ROW_NUMBER() OVER(Partition by _Fld23831RRef,_Fld23833RRef order by _Fld23834) as RN 
 	FROM 
 		dbo._InfoRg23830 T1
@@ -543,7 +537,7 @@ begin
   T1._Fld23832
 	)	 
 	Insert Into [dbo].[WarehouseDatesAggregate]
-	select СкладИсточника, СкладНазначения, ДатаПрибытия, ДатаСобытия
+	select [СкладИсточника], [СкладНазначения], [ДатаПрибытия], [ДатаСобытия]
 	from t where RN <= 10;
 
 
@@ -564,62 +558,62 @@ exec @result = sys.sp_getapplock @Resource = N'[dbo].[buffering_table_deliverypo
 if @result < 0
 	THROW 51000, 'Cant get lock for insert', 1; 
 
- insert into [dbo].[buffering_table_deliverypower] (Период,ЗонаДоставки,МассаОборот,ОбъемОборот,ВремяНаОбслуживаниеОборот) 
+ insert into [dbo].[buffering_table_deliverypower] ([Период],[ЗонаДоставки],[МассаОборот],[ОбъемОборот],[ВремяНаОбслуживаниеОборот]) 
  select   
-       CAST(CAST(МощностиДоставки._Period  AS DATE) AS DATETIME) AS Период, 
-	   МощностиДоставки._Fld25105RRef As ЗонаДоставки,
+       CAST(CAST([МощностиДоставки]._Period  AS DATE) AS DATETIME) AS [Период], 
+	   [МощностиДоставки]._Fld25105RRef As [ЗонаДоставки],
 		SUM(
             CASE
-                WHEN (МощностиДоставки._RecordKind = 0.0) THEN МощностиДоставки._Fld25107
-                ELSE -(МощностиДоставки._Fld25107)
+                WHEN ([МощностиДоставки]._RecordKind = 0.0) THEN [МощностиДоставки]._Fld25107
+                ELSE -([МощностиДоставки]._Fld25107)
         END        
-    ) AS МассаОборот,    
+    ) AS [МассаОборот],    
         SUM(
             CASE
-                WHEN (МощностиДоставки._RecordKind = 0.0) THEN МощностиДоставки._Fld25108
-                ELSE -(МощностиДоставки._Fld25108)
+                WHEN ([МощностиДоставки]._RecordKind = 0.0) THEN [МощностиДоставки]._Fld25108
+                ELSE -([МощностиДоставки]._Fld25108)
         END        
-    ) AS ОбъемОборот,    
+    ) AS [ОбъемОборот],    
         SUM(
             CASE
-                WHEN (МощностиДоставки._RecordKind = 0.0) THEN МощностиДоставки._Fld25201
-                ELSE -(МощностиДоставки._Fld25201)
+                WHEN ([МощностиДоставки]._RecordKind = 0.0) THEN [МощностиДоставки]._Fld25201
+                ELSE -([МощностиДоставки]._Fld25201)
         END        
-    ) AS ВремяНаОбслуживаниеОборот	 
+    ) AS [ВремяНаОбслуживаниеОборот]	 
 FROM
-    inserted As МощностиДоставки With (READCOMMITTED)
+    inserted As [МощностиДоставки] With (READCOMMITTED)
 GROUP BY
-    CAST(CAST(МощностиДоставки._Period  AS DATE) AS DATETIME),
-	МощностиДоставки._Fld25105RRef 
+    CAST(CAST([МощностиДоставки]._Period  AS DATE) AS DATETIME),
+	[МощностиДоставки]._Fld25105RRef 
 ;
 
- insert into [dbo].[buffering_table_deliverypower] (Период,ЗонаДоставки,МассаОборот,ОбъемОборот,ВремяНаОбслуживаниеОборот) 
+ insert into [dbo].[buffering_table_deliverypower] ([Период],[ЗонаДоставки],[МассаОборот],[ОбъемОборот],[ВремяНаОбслуживаниеОборот]) 
  select   
-       CAST(CAST(МощностиДоставки._Period  AS DATE) AS DATETIME) AS Период, 
-	   МощностиДоставки._Fld25105RRef As ЗонаДоставки,
+       CAST(CAST([МощностиДоставки]._Period  AS DATE) AS DATETIME) AS Период, 
+	   [МощностиДоставки]._Fld25105RRef As [ЗонаДоставки],
 		-1*SUM(
             CASE
-                WHEN (МощностиДоставки._RecordKind = 0.0) THEN МощностиДоставки._Fld25107
-                ELSE -(МощностиДоставки._Fld25107)
+                WHEN ([МощностиДоставки]._RecordKind = 0.0) THEN [МощностиДоставки]._Fld25107
+                ELSE -([МощностиДоставки]._Fld25107)
         END        
-    ) AS МассаОборот,    
+    ) AS [МассаОборот],    
         -1*SUM(
             CASE
-                WHEN (МощностиДоставки._RecordKind = 0.0) THEN МощностиДоставки._Fld25108
-                ELSE -(МощностиДоставки._Fld25108)
+                WHEN ([МощностиДоставки]._RecordKind = 0.0) THEN [МощностиДоставки]._Fld25108
+                ELSE -([МощностиДоставки]._Fld25108)
         END        
-    ) AS ОбъемОборот,    
+    ) AS [ОбъемОборот],    
         -1*SUM(
             CASE
-                WHEN (МощностиДоставки._RecordKind = 0.0) THEN МощностиДоставки._Fld25201
-                ELSE -(МощностиДоставки._Fld25201)
+                WHEN ([МощностиДоставки]._RecordKind = 0.0) THEN [МощностиДоставки]._Fld25201
+                ELSE -([МощностиДоставки]._Fld25201)
         END        
-    ) AS ВремяНаОбслуживаниеОборот	 
+    ) AS [ВремяНаОбслуживаниеОборот]	 
 FROM
-    deleted As МощностиДоставки With (READCOMMITTED)
+    deleted As [МощностиДоставки] With (READCOMMITTED)
 GROUP BY
-    CAST(CAST(МощностиДоставки._Period  AS DATE) AS DATETIME),
-	МощностиДоставки._Fld25105RRef
+    CAST(CAST([МощностиДоставки]._Period  AS DATE) AS DATETIME),
+	[МощностиДоставки]._Fld25105RRef
 ;
 
 end;
@@ -638,19 +632,19 @@ exec @result = sys.sp_getapplock @Resource = N'[dbo].[buffering_table_intervals]
 if @result < 0
 	THROW 51000, 'Cant get lock for insert', 1; 
 
- insert into [dbo].[buffering_table_intervals] (Период, ГруппаПланирования, Геозона, ВремяНачала, ВремяОкончания, КоличествоЗаказовЗаИнтервалВремени) 
+ insert into [dbo].[buffering_table_intervals] ([Период], [ГруппаПланирования], [Геозона], [ВремяНачала], [ВремяОкончания], [КоличествоЗаказовЗаИнтервалВремени]) 
  select   
-    T5._Period AS Период,
-    T5._Fld25112RRef As ГруппаПланирования, 
-	T5._Fld25111RRef As Геозона,
-	T5._Fld25202 As ВремяНачала,
-	T5._Fld25203 As ВремяОкончания,
+    T5._Period AS [Период],
+    T5._Fld25112RRef As [ГруппаПланирования], 
+	T5._Fld25111RRef As [Геозона],
+	T5._Fld25202 As [ВремяНачала],
+	T5._Fld25203 As [ВремяОкончания],
 	SUM(
                 CASE
                     WHEN (T5._RecordKind = 0.0) THEN T5._Fld25113
                     ELSE -(T5._Fld25113)
                 END
-            ) AS КоличествоЗаказовЗаИнтервалВремени	 
+            ) AS [КоличествоЗаказовЗаИнтервалВремени]	 
 FROM
     inserted As T5 With (READCOMMITTED)
 GROUP BY
@@ -661,19 +655,19 @@ GROUP BY
 	T5._Fld25203
 ;
 
- insert into [dbo].[buffering_table_intervals] (Период, ГруппаПланирования, Геозона, ВремяНачала, ВремяОкончания, КоличествоЗаказовЗаИнтервалВремени) 
+ insert into [dbo].[buffering_table_intervals] ([Период], [ГруппаПланирования], [Геозона], [ВремяНачала], [ВремяОкончания], [КоличествоЗаказовЗаИнтервалВремени]) 
  select   
-    T5._Period AS Период,
-    T5._Fld25112RRef As ГруппаПланирования, 
-	T5._Fld25111RRef As Геозона,
-	T5._Fld25202 As ВремяНачала,
-	T5._Fld25203 As ВремяОкончания,
+    T5._Period AS [Период],
+    T5._Fld25112RRef As [ГруппаПланирования], 
+	T5._Fld25111RRef As [Геозона],
+	T5._Fld25202 As [ВремяНачала],
+	T5._Fld25203 As [ВремяОкончания],
 	-1*SUM(
                 CASE
                     WHEN (T5._RecordKind = 0.0) THEN T5._Fld25113
                     ELSE -(T5._Fld25113)
                 END
-            ) AS КоличествоЗаказовЗаИнтервалВремени	 
+            ) AS [КоличествоЗаказовЗаИнтервалВремени]	 
 FROM
     deleted As T5 With (READCOMMITTED)
 GROUP BY
@@ -699,47 +693,47 @@ delete  from [dbo].[IntervalsAggregate] with (tablock)
 
 Insert into [dbo].[DeliveryPowerAggregate]
 SELECT   
-       CAST(CAST(МощностиДоставки._Period  AS DATE) AS DATETIME) AS Период, 
-	   МощностиДоставки._Fld25105RRef As ЗонаДоставки,
+       CAST(CAST([МощностиДоставки]._Period  AS DATE) AS DATETIME) AS [Период], 
+	   [МощностиДоставки]._Fld25105RRef As [ЗонаДоставки],
 		SUM(
             CASE
-                WHEN (МощностиДоставки._RecordKind = 0.0) THEN МощностиДоставки._Fld25107
-                ELSE -(МощностиДоставки._Fld25107)
+                WHEN ([МощностиДоставки]._RecordKind = 0.0) THEN [МощностиДоставки]._Fld25107
+                ELSE -([МощностиДоставки]._Fld25107)
         END        
-    ) AS МассаОборот,    
+    ) AS [МассаОборот],    
         SUM(
             CASE
-                WHEN (МощностиДоставки._RecordKind = 0.0) THEN МощностиДоставки._Fld25108
-                ELSE -(МощностиДоставки._Fld25108)
+                WHEN ([МощностиДоставки]._RecordKind = 0.0) THEN [МощностиДоставки]._Fld25108
+                ELSE -([МощностиДоставки]._Fld25108)
         END        
-    ) AS ОбъемОборот,    
+    ) AS [ОбъемОборот],    
         SUM(
             CASE
-                WHEN (МощностиДоставки._RecordKind = 0.0) THEN МощностиДоставки._Fld25201
-                ELSE -(МощностиДоставки._Fld25201)
+                WHEN ([МощностиДоставки]._RecordKind = 0.0) THEN [МощностиДоставки]._Fld25201
+                ELSE -([МощностиДоставки]._Fld25201)
         END        
-    ) AS ВремяНаОбслуживаниеОборот
+    ) AS [ВремяНаОбслуживаниеОборот]
     
 	 
 FROM
-    dbo._AccumRg25104 МощностиДоставки With (READCOMMITTED)
+    dbo._AccumRg25104 [МощностиДоставки] With (READCOMMITTED)
 GROUP BY
-    CAST(CAST(МощностиДоставки._Period  AS DATE) AS DATETIME),
-	МощностиДоставки._Fld25105RRef
+    CAST(CAST([МощностиДоставки]._Period  AS DATE) AS DATETIME),
+	[МощностиДоставки]._Fld25105RRef
 
 Insert into [dbo].[IntervalsAggregate]
 SELECT
-    T5._Period AS Период,
-    T5._Fld25112RRef As ГруппаПланирования, 
-	T5._Fld25111RRef As Геозона,
-	T5._Fld25202 As ВремяНачала,
-	T5._Fld25203 As ВремяОкончания,
+    T5._Period AS [Период],
+    T5._Fld25112RRef As [ГруппаПланирования], 
+	T5._Fld25111RRef As [Геозона],
+	T5._Fld25202 As [ВремяНачала],
+	T5._Fld25203 As [ВремяОкончания],
 	SUM(
                 CASE
                     WHEN (T5._RecordKind = 0.0) THEN T5._Fld25113
                     ELSE -(T5._Fld25113)
                 END
-            ) AS КоличествоЗаказовЗаИнтервалВремени
+            ) AS [КоличествоЗаказовЗаИнтервалВремени]
 
 FROM
     dbo._AccumRg25110 T5 With (READCOMMITTED)
@@ -759,7 +753,14 @@ USE [msdb]
 GO
 
 /****** Object:  Job [UpdateAggregates]    Script Date: 18.08.2021 16:31:51 ******/
-EXEC msdb.dbo.sp_delete_job @job_id=N'7403ec1f-4359-46ea-81e2-e4a99fdf415c', @delete_unused_schedule=1
+DECLARE @jobId binary(16)
+
+SELECT @jobId = job_id FROM msdb.dbo.sysjobs WHERE (name = N'UpdateAggregates')
+IF (@jobId IS NOT NULL)
+BEGIN
+    EXEC msdb.dbo.sp_delete_job @jobId, @delete_unused_schedule=1
+END
+--EXEC msdb.dbo.sp_delete_job @job_id=N'7403ec1f-4359-46ea-81e2-e4a99fdf415c', @delete_unused_schedule=1
 GO
 
 /****** Object:  Job [UpdateAggregates]    Script Date: 18.08.2021 16:31:51 ******/
@@ -850,7 +851,14 @@ USE [msdb]
 GO
 
 /****** Object:  Job [UpdateAggs1min]    Script Date: 23.08.2021 15:31:01 ******/
-EXEC msdb.dbo.sp_delete_job @job_id=N'3710e681-19c0-4db7-956d-52983ef83730', @delete_unused_schedule=1
+DECLARE @jobId binary(16)
+
+SELECT @jobId = job_id FROM msdb.dbo.sysjobs WHERE (name = N'UpdateAggs1min')
+IF (@jobId IS NOT NULL)
+BEGIN
+    EXEC msdb.dbo.sp_delete_job @jobId, @delete_unused_schedule=1
+END
+--EXEC msdb.dbo.sp_delete_job @job_id=N'3710e681-19c0-4db7-956d-52983ef83730', @delete_unused_schedule=1
 GO
 
 /****** Object:  Job [UpdateAggs1min]    Script Date: 23.08.2021 15:31:01 ******/
@@ -943,17 +951,17 @@ begin
     set xact_abort on;
 
 		SELECT
-		T5._Period AS Период,
-		T5._Fld25112RRef As ГруппаПланирования, 
-		T5._Fld25111RRef As Геозона,
-		T5._Fld25202 As ВремяНачала,
-		T5._Fld25203 As ВремяОкончания,
+		T5._Period AS [Период],
+		T5._Fld25112RRef As [ГруппаПланирования], 
+		T5._Fld25111RRef As [Геозона],
+		T5._Fld25202 As [ВремяНачала],
+		T5._Fld25203 As [ВремяОкончания],
 		SUM(
 					CASE
 						WHEN (T5._RecordKind = 0.0) THEN T5._Fld25113
 						ELSE -(T5._Fld25113)
 					END
-				) AS КоличествоЗаказовЗаИнтервалВремени
+				) AS [КоличествоЗаказовЗаИнтервалВремени]
 	into #Temp_IntervalsAll_old
 	FROM
 		dbo._AccumRg25110 T5 With (READCOMMITTED)
@@ -965,8 +973,8 @@ begin
 		T5._Fld25203
 
 	select
-		Case when T1.КоличествоЗаказовЗаИнтервалВремени <> IsNull(T2.[КоличествоЗаказовЗаИнтервалВремени],9999999) then 1 else 0 End As CheckAgg,
-		T1.Период,
+		Case when T1.[КоличествоЗаказовЗаИнтервалВремени] <> IsNull(T2.[КоличествоЗаказовЗаИнтервалВремени],9999999) then 1 else 0 End As CheckAgg,
+		T1.[Период],
 		T1.[ГруппаПланирования],
 		T1.[Геозона],
 		T1.[ВремяНачала],
@@ -974,63 +982,63 @@ begin
 	Into #ErrorsIntervals
 	From #Temp_IntervalsAll_old T1
 		Left Join dbo.IntervalsAggregate T2 on
-			T1.Период = T2.Период
+			T1.[Период] = T2.[Период]
 			And T1.[ГруппаПланирования] = T2.[ГруппаПланирования]
 			And T1.[Геозона] = T2.[Геозона]
 			And T1.[ВремяНачала] = T2.[ВремяНачала]
 			And T1.[ВремяОкончания] = T2.[ВремяОкончания]
-	Where T1.КоличествоЗаказовЗаИнтервалВремени <> IsNull(T2.[КоличествоЗаказовЗаИнтервалВремени],9999999)
+	Where T1.[КоличествоЗаказовЗаИнтервалВремени] <> IsNull(T2.[КоличествоЗаказовЗаИнтервалВремени],9999999)
 
 
 	SELECT   
-		   CAST(CAST(МощностиДоставки._Period  AS DATE) AS DATETIME) AS Период, 
-		   МощностиДоставки._Fld25105RRef As ЗонаДоставки,
+		   CAST(CAST([МощностиДоставки]._Period  AS DATE) AS DATETIME) AS [Период], 
+		   [МощностиДоставки]._Fld25105RRef As [ЗонаДоставки],
 			SUM(
 				CASE
-					WHEN (МощностиДоставки._RecordKind = 0.0) THEN МощностиДоставки._Fld25107
-					ELSE -(МощностиДоставки._Fld25107)
+					WHEN ([МощностиДоставки]._RecordKind = 0.0) THEN [МощностиДоставки]._Fld25107
+					ELSE -([МощностиДоставки]._Fld25107)
 			END        
-		) AS МассаОборот,    
+		) AS [МассаОборот],    
 			SUM(
 				CASE
-					WHEN (МощностиДоставки._RecordKind = 0.0) THEN МощностиДоставки._Fld25108
-					ELSE -(МощностиДоставки._Fld25108)
+					WHEN ([МощностиДоставки]._RecordKind = 0.0) THEN [МощностиДоставки]._Fld25108
+					ELSE -([МощностиДоставки]._Fld25108)
 			END        
-		) AS ОбъемОборот,    
+		) AS [ОбъемОборот],    
 			SUM(
 				CASE
-					WHEN (МощностиДоставки._RecordKind = 0.0) THEN МощностиДоставки._Fld25201
-					ELSE -(МощностиДоставки._Fld25201)
+					WHEN ([МощностиДоставки]._RecordKind = 0.0) THEN [МощностиДоставки]._Fld25201
+					ELSE -([МощностиДоставки]._Fld25201)
 			END        
-		) AS ВремяНаОбслуживаниеОборот
+		) AS [ВремяНаОбслуживаниеОборот]
     
 	Into #DeliveryPowerOld	 
 	FROM
-		dbo._AccumRg25104 МощностиДоставки With (READCOMMITTED)
+		dbo._AccumRg25104 [МощностиДоставки] With (READCOMMITTED)
 	GROUP BY
-		CAST(CAST(МощностиДоставки._Period  AS DATE) AS DATETIME),
-		МощностиДоставки._Fld25105RRef
+		CAST(CAST([МощностиДоставки]._Period  AS DATE) AS DATETIME),
+		[МощностиДоставки]._Fld25105RRef
 
 
 	select
-		Case when T1.ВремяНаОбслуживаниеОборот <> IsNull(T2.ВремяНаОбслуживаниеОборот,9999999) then 1 else 0 End As CheckAgg,
-		Case when T1.МассаОборот <> IsNull(T2.МассаОборот,9999999) then 1 else 0 End As CheckAgg1,
-		Case when T1.ОбъемОборот <> IsNull(T2.ОбъемОборот,9999999) then 1 else 0 End As CheckAgg2,
-		T1.Период,
-		T1.ЗонаДоставки
+		Case when T1.[ВремяНаОбслуживаниеОборот] <> IsNull(T2.[ВремяНаОбслуживаниеОборот],9999999) then 1 else 0 End As CheckAgg,
+		Case when T1.[МассаОборот] <> IsNull(T2.[МассаОборот],9999999) then 1 else 0 End As CheckAgg1,
+		Case when T1.[ОбъемОборот] <> IsNull(T2.[ОбъемОборот],9999999) then 1 else 0 End As CheckAgg2,
+		T1.[Период],
+		T1.[ЗонаДоставки]
 	Into #ErrorsDeliveryPower
 	From #DeliveryPowerOld T1
 		Left Join dbo.DeliveryPowerAggregate T2 on
-			T1.Период = T2.Период
-			And T1.ЗонаДоставки = T2.ЗонаДоставки
-	Where T1.ВремяНаОбслуживаниеОборот <> IsNull(T2.ВремяНаОбслуживаниеОборот,9999999) 
-	Or T1.МассаОборот <> IsNull(T2.МассаОборот,9999999)
-	Or T1.МассаОборот <> IsNull(T2.МассаОборот,9999999)
+			T1.[Период] = T2.[Период]
+			And T1.[ЗонаДоставки] = T2.[ЗонаДоставки]
+	Where T1.[ВремяНаОбслуживаниеОборот] <> IsNull(T2.[ВремяНаОбслуживаниеОборот],9999999) 
+	Or T1.[МассаОборот] <> IsNull(T2.[МассаОборот],9999999)
+	Or T1.[МассаОборот] <> IsNull(T2.[МассаОборот],9999999)
 
 	SELECT
-		T1._Fld23831RRef AS СкладИсточника,
-		T1._Fld23833RRef AS СкладНазначения,
-		MIN(T1._Fld23834) AS ДатаПрибытия 
+		T1._Fld23831RRef AS [СкладИсточника],
+		T1._Fld23833RRef AS [СкладНазначения],
+		MIN(T1._Fld23834) AS [ДатаПрибытия]
 	Into #Temp_MinimumWarehouseDatesOld
 	FROM
 		dbo._InfoRg23830 T1 With (READCOMMITTED, INDEX([_InfoRg23830_Custom2]))
@@ -1041,28 +1049,28 @@ begin
 	T1._Fld23833RRef
 
 	SELECT
-		T1.СкладИсточника AS СкладИсточника,
-		T1.СкладНазначения AS СкладНазначения,
-		MIN(T1.ДатаПрибытия) AS ДатаПрибытия 
+		T1.[СкладИсточника] AS [СкладИсточника],
+		T1.[СкладНазначения] AS [СкладНазначения],
+		MIN(T1.[ДатаПрибытия]) AS [ДатаПрибытия] 
 	Into #Temp_MinimumWarehouseDatesNew
 	FROM
 		[dbo].[WarehouseDatesAggregate] T1 
     
 	WHERE
-	   T1.ДатаСобытия >= DateAdd(YEAR,2000,GETDATE()) 
-	GROUP BY T1.СкладИсточника,
-	T1.СкладНазначения
+	   T1.[ДатаСобытия] >= DateAdd(YEAR,2000,GETDATE()) 
+	GROUP BY T1.[СкладИсточника],
+	T1.[СкладНазначения]
 
 	Select Top 1000
-		#Temp_MinimumWarehouseDatesOld.ДатаПрибытия ,
-		 ISNULL(#Temp_MinimumWarehouseDatesNew.ДатаПрибытия, GETDATE()) AS ДатаПрибытияNew
+		#Temp_MinimumWarehouseDatesOld.[ДатаПрибытия] ,
+		 ISNULL(#Temp_MinimumWarehouseDatesNew.[ДатаПрибытия], GETDATE()) AS [ДатаПрибытияNew]
 	Into #ErrorsWarehouseDates
 	From
 		#Temp_MinimumWarehouseDatesOld
 		Left Join #Temp_MinimumWarehouseDatesNew On
-			#Temp_MinimumWarehouseDatesOld.СкладИсточника = #Temp_MinimumWarehouseDatesNew.СкладИсточника
-			And #Temp_MinimumWarehouseDatesOld.СкладНазначения = #Temp_MinimumWarehouseDatesNew.СкладНазначения
-	Where #Temp_MinimumWarehouseDatesOld.ДатаПрибытия <> ISNULL(#Temp_MinimumWarehouseDatesNew.ДатаПрибытия, GETDATE())
+			#Temp_MinimumWarehouseDatesOld.[СкладИсточника] = #Temp_MinimumWarehouseDatesNew.[СкладИсточника]
+			And #Temp_MinimumWarehouseDatesOld.[СкладНазначения] = #Temp_MinimumWarehouseDatesNew.[СкладНазначения]
+	Where #Temp_MinimumWarehouseDatesOld.[ДатаПрибытия] <> ISNULL(#Temp_MinimumWarehouseDatesNew.[ДатаПрибытия], GETDATE())
 
 
 	Select Sum(t1.c1) as ErrorCount From (
