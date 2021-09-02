@@ -11,6 +11,7 @@ namespace DateTimeService.Models
         public bool AvailableToUse { get; set; }
         public DateTimeOffset LastFreeProcCacheCommand { get; set; }
         public DateTimeOffset LastCheckAvailability { get; set; }
+        public DateTimeOffset LastCheckAggregations { get; set; }
         public DateTimeOffset LastCheckPerfomance { get; set; }
         public int ActualPriority { get; set; }
         public bool ExistsInFile { get; set; }

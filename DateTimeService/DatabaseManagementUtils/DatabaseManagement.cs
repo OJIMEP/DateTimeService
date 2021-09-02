@@ -175,57 +175,130 @@ namespace DateTimeService.Data
                 _logger.LogError(logstringElement);
             }
 
-            if (elasticResponse == null)
+            if (elasticResponse != null)
             {
-                return;
-            }
-
-            foreach (var rootAggregation in elasticResponse.Aggregations)
-            {
-                if (rootAggregation.Key == "load_time_outlier")
+                foreach (var rootAggregation in elasticResponse.Aggregations)
                 {
-                    foreach (var bucket in rootAggregation.Value.Buckets)
+                    if (rootAggregation.Key == "load_time_outlier")
                     {
-                        var minutesInBucket = int.Parse(analyzeInterval.Replace("now-", "").Replace("m", ""));
-                        var recordsByMinute = bucket.DocCount / minutesInBucket;
-                        var database = DatabaseList.Databases.FirstOrDefault(s => s.ConnectionWithoutCredentials == bucket.Key);
-                        var criteria = clearCacheCriterias.FirstOrDefault(s => recordsByMinute >= s.RecordCountBegin && recordsByMinute <= s.RecordCountEnd && s.CriteriaType == "RecordCount");
-                        var criteriaMaxTime = clearCacheCriterias.FirstOrDefault(s => s.CriteriaType == "MaximumResponseTime");
-                        var percentile95rate = bucket.TimePercentile.Values.GetValueOrDefault("95.0");
-
-                        var checkAvailability = false;
-
-                        if (database == default || criteria == default || percentile95rate == default)
+                        foreach (var bucket in rootAggregation.Value.Buckets)
                         {
-                            continue;
-                        }
+                            var minutesInBucket = int.Parse(analyzeInterval.Replace("now-", "").Replace("m", ""));
+                            var recordsByMinute = bucket.DocCount / minutesInBucket;
+                            var database = DatabaseList.Databases.FirstOrDefault(s => s.ConnectionWithoutCredentials == bucket.Key);
+                            var criteria = clearCacheCriterias.FirstOrDefault(s => recordsByMinute >= s.RecordCountBegin && recordsByMinute <= s.RecordCountEnd && s.CriteriaType == "RecordCount");
+                            var criteriaMaxTime = clearCacheCriterias.FirstOrDefault(s => s.CriteriaType == "MaximumResponseTime");
+                            var percentile95rate = bucket.TimePercentile.Values.GetValueOrDefault("95.0");
 
+                            var checkAvailability = false;
 
-                        if (percentile95rate > criteria.Percentile_95
-                            && database.Type != "main"
-                            && (database.LastFreeProcCacheCommand == default || DateTimeOffset.Now - database.LastFreeProcCacheCommand > TimeSpan.FromSeconds(180)))
-                        {
-
-                            try
+                            if (database == default || criteria == default || percentile95rate == default)
                             {
-                                using SqlConnection conn = new(database.Connection);
+                                continue;
+                            }
 
-                                conn.Open();
 
-                                SqlCommand cmd = new("dbcc freeproccache", conn);
+                            if (percentile95rate > criteria.Percentile_95
+                                && database.Type != "main"
+                                && (database.LastFreeProcCacheCommand == default || DateTimeOffset.Now - database.LastFreeProcCacheCommand > TimeSpan.FromSeconds(180)))
+                            {
 
-                                cmd.CommandTimeout = 1;
+                                try
+                                {
+                                    using SqlConnection conn = new(database.Connection);
 
-                                var clearCacheResult = await cmd.ExecuteNonQueryAsync(cancellationToken);
-                                conn.Close();
+                                    conn.Open();
 
-                                database.LastFreeProcCacheCommand = DateTimeOffset.Now;
+                                    var clearCacheScript = Queries.ClearCacheScriptDefault;
+
+                                    var clearCacheScriptFromConfig = _configuration.GetValue<string>("ClearCacheScript");
+
+                                    if (!String.IsNullOrEmpty(clearCacheScriptFromConfig))
+                                    {
+                                        clearCacheScript = clearCacheScriptFromConfig;
+                                    }
+
+                                    SqlCommand cmd = new(clearCacheScript, conn);
+
+                                    cmd.CommandTimeout = 1;
+
+                                    var clearCacheResult = await cmd.ExecuteNonQueryAsync(cancellationToken);
+                                    conn.Close();
+
+                                    database.LastFreeProcCacheCommand = DateTimeOffset.Now;
+
+                                    var logElement = new ElasticLogElement
+                                    {
+                                        LoadBalancingExecution = 0,
+                                        ErrorDescription = "Send dbcc freeproccache",
+                                        Status = "Ok",
+                                        DatabaseConnection = database.ConnectionWithoutCredentials
+                                    };
+
+                                    var logstringElement = JsonSerializer.Serialize(logElement);
+
+                                    _logger.LogInformation(logstringElement);
+                                }
+                                catch (Exception ex)
+                                {
+                                    var logElement = new ElasticLogElement
+                                    {
+                                        LoadBalancingExecution = 0,
+                                        ErrorDescription = ex.Message,
+                                        Status = "Error",
+                                        DatabaseConnection = database.ConnectionWithoutCredentials
+                                    };
+
+                                    var logstringElement = JsonSerializer.Serialize(logElement);
+
+                                    _logger.LogError(logstringElement);
+
+                                    checkAvailability = true;
+                                }
+
+                            }
+
+                            if (checkAvailability)
+                            {
+                                var checkResult = await CheckDatabaseAvailability(database.Connection, cancellationToken, (int)criteriaMaxTime.Percentile_95);
+
+                                database.AvailableToUse = checkResult;
+
+                                if (database.Type == "replica_tables")
+                                {
+                                    var aggResult = await CheckAggregationsAvailability(database.Connection, cancellationToken, (int)criteriaMaxTime.Percentile_95);
+
+                                    database.CustomAggregationsAvailable = aggResult;
+                                }
+                                else
+                                    database.CustomAggregationsAvailable = false;
+
+
+
 
                                 var logElement = new ElasticLogElement
                                 {
                                     LoadBalancingExecution = 0,
-                                    ErrorDescription = "Send dbcc freeproccache",
+                                    ErrorDescription = "Checked availability",
                                     Status = "Ok",
+                                    DatabaseConnection = database.ConnectionWithoutCredentials
+                                };
+                                logElement.AdditionalData.Add("Available", checkResult.ToString());
+                                logElement.AdditionalData.Add("AvailableAggs", database.CustomAggregationsAvailable.ToString());
+                                var logstringElement = JsonSerializer.Serialize(logElement);
+
+                                _logger.LogInformation(logstringElement);
+                            }
+
+                            if (recordsByMinute >= 100 && bucket.WeekAvg.Value == 0)
+                            {
+                                database.AvailableToUse = false;
+
+                                var logElement = new ElasticLogElement
+                                {
+                                    LoadBalancingExecution = 0,
+                                    ErrorDescription = "Database disabled due to zero response time",
+                                    Status = "Error",
                                     DatabaseConnection = database.ConnectionWithoutCredentials
                                 };
 
@@ -233,109 +306,43 @@ namespace DateTimeService.Data
 
                                 _logger.LogInformation(logstringElement);
                             }
-                            catch (Exception ex)
+
+                            if (recordsByMinute >= 100 && bucket.LoadBalance.Value > criteriaMaxTime.LoadBalance)
                             {
+                                database.AvailableToUse = false;
+
                                 var logElement = new ElasticLogElement
                                 {
                                     LoadBalancingExecution = 0,
-                                    ErrorDescription = ex.Message,
+                                    ErrorDescription = "Database disabled due to big load balance time",
                                     Status = "Error",
                                     DatabaseConnection = database.ConnectionWithoutCredentials
                                 };
 
                                 var logstringElement = JsonSerializer.Serialize(logElement);
 
-                                _logger.LogError(logstringElement);
-
-                                checkAvailability = true;
+                                _logger.LogInformation(logstringElement);
                             }
 
-                        }
-
-                        if (checkAvailability)
-                        {
-                            var checkResult = await CheckDatabaseAvailability(database.Connection, cancellationToken, (int)criteriaMaxTime.Percentile_95);
-
-                            database.AvailableToUse = checkResult;
-
-                            if (database.Type == "replica_tables")
+                            if (recordsByMinute >= 100 && bucket.WeekAvg.Value > criteriaMaxTime.Percentile_95)
                             {
-                                var aggResult = await CheckAggregationsAvailability(database.Connection, cancellationToken, (int)criteriaMaxTime.Percentile_95);
+                                database.AvailableToUse = false;
 
-                                database.CustomAggregationsAvailable = aggResult;
+                                var logElement = new ElasticLogElement
+                                {
+                                    LoadBalancingExecution = 0,
+                                    ErrorDescription = "Database disabled due to big execution time",
+                                    Status = "Error",
+                                    DatabaseConnection = database.ConnectionWithoutCredentials
+                                };
+
+                                var logstringElement = JsonSerializer.Serialize(logElement);
+
+                                _logger.LogInformation(logstringElement);
                             }
-                            else
-                                database.CustomAggregationsAvailable = false;
-
-
-
-
-                            var logElement = new ElasticLogElement
-                            {
-                                LoadBalancingExecution = 0,
-                                ErrorDescription = "Checked availability",
-                                Status = "Ok",
-                                DatabaseConnection = database.ConnectionWithoutCredentials
-                            };
-                            logElement.AdditionalData.Add("Available", checkResult.ToString());
-                            logElement.AdditionalData.Add("AvailableAggs", database.CustomAggregationsAvailable.ToString());
-                            var logstringElement = JsonSerializer.Serialize(logElement);
-
-                            _logger.LogInformation(logstringElement);
+                            database.LastCheckAvailability = DateTimeOffset.Now;
+                            database.LastCheckPerfomance = DateTimeOffset.Now;
                         }
-
-                        if (recordsByMinute >= 100 && bucket.WeekAvg.Value == 0)
-                        {
-                            database.AvailableToUse = false;
-
-                            var logElement = new ElasticLogElement
-                            {
-                                LoadBalancingExecution = 0,
-                                ErrorDescription = "Database disabled due to zero response time",
-                                Status = "Error",
-                                DatabaseConnection = database.ConnectionWithoutCredentials
-                            };
-
-                            var logstringElement = JsonSerializer.Serialize(logElement);
-
-                            _logger.LogInformation(logstringElement);
-                        }
-
-                        if (recordsByMinute >= 100 && bucket.LoadBalance.Value > criteriaMaxTime.LoadBalance)
-                        {
-                            database.AvailableToUse = false;
-
-                            var logElement = new ElasticLogElement
-                            {
-                                LoadBalancingExecution = 0,
-                                ErrorDescription = "Database disabled due to big load balance time",
-                                Status = "Error",
-                                DatabaseConnection = database.ConnectionWithoutCredentials
-                            };
-
-                            var logstringElement = JsonSerializer.Serialize(logElement);
-
-                            _logger.LogInformation(logstringElement);
-                        }
-
-                        if (recordsByMinute >= 100 && bucket.WeekAvg.Value > criteriaMaxTime.Percentile_95)
-                        {
-                            database.AvailableToUse = false;
-
-                            var logElement = new ElasticLogElement
-                            {
-                                LoadBalancingExecution = 0,
-                                ErrorDescription = "Database disabled due to big execution time",
-                                Status = "Error",
-                                DatabaseConnection = database.ConnectionWithoutCredentials
-                            };
-
-                            var logstringElement = JsonSerializer.Serialize(logElement);
-
-                            _logger.LogInformation(logstringElement);
-                        }
-                        database.LastCheckAvailability = DateTimeOffset.Now;
-                        database.LastCheckPerfomance = DateTimeOffset.Now;
                     }
                 }
             }
@@ -349,14 +356,14 @@ namespace DateTimeService.Data
 
                     item.AvailableToUse = checkResult;
 
-                    if (item.Type == "replica_tables")
-                    {
-                        var aggResult = await CheckAggregationsAvailability(item.Connection, cancellationToken);
+                    //if (item.Type == "replica_tables")
+                    //{
+                    //    var aggResult = await CheckAggregationsAvailability(item.Connection, cancellationToken);
 
-                        item.CustomAggregationsAvailable = aggResult;
-                    }
-                    else
-                        item.CustomAggregationsAvailable = false;
+                    //    item.CustomAggregationsAvailable = aggResult;
+                    //}
+                    //else
+                    //    item.CustomAggregationsAvailable = false;
 
 
 
@@ -376,6 +383,40 @@ namespace DateTimeService.Data
                     _logger.LogInformation(logstringElement);
 
                 }
+
+                if (item.AvailableToUse && DateTimeOffset.Now - item.LastCheckAggregations > TimeSpan.FromSeconds(60))
+                {
+
+                    item.LastCheckAggregations = DateTimeOffset.Now;
+
+                    var oldAggs = item.CustomAggregationsAvailable;
+
+                    if (item.Type == "replica_tables" && item.AvailableToUse)
+                    {
+                        var aggResult = await CheckAggregationsAvailability(item.Connection, cancellationToken);
+
+                        item.CustomAggregationsAvailable = aggResult;
+                    }
+                    else
+                        item.CustomAggregationsAvailable = false;
+
+                    if (item.Type == "replica_tables" && item.AvailableToUse && oldAggs != item.CustomAggregationsAvailable)
+                    {
+                        var logElement = new ElasticLogElement
+                        {
+                            LoadBalancingExecution = 0,
+                            ErrorDescription = item.CustomAggregationsAvailable ? "Enabled aggregations" : "Disabled aggregations",
+                            Status = "Ok",
+                            DatabaseConnection = item.ConnectionWithoutCredentials
+                        };
+                        logElement.AdditionalData.Add("Available", item.AvailableToUse.ToString());
+                        logElement.AdditionalData.Add("AvailableAggs", item.CustomAggregationsAvailable.ToString());
+                        var logstringElement = JsonSerializer.Serialize(logElement);
+
+                        _logger.LogInformation(logstringElement);
+                    }
+                }                
+
             }
 
         }
