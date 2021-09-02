@@ -3274,5 +3274,7 @@ from [master].[sys].[dm_hadr_database_replica_states]";
 
         public const string CheckAggregations = @"EXEC	[dbo].[spCheckAggregates]";
 
+        public const string ClearCacheScriptDefault = @"dbcc freeproccache";
+
     }
 }
