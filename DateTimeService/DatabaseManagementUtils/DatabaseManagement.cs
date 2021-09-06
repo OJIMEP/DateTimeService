@@ -48,7 +48,7 @@ namespace DateTimeService.Data
             var indexPath = _configuration["elasticsearch:indexName"];
             var authenticationString = elasticLogin + ":" + elasticPass;
             var base64EncodedAuthenticationString = Convert.ToBase64String(Encoding.UTF8.GetBytes(authenticationString));
-            var analyzeInterval = "now-1m";
+            var analyzeInterval = "now-3m";
             var clearCacheCriterias = _configuration.GetSection("ClearCacheCriterias").Get<List<ClearCacheCriteria>>();
 
             ElasticResponse elasticResponse = null;
@@ -266,7 +266,7 @@ namespace DateTimeService.Data
 
                                 if (database.Type == "replica_tables")
                                 {
-                                    var aggResult = await CheckAggregationsAvailability(database.Connection, cancellationToken, (int)criteriaMaxTime.Percentile_95);
+                                    var aggResult = await CheckAggregationsAvailability(database.Connection, cancellationToken);
 
                                     database.CustomAggregationsAvailable = aggResult;
                                 }
@@ -395,7 +395,22 @@ namespace DateTimeService.Data
                     {
                         var aggResult = await CheckAggregationsAvailability(item.Connection, cancellationToken);
 
-                        item.CustomAggregationsAvailable = aggResult;
+                        if (aggResult == true)
+                        {
+                            item.CustomAggsFailCount = 0;
+                            item.CustomAggregationsAvailable = true;
+                        }
+                        else
+                        {
+                            item.CustomAggsFailCount++;
+
+                            if (item.CustomAggsFailCount >= 3)
+                            {
+                                item.CustomAggregationsAvailable = false;
+                            }
+                        }
+
+                        //item.CustomAggregationsAvailable = aggResult;
                     }
                     else
                         item.CustomAggregationsAvailable = false;
@@ -581,7 +596,7 @@ namespace DateTimeService.Data
             return result >= 0;
         }
 
-        public async Task<bool> CheckAggregationsAvailability(string connstring, CancellationToken cancellationToken, int executionLimit = 3000)
+        public async Task<bool> CheckAggregationsAvailability(string connstring, CancellationToken cancellationToken, int executionLimit = 4500)
         {
             int result = -1;
 

@@ -1,5 +1,6 @@
 ﻿using DateTimeService.Data;
 using System;
+using System.Collections.Generic;
 
 namespace DateTimeService.Models
 {
@@ -16,6 +17,7 @@ namespace DateTimeService.Models
         public int ActualPriority { get; set; }
         public bool ExistsInFile { get; set; }
         public bool CustomAggregationsAvailable { get; set; }
+        public int CustomAggsFailCount { get; set; }
 
 
         public DatabaseInfo(DatabaseConnectionParameter connectionParameter)
