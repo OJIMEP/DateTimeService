@@ -48,7 +48,7 @@ namespace DateTimeService.Data
             var indexPath = _configuration["elasticsearch:indexName"];
             var authenticationString = elasticLogin + ":" + elasticPass;
             var base64EncodedAuthenticationString = Convert.ToBase64String(Encoding.UTF8.GetBytes(authenticationString));
-            var analyzeInterval = "now-3m";
+            var analyzeInterval = "now-1m";
             var clearCacheCriterias = _configuration.GetSection("ClearCacheCriterias").Get<List<ClearCacheCriteria>>();
 
             ElasticResponse elasticResponse = null;
@@ -200,7 +200,7 @@ namespace DateTimeService.Data
 
                             if (percentile95rate > criteria.Percentile_95
                                 && database.Type != "main"
-                                && (database.LastFreeProcCacheCommand == default || DateTimeOffset.Now - database.LastFreeProcCacheCommand > TimeSpan.FromSeconds(180)))
+                                && (database.LastFreeProcCacheCommand == default || DateTimeOffset.Now - database.LastFreeProcCacheCommand > TimeSpan.FromSeconds(240)))
                             {
 
                                 try
@@ -384,7 +384,7 @@ namespace DateTimeService.Data
 
                 }
 
-                if (item.AvailableToUse && DateTimeOffset.Now - item.LastCheckAggregations > TimeSpan.FromSeconds(60))
+                if (item.AvailableToUse && DateTimeOffset.Now - item.LastCheckAggregations > TimeSpan.FromSeconds(30))
                 {
 
                     item.LastCheckAggregations = DateTimeOffset.Now;
@@ -404,7 +404,7 @@ namespace DateTimeService.Data
                         {
                             item.CustomAggsFailCount++;
 
-                            if (item.CustomAggsFailCount >= 3)
+                            if (item.CustomAggsFailCount >= 4)
                             {
                                 item.CustomAggregationsAvailable = false;
                             }
