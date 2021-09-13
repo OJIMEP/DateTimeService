@@ -8,7 +8,7 @@ DECLARE @subscr_db nvarchar(30);
 SET @subscr_db = 'triovist_repl';--'triovist_repl';
 
 DECLARE @subscr_server nvarchar(30);
-SET @subscr_server = 'SERVER-1C-SQL';
+SET @subscr_server = 'SERVER-SQLNETMS';
 
 DECLARE @login nvarchar(30);
 SET @login = 'exampleDomain\exampleLogin';
@@ -1092,8 +1092,9 @@ exec sp_addarticle @publication = @publ_name, @article = N'sp_upgraddiagrams', @
 -- Adding the transactional subscriptions
 use [triovist]
 exec sp_addsubscription @publication = @publ_name, @subscriber = @subscr_server, @destination_db = @subscr_db, @subscription_type = N'Push', @sync_type = N'automatic', @article = N'all', @update_mode = N'read only', @subscriber_type = 0
-exec sp_addpushsubscription_agent @publication = @publ_name, @subscriber = @subscr_server, @subscriber_db = @subscr_db, @job_login = @login, @job_password = @pass, @subscriber_security_mode = 0, @subscriber_login = N'sa', @subscriber_password = N'examplePass', @frequency_type = 64, @frequency_interval = 1, @frequency_relative_interval = 1, @frequency_recurrence_factor = 0, @frequency_subday = 4, @frequency_subday_interval = 5, @active_start_time_of_day = 0, @active_end_time_of_day = 235959, @active_start_date = 0, @active_end_date = 0, @dts_package_location = N'Distributor'
+exec sp_addpushsubscription_agent @publication = @publ_name, @subscriber = @subscr_server, @subscriber_db = @subscr_db, @job_login = @login, @job_password = @pass, @subscriber_security_mode = 0, @subscriber_login = N'exampleLogin', @subscriber_password = N'examplePass', @frequency_type = 64, @frequency_interval = 1, @frequency_relative_interval = 1, @frequency_recurrence_factor = 0, @frequency_subday = 4, @frequency_subday_interval = 5, @active_start_time_of_day = 0, @active_end_time_of_day = 235959, @active_start_date = 0, @active_end_date = 0, @dts_package_location = N'Distributor'
 --GO
+
 
 use [triovist]
 exec sp_addsubscription @publication = @publ_name, @subscriber = N'SERVER-1C-SQL-1', @destination_db = N'triovist_repl', @subscription_type = N'Push', @sync_type = N'automatic', @article = N'all', @update_mode = N'read only', @subscriber_type = 0
