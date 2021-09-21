@@ -63,10 +63,10 @@ SET @PickupPoint6 = '2';
 DECLARE @P_DaysToShow numeric(2);
  Set @P_DaysToShow = 7;
 
- Set @P_DateTimeNow = '4021-08-20T16:35:00' 
- Set @P_DateTimePeriodBegin = '4021-08-20T00:00:00'
- Set @P_DateTimePeriodEnd = '4021-08-24T00:00:00'
- Set @P_TimeNow = '2001-01-01T16:35:00'
+ Set @P_DateTimeNow = '4021-09-21T15:20:00' 
+ Set @P_DateTimePeriodBegin = '4021-09-21T00:00:00'
+ Set @P_DateTimePeriodEnd = '4021-09-27T00:00:00'
+ Set @P_TimeNow = '2001-01-01T15:20:00'
  Set @P_EmptyDate = '2001-01-01T00:00:00'
  Set @P_MaxDate = '5999-11-11T00:00:00'
 
@@ -446,7 +446,7 @@ HAVING
     (SUM(T2._Fld21412) <> 0.0
     OR SUM(T2._Fld21411) <> 0.0)
 	AND SUM(T2._Fld21411) - SUM(T2._Fld21412) > 0.0
-OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimeNow='4021-08-20T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
+OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimeNow='4021-09-21T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
 
 SELECT Distinct
     T1._Fld23831RRef AS СкладИсточника,
@@ -482,7 +482,7 @@ WHERE
 		AND	T1._Fld23832 BETWEEN @P_DateTimeNow AND DateAdd(DAY,6,@P_DateTimeNow)
 GROUP BY T1._Fld23831RRef,
 T1._Fld23833RRef
-OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimeNow='4021-08-20T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
+OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimeNow='4021-09-21T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
 
 
 SELECT
@@ -582,12 +582,12 @@ FROM
     INNER JOIN dbo._AccumRg21407 Резервирование WITH(READCOMMITTED)
     LEFT OUTER JOIN Temp_ExchangeRates T3 WITH(NOLOCK)
         ON (Резервирование._Fld21443RRef = T3.Валюта)
-    ON (T1.НоменклатураСсылка = Резервирование._Fld21408RRef)
-    AND (
-        T1.Источник_TYPE = 0x08
-        AND T1.Источник_RTRef = Резервирование._RecorderTRef
+    ON 
+	T1.НоменклатураСсылка = Резервирование._Fld21408RRef
+    AND T1.Источник_TYPE = 0x08
+		AND T1.Источник_RTRef = Резервирование._RecorderTRef
         AND T1.Источник_RRRef = Резервирование._RecorderRRef
-    )
+    
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
 With Temp_SupplyDocs AS
@@ -1037,7 +1037,7 @@ GROUP BY
 	T5.ВремяНачала,
 	T5.ВремяОкончания,
 	PlanningGroups.Приоритет
-OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-08-20T00:00:00',@P_DateTimePeriodEnd='4021-08-24T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
+OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-09-21T00:00:00',@P_DateTimePeriodEnd='4021-09-27T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
 
 
 select
@@ -1072,7 +1072,7 @@ Group By
 	#Temp_IntervalsAll.Геозона,
 	T2._Fld25137,
 	#Temp_IntervalsAll.Приоритет
-OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-08-20T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-09-21T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
 
 INsert into #Temp_Intervals
 select
@@ -1106,7 +1106,7 @@ Group By
 	#Temp_IntervalsAll.ГруппаПланирования,
 	#Temp_IntervalsAll.Геозона,
     #Temp_IntervalsAll.Приоритет
-OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-08-20T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-09-21T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
 
 INsert into #Temp_Intervals
 select
@@ -1135,7 +1135,7 @@ Group By
 	#Temp_IntervalsAll.ГруппаПланирования,
 	#Temp_IntervalsAll.Геозона,
     #Temp_IntervalsAll.Приоритет
-OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-08-20T00:00:00',@P_DateTimePeriodEnd='4021-08-24T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-09-21T00:00:00',@P_DateTimePeriodEnd='4021-09-27T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
 
 /*если основная база или реплика, то заменить таблицу ниже на исходный вариант*/
 /*
@@ -1224,7 +1224,7 @@ GROUP BY
 	T1.НоменклатураСсылка,
     T1.article,
 	T1.code
-OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-08-20T00:00:00',@P_DateTimePeriodEnd='4021-08-24T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
+OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-09-21T00:00:00',@P_DateTimePeriodEnd='4021-09-27T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
 
 Select 
 	IsNull(#Temp_AvailableCourier.article,#Temp_AvailablePickUp.article) AS article,

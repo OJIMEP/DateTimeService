@@ -18,6 +18,7 @@ namespace DateTimeService.Models
         public bool ExistsInFile { get; set; }
         public bool CustomAggregationsAvailable { get; set; }
         public int CustomAggsFailCount { get; set; }
+        public int TimeCriteriaFailCount { get; set; }
 
 
         public DatabaseInfo(DatabaseConnectionParameter connectionParameter)

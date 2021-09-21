@@ -190,6 +190,18 @@ namespace DateTimeService.Data
                             var criteriaMaxTime = clearCacheCriterias.FirstOrDefault(s => s.CriteriaType == "MaximumResponseTime");
                             var percentile95rate = bucket.TimePercentile.Values.GetValueOrDefault("95.0");
 
+                            var DelayBetweenClearCache = _configuration.GetValue<int>("DelayBetweenClearCache");
+                            if (DelayBetweenClearCache == 0)
+                            {
+                                DelayBetweenClearCache = 180;
+                            }
+
+                            var ErrorsCountToSendClearCache = _configuration.GetValue<int>("ErrorsCountToSendClearCache");
+                            if (ErrorsCountToSendClearCache == 0)
+                            {
+                                ErrorsCountToSendClearCache = 1;
+                            }
+
                             var checkAvailability = false;
 
                             if (database == default || criteria == default || percentile95rate == default)
@@ -200,62 +212,71 @@ namespace DateTimeService.Data
 
                             if (percentile95rate > criteria.Percentile_95
                                 && database.Type != "main"
-                                && (database.LastFreeProcCacheCommand == default || DateTimeOffset.Now - database.LastFreeProcCacheCommand > TimeSpan.FromSeconds(240)))
+                                && (database.LastFreeProcCacheCommand == default || DateTimeOffset.Now - database.LastFreeProcCacheCommand > TimeSpan.FromSeconds(DelayBetweenClearCache)))
                             {
-
-                                try
+                                if (database.TimeCriteriaFailCount >= ErrorsCountToSendClearCache)
                                 {
-                                    using SqlConnection conn = new(database.Connection);
-
-                                    conn.Open();
-
-                                    var clearCacheScript = Queries.ClearCacheScriptDefault;
-
-                                    var clearCacheScriptFromConfig = _configuration.GetValue<string>("ClearCacheScript");
-
-                                    if (!String.IsNullOrEmpty(clearCacheScriptFromConfig))
+                                    try
                                     {
-                                        clearCacheScript = clearCacheScriptFromConfig;
+                                        using SqlConnection conn = new(database.Connection);
+
+                                        conn.Open();
+
+                                        var clearCacheScript = Queries.ClearCacheScriptDefault;
+
+                                        var clearCacheScriptFromConfig = _configuration.GetValue<string>("ClearCacheScript");
+
+                                        if (!String.IsNullOrEmpty(clearCacheScriptFromConfig))
+                                        {
+                                            clearCacheScript = clearCacheScriptFromConfig;
+                                        }
+
+                                        SqlCommand cmd = new(clearCacheScript, conn);
+
+                                        cmd.CommandTimeout = 1;
+
+                                        var clearCacheResult = await cmd.ExecuteNonQueryAsync(cancellationToken);
+                                        conn.Close();
+
+                                        database.LastFreeProcCacheCommand = DateTimeOffset.Now;
+
+                                        var logElement = new ElasticLogElement
+                                        {
+                                            LoadBalancingExecution = 0,
+                                            ErrorDescription = "Send dbcc freeproccache",
+                                            Status = "Ok",
+                                            DatabaseConnection = database.ConnectionWithoutCredentials
+                                        };
+
+                                        var logstringElement = JsonSerializer.Serialize(logElement);
+
+                                        _logger.LogInformation(logstringElement);
                                     }
-
-                                    SqlCommand cmd = new(clearCacheScript, conn);
-
-                                    cmd.CommandTimeout = 1;
-
-                                    var clearCacheResult = await cmd.ExecuteNonQueryAsync(cancellationToken);
-                                    conn.Close();
-
-                                    database.LastFreeProcCacheCommand = DateTimeOffset.Now;
-
-                                    var logElement = new ElasticLogElement
+                                    catch (Exception ex)
                                     {
-                                        LoadBalancingExecution = 0,
-                                        ErrorDescription = "Send dbcc freeproccache",
-                                        Status = "Ok",
-                                        DatabaseConnection = database.ConnectionWithoutCredentials
-                                    };
+                                        var logElement = new ElasticLogElement
+                                        {
+                                            LoadBalancingExecution = 0,
+                                            ErrorDescription = ex.Message,
+                                            Status = "Error",
+                                            DatabaseConnection = database.ConnectionWithoutCredentials
+                                        };
 
-                                    var logstringElement = JsonSerializer.Serialize(logElement);
+                                        var logstringElement = JsonSerializer.Serialize(logElement);
 
-                                    _logger.LogInformation(logstringElement);
+                                        _logger.LogError(logstringElement);
+
+                                        checkAvailability = true;
+                                    }
                                 }
-                                catch (Exception ex)
+                                else
                                 {
-                                    var logElement = new ElasticLogElement
-                                    {
-                                        LoadBalancingExecution = 0,
-                                        ErrorDescription = ex.Message,
-                                        Status = "Error",
-                                        DatabaseConnection = database.ConnectionWithoutCredentials
-                                    };
-
-                                    var logstringElement = JsonSerializer.Serialize(logElement);
-
-                                    _logger.LogError(logstringElement);
-
-                                    checkAvailability = true;
+                                    database.TimeCriteriaFailCount++;
                                 }
-
+                            }
+                            else
+                            {
+                                database.TimeCriteriaFailCount = 0;
                             }
 
                             if (checkAvailability)
@@ -430,7 +451,7 @@ namespace DateTimeService.Data
 
                         _logger.LogInformation(logstringElement);
                     }
-                }                
+                }
 
             }
 
@@ -449,7 +470,7 @@ namespace DateTimeService.Data
                 //open connection
                 conn.Open();
 
-                List<string> queryParts=new();
+                List<string> queryParts = new();
 
                 queryParts.Add(Queries.AvailableDate1);
                 queryParts.Add(Queries.AvailableDate2MinimumWarehousesBasic);
@@ -590,6 +611,17 @@ namespace DateTimeService.Data
             if (watch.ElapsedMilliseconds > executionLimit)
             {
                 result = -1;
+                var logElement = new ElasticLogElement
+                {
+                    LoadBalancingExecution = 0,
+                    ErrorDescription = "Availability false because of ElapsedMilliseconds=" + watch.ElapsedMilliseconds,
+                    Status = "Error",
+                    DatabaseConnection = LoadBalancing.RemoveCredentialsFromConnectionString(connstring)
+                };
+
+                var logstringElement = JsonSerializer.Serialize(logElement);
+
+                _logger.LogInformation(logstringElement);
             }
 
 
@@ -655,10 +687,10 @@ namespace DateTimeService.Data
             }
             watch.Stop();
 
-            if (watch.ElapsedMilliseconds > executionLimit)
-            {
-                result = -1;
-            }
+            //if (watch.ElapsedMilliseconds > executionLimit)
+            //{
+            //    result = -1;
+            //}
 
 
             return result >= 0;
