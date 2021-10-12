@@ -161,6 +161,7 @@ namespace DateTimeService.Controllers
         [Authorize(Roles = UserRoles.AvailableDate + "," + UserRoles.Admin)]
         [Route("AvailableDate")]
         [HttpPost]
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public async Task<IActionResult> AvailableDateAsync([FromBody] RequestDataAvailableDateByCodeItemsDTO inputDataJson)
         {
 
@@ -549,6 +550,7 @@ namespace DateTimeService.Controllers
         [Authorize(Roles = UserRoles.IntervalList + "," + UserRoles.Admin)]
         [Route("IntervalList")]
         [HttpPost]
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public async Task<IActionResult> IntervalListAsync(RequestIntervalListDTO inputData)
         {
             var data = _mapper.Map<RequestIntervalList>(inputData);
@@ -556,6 +558,10 @@ namespace DateTimeService.Controllers
             bool customAggs = false;
             Stopwatch stopwatchExecution = new();
             stopwatchExecution.Start();
+
+            
+
+            
 
             var logElementLoadBal = new ElasticLogElement
             {
