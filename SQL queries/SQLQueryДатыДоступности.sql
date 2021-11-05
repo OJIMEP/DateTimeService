@@ -475,7 +475,7 @@ SELECT
 	MIN(T1._Fld23834) AS ДатаПрибытия 
 Into #Temp_MinimumWarehouseDates
 FROM
-    dbo._InfoRg23830 T1 With (READCOMMITTED, INDEX([_InfoRg23830_Custom2]))
+    dbo._InfoRg23830 T1 With (READCOMMITTED) --, INDEX([_InfoRg23830_Custom2]))
     Inner Join SourceWarehouses On T1._Fld23831RRef = SourceWarehouses.СкладИсточника
 WHERE
     T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData UNION ALL Select СкладСсылка From #Temp_PickupPoints)
@@ -693,7 +693,7 @@ SELECT
 	T1.ГруппаПланированияДобавляемоеВремя,
     T1.Приоритет,
 	0 AS PickUp
-into #Temp_ClosestDatesByGoods
+into #Temp_ClosestDatesByGoodsWithoutShifting
 FROM
     #Temp_Goods T1 WITH(NOLOCK)	
     LEFT JOIN Temp_SourcesCorrectedDate T2 WITH(NOLOCK)
@@ -753,6 +753,33 @@ GROUP BY
 	T1.ГруппаПланированияДобавляемоеВремя,
 	T1.Приоритет
 OPTION (HASH GROUP, KEEP PLAN, KEEPFIXED PLAN);
+
+SELECT
+    T1.НоменклатураСсылка,
+	T1.article,
+	T1.code,
+    T1.СкладНазначения,
+    Case when ПрослеживаемыеТНВЭД._Fld27184RRef is null then T1.БлижайшаяДата else DateAdd(DAY, 3, ПрослеживаемыеТНВЭД._Period) end as БлижайшаяДата,
+    T1.Количество,
+    T1.Вес,
+    T1.Объем,
+    T1.ВремяНаОбслуживание,
+    T1.ГруппаПланирования,
+	T1.ГруппаПланированияДобавляемоеВремя,
+    T1.Приоритет,
+	T1.PickUp,
+	ПрослеживаемыеТНВЭД._Fld27185
+into #Temp_ClosestDatesByGoods
+FROM
+    #Temp_ClosestDatesByGoodsWithoutShifting T1 WITH(NOLOCK)
+	inner join dbo._Reference149 as Номенклатура WITH(NOLOCK) 
+		ON T1.НоменклатураСсылка = Номенклатура._IDRRef
+	left join dbo._InfoRg27183 as ПрослеживаемыеТНВЭД WITH(NOLOCK)
+		on ПрослеживаемыеТНВЭД._Fld27184RRef = Номенклатура._Fld21822RRef 
+			and (ПрослеживаемыеТНВЭД._Fld27185 = 0x01 or ПрослеживаемыеТНВЭД._Fld28120 = 0x01)
+			and T1.БлижайшаяДата BETWEEN ПрослеживаемыеТНВЭД._Period AND DateAdd(DAY, 3, ПрослеживаемыеТНВЭД._Period)
+OPTION (KEEP PLAN, KEEPFIXED PLAN);
+;
 
 SELECT
     T1.НоменклатураСсылка,
@@ -953,7 +980,6 @@ Group by
 OPTION (HASH GROUP, KEEP PLAN, KEEPFIXED PLAN);
 
 /*если реплика alwayson или основная база то заменить на исходный вариант с суммированием*/
-/*
 With PlanningGroups AS(
 Select Distinct 
 	#Temp_ShipmentDatesDeliveryCourier.ГруппаПланирования,
@@ -1000,9 +1026,8 @@ HAVING
         ) > 0.0
     )
 OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-07-08T00:00:00',@P_DateTimePeriodEnd='4021-07-12T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
-*/
 
-With PlanningGroups AS(
+/*With PlanningGroups AS(
 Select Distinct 
 	#Temp_ShipmentDatesDeliveryCourier.ГруппаПланирования,
 	#Temp_ShipmentDatesDeliveryCourier.Приоритет
@@ -1038,7 +1063,7 @@ GROUP BY
 	T5.ВремяОкончания,
 	PlanningGroups.Приоритет
 OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-09-21T00:00:00',@P_DateTimePeriodEnd='4021-09-27T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
-
+*/
 
 select
 DATEADD(
@@ -1138,7 +1163,7 @@ Group By
 OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-09-21T00:00:00',@P_DateTimePeriodEnd='4021-09-27T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
 
 /*если основная база или реплика, то заменить таблицу ниже на исходный вариант*/
-/*
+
 With Temp_DeliveryPower AS
 (
 SELECT   
@@ -1169,9 +1194,9 @@ WHERE
 GROUP BY
     CAST(CAST(МощностиДоставки._Period  AS DATE) AS DATETIME)
 ), 
-*/
 
-With Temp_DeliveryPower AS
+
+/*With Temp_DeliveryPower AS
 (
 SELECT   
         МощностиДоставки.МассаОборот AS МассаОборот,    
@@ -1183,7 +1208,7 @@ FROM
 WHERE
     МощностиДоставки.Период BETWEEN @P_DateTimePeriodBegin AND @P_DateTimePeriodEnd
 	AND МощностиДоставки.ЗонаДоставки IN (Select ЗонаДоставкиРодительСсылка From  #Temp_GeoData)
-), 
+),*/ 
 Temp_PlanningGroupPriority AS
 (
 select Период, Max(Приоритет) AS Приоритет from #Temp_Intervals Group by Период
@@ -1261,3 +1286,4 @@ DROP TAble #Temp_PickupWorkingHours
 DROP TAble #Temp_Dates
 DROP Table #Temp_PickupPoints
 --DRop Table #Temp_PlanningGroupPriority
+DROP Table #Temp_ClosestDatesByGoodsWithoutShifting
