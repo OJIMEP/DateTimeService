@@ -775,11 +775,12 @@ FROM
 	inner join dbo._Reference149 as Номенклатура WITH(NOLOCK) 
 		ON T1.НоменклатураСсылка = Номенклатура._IDRRef
 	left join dbo._InfoRg27183 as ПрослеживаемыеТНВЭД WITH(NOLOCK)
-		on ПрослеживаемыеТНВЭД._Fld27184RRef = Номенклатура._Fld21822RRef 
+		on 1 = 0 -- это будет значение ГП ПрименятьСмещениеДоступностиПрослеживаемыхМаркируемыхТоваров
+			and ПрослеживаемыеТНВЭД._Fld27184RRef = Номенклатура._Fld21822RRef 
 			and (ПрослеживаемыеТНВЭД._Fld27185 = 0x01 or ПрослеживаемыеТНВЭД._Fld28120 = 0x01)
 			and T1.БлижайшаяДата BETWEEN ПрослеживаемыеТНВЭД._Period AND DateAdd(DAY, 3, ПрослеживаемыеТНВЭД._Period)
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
-;
+
 
 SELECT
     T1.НоменклатураСсылка,

@@ -28,7 +28,9 @@ namespace DateTimeService.Data
 
 
                 string queryParametrs = @"SELECT [_Fld22354]      
-      ,[_Fld22355_N]     
+        ,[_Fld22355_TYPE]     
+        ,[_Fld22355_N]     
+        ,[_Fld22355_L]     
   FROM [dbo].[_InfoRg22353]
   where [_Fld22354] IN({0})";
 
@@ -55,7 +57,15 @@ namespace DateTimeService.Data
                 {
                     while (drParametrs.Read())
                     {
-                        names.First(x => x.Name.Contains(drParametrs.GetString(0))).ValueDouble = (double)drParametrs.GetDecimal(1);
+                        if (((byte[]) drParametrs.GetValue(1))[0] == 2) //boalean
+                        {
+                            names.First(x => x.Name.Contains(drParametrs.GetString(0))).ValueDouble = (double)((byte[])drParametrs.GetValue(3))[0];
+                        }
+                        else
+                        {
+                            names.First(x => x.Name.Contains(drParametrs.GetString(0))).ValueDouble = (double)drParametrs.GetDecimal(2);
+                        }
+                        
 
                         querySuccessful = true;
                     }

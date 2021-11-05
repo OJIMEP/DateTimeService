@@ -273,6 +273,16 @@ namespace DateTimeService.Controllers
                 {
                     Name = "ПроцентДнейАнализаЛучшейЦеныПриОтсрочкеЗаказа",
                     DefaultDouble = 3
+                },
+                new GlobalParam1C
+                {
+                    Name = "ПрименятьСмещениеДоступностиПрослеживаемыхМаркируемыхТоваров",
+                    DefaultDouble = 0
+                },
+                new GlobalParam1C
+                {
+                    Name = "КоличествоДнейСмещенияДоступностиПрослеживаемыхМаркируемыхТоваров",
+                    DefaultDouble = 0
                 }
             };
             watch.Start();
@@ -395,7 +405,10 @@ namespace DateTimeService.Controllers
                     DateMove.Date.AddDays(Parameters1C.First(x => x.Name.Contains("rsp_КоличествоДнейЗаполненияГрафика")).ValueDouble - 1).ToString("yyyy-MM-ddTHH:mm:ss"),
                     Parameters1C.First(x => x.Name.Contains("КоличествоДнейАнализаЛучшейЦеныПриОтсрочкеЗаказа")).ValueDouble,
                     Parameters1C.First(x => x.Name.Contains("ПроцентДнейАнализаЛучшейЦеныПриОтсрочкеЗаказа")).ValueDouble,
-                    pickupWorkingHoursJoinType, useIndexHint);
+                    pickupWorkingHoursJoinType,
+                    useIndexHint,
+                    Parameters1C.First(x => x.Name.Contains("ПрименятьСмещениеДоступностиПрослеживаемыхМаркируемыхТоваров")).ValueDouble,
+                    Parameters1C.First(x => x.Name.Contains("КоличествоДнейСмещенияДоступностиПрослеживаемыхМаркируемыхТоваров")).ValueDouble);
 
 
                 //execute the SQLCommand
