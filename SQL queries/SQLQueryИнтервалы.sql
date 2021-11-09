@@ -1443,22 +1443,26 @@ OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-07-20T00:00:00',@P_DateTimePe
 ;
 
 Select distinct 
-	ПрослеживаемыеТНВЭД._period as Дата
+	ПрослеживаемыеТНВЭД._period as ДатаНачала,
+	DateAdd(DAY, 2, ПрослеживаемыеТНВЭД._Period) as ДатаОкончания
 INTO #Temp_UnavailableDates
 From #Temp_Goods as TempGoods
 inner join dbo._Reference149 as Номенклатура WITH(NOLOCK) 
 		ON TempGoods.НоменклатураСсылка = Номенклатура._IDRRef
 inner join dbo._InfoRg27183 as ПрослеживаемыеТНВЭД WITH(NOLOCK)
-		on ПрослеживаемыеТНВЭД._Fld27184RRef = Номенклатура._Fld21822RRef 
+		on 1 = 0 -- это будет значение ГП ПрименятьСмещениеДоступностиПрослеживаемыхМаркируемыхТоваров
+			and ПрослеживаемыеТНВЭД._Fld27184RRef = Номенклатура._Fld21822RRef 
 			and (ПрослеживаемыеТНВЭД._Fld27185 = 0x01 or ПрослеживаемыеТНВЭД._Fld28120 = 0x01)
 			and @P_DateTimeNow BETWEEN ПрослеживаемыеТНВЭД._Period AND DateAdd(DAY, 2, ПрослеживаемыеТНВЭД._Period)
-;
+OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
 select distinct IntervalsWithOutShifting.* 
 from #Temp_IntervalsWithOutShifting as IntervalsWithOutShifting  
-cross join #Temp_UnavailableDates as UnavailableDates  
-where NOT IntervalsWithOutShifting.ВремяНачала BETWEEN UnavailableDates.Дата AND DateAdd(DAY, 2, UnavailableDates.Дата)
+left join #Temp_UnavailableDates as UnavailableDates 
+on 1 = 1
+where UnavailableDates.ДатаНачала is NULL or (NOT IntervalsWithOutShifting.ВремяНачала BETWEEN UnavailableDates.ДатаНачала AND UnavailableDates.ДатаОкончания)
 Order by ВремяНачала
+OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
 Drop table #Temp_GeoData
 Drop table #Temp_Goods
