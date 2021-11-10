@@ -100,6 +100,7 @@ OPTION (KEEP PLAN, KEEPFIXED PLAN);
 Select 
 	Номенклатура._IDRRef AS НоменклатураСсылка,
 	Упаковки._IDRRef AS УпаковкаСсылка,
+    Номенклатура._Fld21822RRef as ТНВЭДСсылка,
 	Sum(T1.quantity) As Количество	
 INTO #Temp_Goods
 From 
@@ -115,11 +116,13 @@ From
 		AND Упаковки._Marked = 0x00
 Group By 
 	Номенклатура._IDRRef,
-	Упаковки._IDRRef
+	Упаковки._IDRRef,
+    Номенклатура._Fld21822RRef
 union all
 Select 
 	Номенклатура._IDRRef,
 	Упаковки._IDRRef,
+    Номенклатура._Fld21822RRef,
 	Sum(T1.quantity)	
 From 
 	#Temp_GoodsRaw T1
@@ -134,11 +137,13 @@ From
 		AND Упаковки._Marked = 0x00
 Group By 
 	Номенклатура._IDRRef,
-	Упаковки._IDRRef
+	Упаковки._IDRRef,
+    Номенклатура._Fld21822RRef
 union all
 Select 
 	Номенклатура._IDRRef,
 	Упаковки._IDRRef,
+    Номенклатура._Fld21822RRef,
 	Sum(T1.Количество)	
 From 
 	#Temp_GoodsOrder T1
@@ -155,7 +160,8 @@ Where
 	Номенклатура._Fld3514RRef = 0x84A6131B6DC5555A4627E85757507687 -- тип номенклатуры товар
 Group By 
 	Номенклатура._IDRRef,
-	Упаковки._IDRRef
+	Упаковки._IDRRef,
+    Номенклатура._Fld21822RRef
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 /*Конец товаров*/
 
@@ -423,7 +429,7 @@ GROUP BY
     T2.Fld24100_
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
-/*Время обслуживания началось выше и тут итоговая цифра*/
+/*Время огбслуживания началось выше и тут итоговая цифра*/
 SELECT
     ISNULL(T2.МинимальноеВремя, 0) + ISNULL(T2.УсловиеКоличествоСтрок, 0) + ISNULL(T1.УсловиеМинскЧас, 0) + ISNULL(T2.УсловиеЭтажМассаОбщ, 0) + ISNULL(T2.УсловиеВесОбъем, 0) + ISNULL(T1.УсловиеСпособОплаты, 0) AS ВремяВыполнения
 Into #Temp_TimeService
@@ -1365,25 +1371,25 @@ Select
 From #Temp_AvailablePickUp
 OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'), KEEP PLAN, KEEPFIXED PLAN);
 
-Select distinct 
-	ПрослеживаемыеТНВЭД._period as ДатаНачала,
-	DateAdd(DAY, {8}, ПрослеживаемыеТНВЭД._Period) as ДатаОкончания
+Select 
+	IntervalsWithOutShifting.ВремяНачала
 INTO #Temp_UnavailableDates
 From #Temp_Goods as TempGoods
-inner join dbo._Reference149 as Номенклатура WITH(NOLOCK) 
-		ON TempGoods.НоменклатураСсылка = Номенклатура._IDRRef
 inner join dbo._InfoRg27183 as ПрослеживаемыеТНВЭД WITH(NOLOCK)
-		on 1 = {7}
-			and ПрослеживаемыеТНВЭД._Fld27184RRef = Номенклатура._Fld21822RRef 
+		on 1 = {7} -- это будет значение ГП ПрименятьСмещениеДоступностиПрослеживаемыхМаркируемыхТоваров
+			and ПрослеживаемыеТНВЭД._Fld27184RRef = TempGoods.ТНВЭДСсылка
 			and (ПрослеживаемыеТНВЭД._Fld27185 = 0x01 or ПрослеживаемыеТНВЭД._Fld28120 = 0x01)
-			and @P_DateTimeNow BETWEEN ПрослеживаемыеТНВЭД._Period AND DateAdd(DAY, {8}, ПрослеживаемыеТНВЭД._Period)
+			and @P_DateTimeNow <= DateAdd(DAY, {8}, ПрослеживаемыеТНВЭД._Period)  -- количество дней будет из ГП
+inner join #Temp_IntervalsWithOutShifting as IntervalsWithOutShifting
+		on IntervalsWithOutShifting.ВремяНачала between ПрослеживаемыеТНВЭД._period AND DateAdd(DAY, {8}, ПрослеживаемыеТНВЭД._Period)
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
-select distinct IntervalsWithOutShifting.* 
+select IntervalsWithOutShifting.* 
 from #Temp_IntervalsWithOutShifting as IntervalsWithOutShifting  
 left join #Temp_UnavailableDates as UnavailableDates 
-on 1 = 1
-where UnavailableDates.ДатаНачала is NULL or (NOT IntervalsWithOutShifting.ВремяНачала BETWEEN UnavailableDates.ДатаНачала AND UnavailableDates.ДатаОкончания)
+	on IntervalsWithOutShifting.ВремяНачала = UnavailableDates.ВремяНачала
+where 
+	UnavailableDates.ВремяНачала is NULL
 Order by ВремяНачала
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 ";
@@ -1441,7 +1447,8 @@ Select
 	#Temp_PickupPoints.СкладСсылка AS СкладПВЗСсылка,
 	Упаковки._IDRRef AS УпаковкаСсылка,
 	Упаковки._Fld6000 AS Вес,
-	Упаковки._Fld6006 AS Объем
+	Упаковки._Fld6006 AS Объем,
+    Номенклатура._Fld21822RRef as ТНВЭДСсылка
 INTO #Temp_GoodsBegin
 From
 	Temp_GoodsRawParsed T1
@@ -1467,7 +1474,8 @@ Select
 	#Temp_PickupPoints.СкладСсылка,
 	Упаковки._IDRRef AS УпаковкаСсылка,
 	Упаковки._Fld6000 AS Вес,
-	Упаковки._Fld6006 AS Объем
+	Упаковки._Fld6006 AS Объем,
+    Номенклатура._Fld21822RRef as ТНВЭДСсылка
 From 
 	Temp_GoodsRawParsed T1
 	Inner Join 	dbo._Reference149 Номенклатура With (NOLOCK) 
@@ -1493,6 +1501,7 @@ Select
 	1 As Количество,
 	Номенклатура.Вес AS Вес,--Упаковки._Fld6000 AS Вес,
 	Номенклатура.Объем AS Объем,--Упаковки._Fld6006 AS Объем,
+    Номенклатура.ТНВЭДСсылка as ТНВЭДСсылка,
 	10 AS ВремяНаОбслуживание,
 	IsNull(ГруппыПланирования._IDRRef, 0x00000000000000000000000000000000) AS ГруппаПланирования,
 	IsNull(ГруппыПланирования._Description, '') AS ГруппаПланированияНаименование,
@@ -1522,6 +1531,7 @@ Select
 	1 As Количество,
 	Номенклатура.Вес AS Вес,--Упаковки._Fld6000 AS Вес,
 	Номенклатура.Объем AS Объем,--Упаковки._Fld6006 AS Объем,
+    Номенклатура.ТНВЭДСсылка as ТНВЭДСсылка,
 	10 AS ВремяНаОбслуживание,
 	IsNull(ПодчиненнаяГП._IDRRef, 0x00000000000000000000000000000000) AS ГруппаПланирования,
 	IsNull(ПодчиненнаяГП._Description, '') AS ГруппаПланированияНаименование,
@@ -1868,6 +1878,7 @@ SELECT
     1 AS Количество,
     T1.Вес,
     T1.Объем,
+    T1.ТНВЭДСсылка,
     T1.ВремяНаОбслуживание,
     T1.ГруппаПланирования,
 	T1.ГруппаПланированияДобавляемоеВремя,
@@ -1891,6 +1902,7 @@ GROUP BY
 	ISNULL(T3.СкладНазначения, T2.СкладНазначения),
     T1.Вес,
     T1.Объем,
+    T1.ТНВЭДСсылка,
     T1.ВремяНаОбслуживание,
     T1.Количество,
     T1.ГруппаПланирования,
@@ -1906,6 +1918,7 @@ SELECT
     1 AS Количество,
     T1.Вес,
     T1.Объем,
+    T1.ТНВЭДСсылка,
     T1.ВремяНаОбслуживание,
     T1.ГруппаПланирования,
 	T1.ГруппаПланированияДобавляемоеВремя,
@@ -1927,6 +1940,7 @@ GROUP BY
 	ISNULL(T3.СкладНазначения, T2.СкладНазначения),
     T1.Вес,
     T1.Объем,
+    T1.ТНВЭДСсылка,
     T1.ВремяНаОбслуживание,
     T1.Количество,
     T1.ГруппаПланирования,
@@ -1952,11 +1966,9 @@ SELECT
 into #Temp_ClosestDatesByGoods
 FROM
     #Temp_ClosestDatesByGoodsWithoutShifting T1 WITH(NOLOCK)
-	inner join dbo._Reference149 as Номенклатура WITH(NOLOCK) 
-		ON T1.НоменклатураСсылка = Номенклатура._IDRRef
 	left join dbo._InfoRg27183 as ПрослеживаемыеТНВЭД WITH(NOLOCK)
 		on 1 = {8} 
-			and ПрослеживаемыеТНВЭД._Fld27184RRef = Номенклатура._Fld21822RRef 
+			and ПрослеживаемыеТНВЭД._Fld27184RRef = T1.ТНВЭДСсылка 
 			and (ПрослеживаемыеТНВЭД._Fld27185 = 0x01 or ПрослеживаемыеТНВЭД._Fld28120 = 0x01)
 			and T1.БлижайшаяДата BETWEEN ПрослеживаемыеТНВЭД._Period AND DateAdd(DAY, {9}, ПрослеживаемыеТНВЭД._Period)
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
@@ -2497,7 +2509,8 @@ Select
 	Упаковки._Fld6006 AS Объем,
 	Упаковки._Fld6001 AS Высота,
 	Упаковки._Fld6002 AS Глубина,
-	Упаковки._Fld6009 AS Ширина
+	Упаковки._Fld6009 AS Ширина,
+    Номенклатура._Fld21822RRef as ТНВЭДСсылка
 INTO #Temp_GoodsBegin
 From
 	Temp_GoodsRawParsed T1
@@ -2527,7 +2540,8 @@ Select
 	Упаковки._Fld6006 AS Объем,
 	Упаковки._Fld6001 AS Высота,
 	Упаковки._Fld6002 AS Глубина,
-	Упаковки._Fld6009 AS Ширина
+	Упаковки._Fld6009 AS Ширина,
+    Номенклатура._Fld21822RRef as ТНВЭДСсылка
 From 
 	Temp_GoodsRawParsed T1
 	Inner Join 	dbo._Reference149 Номенклатура With (NOLOCK) 
@@ -2607,6 +2621,7 @@ Select
 	Номенклатура.Количество As Количество,
 	Номенклатура.Вес AS Вес,--Упаковки._Fld6000 AS Вес,
 	Номенклатура.Объем AS Объем,--Упаковки._Fld6006 AS Объем,
+    Номенклатура.ТНВЭДСсылка as ТНВЭДСсылка,
 	10 AS ВремяНаОбслуживание,
 	IsNull(ГруппыПланирования._IDRRef, 0x00000000000000000000000000000000) AS ГруппаПланирования,
 	IsNull(ГруппыПланирования._Description, '') AS ГруппаПланированияНаименование,
@@ -2637,6 +2652,7 @@ Select
 	Номенклатура.Количество As Количество,
 	Номенклатура.Вес AS Вес,--Упаковки._Fld6000 AS Вес,
 	Номенклатура.Объем AS Объем,--Упаковки._Fld6006 AS Объем,
+    Номенклатура.ТНВЭДСсылка as ТНВЭДСсылка,
 	10 AS ВремяНаОбслуживание,
 	IsNull(ПодчиненнаяГП._IDRRef, 0x00000000000000000000000000000000) AS ГруппаПланирования,
 	IsNull(ПодчиненнаяГП._Description, '') AS ГруппаПланированияНаименование,
@@ -2974,6 +2990,7 @@ SELECT
     T1.Количество AS Количество,
     T1.Вес,
     T1.Объем,
+    T1.ТНВЭДСсылка,
     T1.ВремяНаОбслуживание,
     T1.ГруппаПланирования,
 	T1.ГруппаПланированияДобавляемоеВремя,
@@ -2998,6 +3015,7 @@ GROUP BY
 	ISNULL(T3.СкладНазначения, T2.СкладНазначения),
     T1.Вес,
     T1.Объем,
+    T1.ТНВЭДСсылка,
     T1.ВремяНаОбслуживание,
     T1.Количество,
     T1.ГруппаПланирования,
@@ -3013,6 +3031,7 @@ SELECT
     T1.Количество AS Количество,
     T1.Вес,
     T1.Объем,
+    T1.ТНВЭДСсылка,
     T1.ВремяНаОбслуживание,
     T1.ГруппаПланирования,
 	T1.ГруппаПланированияДобавляемоеВремя,
@@ -3035,6 +3054,7 @@ GROUP BY
 	ISNULL(T3.СкладНазначения, T2.СкладНазначения),
     T1.Вес,
     T1.Объем,
+    T1.ТНВЭДСсылка,
     T1.ВремяНаОбслуживание,
     T1.Количество,
     T1.ГруппаПланирования,
@@ -3051,6 +3071,7 @@ SELECT
     T1.Количество AS Количество,
     T1.Вес,
     T1.Объем,
+    T1.ТНВЭДСсылка,
     T1.ВремяНаОбслуживание,
     T1.ГруппаПланирования,
 	T1.ГруппаПланированияДобавляемоеВремя,
@@ -3073,6 +3094,7 @@ GROUP BY
 	#Temp_AvailableGoods.СкладНазначения,
     T1.Вес,
     T1.Объем,
+    T1.ТНВЭДСсылка,
     T1.ВремяНаОбслуживание,
     T1.Количество,
     T1.ГруппаПланирования,
@@ -3088,6 +3110,7 @@ SELECT
     T1.Количество AS Количество,
     T1.Вес,
     T1.Объем,
+    T1.ТНВЭДСсылка,
     T1.ВремяНаОбслуживание,
     T1.ГруппаПланирования,
 	T1.ГруппаПланированияДобавляемоеВремя,
@@ -3109,6 +3132,7 @@ GROUP BY
 	#Temp_AvailableGoods.СкладНазначения,
     T1.Вес,
     T1.Объем,
+    T1.ТНВЭДСсылка,
     T1.ВремяНаОбслуживание,
     T1.Количество,
     T1.ГруппаПланирования,
@@ -3134,11 +3158,9 @@ SELECT
 into #Temp_ClosestDatesByGoods
 FROM
     #Temp_ClosestDatesByGoodsWithoutShifting T1 WITH(NOLOCK)
-	inner join dbo._Reference149 as Номенклатура WITH(NOLOCK) 
-		ON T1.НоменклатураСсылка = Номенклатура._IDRRef
 	left join dbo._InfoRg27183 as ПрослеживаемыеТНВЭД WITH(NOLOCK)
 		on 1 = {8} 
-			and ПрослеживаемыеТНВЭД._Fld27184RRef = Номенклатура._Fld21822RRef 
+			and ПрослеживаемыеТНВЭД._Fld27184RRef = T1.ТНВЭДссылка 
 			and (ПрослеживаемыеТНВЭД._Fld27185 = 0x01 or ПрослеживаемыеТНВЭД._Fld28120 = 0x01)
 			and T1.БлижайшаяДата BETWEEN ПрослеживаемыеТНВЭД._Period AND DateAdd(DAY, {9}, ПрослеживаемыеТНВЭД._Period)
 OPTION (KEEP PLAN, KEEPFIXED PLAN);

@@ -27,7 +27,7 @@ DECLARE @P_TimeNow datetime;
 DECLARE @P_EmptyDate datetime;
 DECLARE @P_MaxDate datetime;
 
- SET @P_Article1 = '5990263'; --артикулы
+ SET @P_Article1 = '936160'; --артикулы
  SET @P_Article2 = '424941';
  SET @P_Article3 = '69516';
  SET @P_Article4 = '5962720';
@@ -49,9 +49,9 @@ DECLARE @P_MaxDate datetime;
 
  Set @P_AdressCode = '47175';--'4948900';--'47175'--'47175000000'--'3298156' --код адреса
  
-  Set @P_DateTimeNow = '4021-11-04T16:46:00' 
- Set @P_DateTimePeriodBegin = '4021-11-04T00:00:00'
- Set @P_DateTimePeriodEnd = '4021-11-07T00:00:00'
+  Set @P_DateTimeNow = '4021-11-10T16:46:00' 
+ Set @P_DateTimePeriodBegin = '4021-11-10T00:00:00'
+ Set @P_DateTimePeriodEnd = '4021-11-13T00:00:00'
  Set @P_TimeNow = '2001-01-01T16:46:00'
  Set @P_EmptyDate = '2001-01-01T00:00:00'
  Set @P_MaxDate = '5999-11-11T00:00:00'
@@ -180,6 +180,7 @@ OPTION (KEEP PLAN, KEEPFIXED PLAN);
 Select 
 	Номенклатура._IDRRef AS НоменклатураСсылка,
 	Упаковки._IDRRef AS УпаковкаСсылка,
+	Номенклатура._Fld21822RRef as ТНВЭДСсылка,
 	Sum(T1.quantity) As Количество	
 INTO #Temp_Goods
 From 
@@ -195,11 +196,13 @@ From
 		AND Упаковки._Marked = 0x00
 Group By 
 	Номенклатура._IDRRef,
-	Упаковки._IDRRef
+	Упаковки._IDRRef,
+	Номенклатура._Fld21822RRef
 union all
 Select 
 	Номенклатура._IDRRef,
 	Упаковки._IDRRef,
+	Номенклатура._Fld21822RRef,
 	Sum(T1.quantity)	
 From 
 	#Temp_GoodsRaw T1
@@ -214,11 +217,13 @@ From
 		AND Упаковки._Marked = 0x00
 Group By 
 	Номенклатура._IDRRef,
-	Упаковки._IDRRef
+	Упаковки._IDRRef,
+	Номенклатура._Fld21822RRef
 union all
 Select 
 	Номенклатура._IDRRef,
 	Упаковки._IDRRef,
+	Номенклатура._Fld21822RRef,
 	Sum(T1.Количество)	
 From 
 	#Temp_GoodsOrder T1
@@ -235,7 +240,8 @@ Where
 	Номенклатура._Fld3514RRef = 0x84A6131B6DC5555A4627E85757507687 -- тип номенклатуры товар
 Group By 
 	Номенклатура._IDRRef,
-	Упаковки._IDRRef
+	Упаковки._IDRRef,
+	Номенклатура._Fld21822RRef
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 /*Конец товаров*/
 
@@ -1442,25 +1448,25 @@ From #Temp_AvailablePickUp
 OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-07-20T00:00:00',@P_DateTimePeriodEnd='4021-07-24T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
 ;
 
-Select distinct 
-	ПрослеживаемыеТНВЭД._period as ДатаНачала,
-	DateAdd(DAY, 2, ПрослеживаемыеТНВЭД._Period) as ДатаОкончания
+Select 
+	IntervalsWithOutShifting.ВремяНачала
 INTO #Temp_UnavailableDates
 From #Temp_Goods as TempGoods
-inner join dbo._Reference149 as Номенклатура WITH(NOLOCK) 
-		ON TempGoods.НоменклатураСсылка = Номенклатура._IDRRef
 inner join dbo._InfoRg27183 as ПрослеживаемыеТНВЭД WITH(NOLOCK)
-		on 1 = 0 -- это будет значение ГП ПрименятьСмещениеДоступностиПрослеживаемыхМаркируемыхТоваров
-			and ПрослеживаемыеТНВЭД._Fld27184RRef = Номенклатура._Fld21822RRef 
+		on 1 = 1 -- это будет значение ГП ПрименятьСмещениеДоступностиПрослеживаемыхМаркируемыхТоваров
+			and ПрослеживаемыеТНВЭД._Fld27184RRef = TempGoods.ТНВЭДСсылка
 			and (ПрослеживаемыеТНВЭД._Fld27185 = 0x01 or ПрослеживаемыеТНВЭД._Fld28120 = 0x01)
-			and @P_DateTimeNow BETWEEN ПрослеживаемыеТНВЭД._Period AND DateAdd(DAY, 2, ПрослеживаемыеТНВЭД._Period)
+			and @P_DateTimeNow <= DateAdd(DAY, 2, ПрослеживаемыеТНВЭД._Period)  -- количество дней будет из ГП
+inner join #Temp_IntervalsWithOutShifting as IntervalsWithOutShifting
+		on IntervalsWithOutShifting.ВремяНачала between ПрослеживаемыеТНВЭД._period AND DateAdd(DAY, 2, ПрослеживаемыеТНВЭД._Period)
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
-select distinct IntervalsWithOutShifting.* 
+select IntervalsWithOutShifting.* 
 from #Temp_IntervalsWithOutShifting as IntervalsWithOutShifting  
 left join #Temp_UnavailableDates as UnavailableDates 
-on 1 = 1
-where UnavailableDates.ДатаНачала is NULL or (NOT IntervalsWithOutShifting.ВремяНачала BETWEEN UnavailableDates.ДатаНачала AND UnavailableDates.ДатаОкончания)
+	on IntervalsWithOutShifting.ВремяНачала = UnavailableDates.ВремяНачала
+where 
+	UnavailableDates.ВремяНачала is NULL
 Order by ВремяНачала
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
