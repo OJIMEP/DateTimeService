@@ -684,6 +684,9 @@ use [triovist]
 exec sp_addarticle @publication = @publ_name, @article = N'_InfoRg24088', @source_owner = N'dbo', @source_object = N'_InfoRg24088', @type = N'logbased', @description = N'', @creation_script = N'', @pre_creation_cmd = N'drop', @schema_option = 0x000000000803508F, @identityrangemanagementoption = N'none', @destination_table = N'_InfoRg24088', @destination_owner = N'dbo', @status = 24, @vertical_partition = N'false', @ins_cmd = N'CALL [sp_MSins_dbo_InfoRg24088]', @del_cmd = N'CALL [sp_MSdel_dbo_InfoRg24088]', @upd_cmd = N'SCALL [sp_MSupd_dbo_InfoRg24088]'
 --GO
 use [triovist]
+exec sp_addarticle @publication = @publ_name, @article = N'_InfoRg27183', @source_owner = N'dbo', @source_object = N'_InfoRg27183', @type = N'logbased', @description = N'', @creation_script = N'', @pre_creation_cmd = N'drop', @schema_option = 0x000000000803509F, @identityrangemanagementoption = N'none', @destination_table = N'_InfoRg27183', @destination_owner = N'dbo', @status = 24, @vertical_partition = N'false', @ins_cmd = N'CALL [sp_MSins_dbo_InfoRg27183]', @del_cmd = N'CALL [sp_MSdel_dbo_InfoRg27183]', @upd_cmd = N'SCALL [sp_MSupd_dbo_InfoRg27183]'
+--GO
+use [triovist]
 exec sp_addarticle @publication = @publ_name, @article = N'_InfoRgSL26678', @source_owner = N'dbo', @source_object = N'_InfoRgSL26678', @type = N'logbased', @description = N'', @creation_script = N'', @pre_creation_cmd = N'drop', @schema_option = 0x000000000803508F, @identityrangemanagementoption = N'none', @destination_table = N'_InfoRgSL26678', @destination_owner = N'dbo', @status = 24, @vertical_partition = N'false', @ins_cmd = N'CALL [sp_MSins_dbo_InfoRgSL26678]', @del_cmd = N'CALL [sp_MSdel_dbo_InfoRgSL26678]', @upd_cmd = N'SCALL [sp_MSupd_dbo_InfoRgSL26678]'
 --GO
 use [triovist]
