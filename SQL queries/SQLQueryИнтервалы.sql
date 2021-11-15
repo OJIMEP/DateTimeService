@@ -181,6 +181,7 @@ Select
 	Номенклатура._IDRRef AS НоменклатураСсылка,
 	Упаковки._IDRRef AS УпаковкаСсылка,
 	Номенклатура._Fld21822RRef as ТНВЭДСсылка,
+	Номенклатура._Fld3515RRef as ТоварнаяКатегорияСсылка,
 	Sum(T1.quantity) As Количество	
 INTO #Temp_Goods
 From 
@@ -197,12 +198,14 @@ From
 Group By 
 	Номенклатура._IDRRef,
 	Упаковки._IDRRef,
-	Номенклатура._Fld21822RRef
+	Номенклатура._Fld21822RRef,
+	Номенклатура._Fld3515RRef
 union all
 Select 
 	Номенклатура._IDRRef,
 	Упаковки._IDRRef,
 	Номенклатура._Fld21822RRef,
+	Номенклатура._Fld3515RRef,
 	Sum(T1.quantity)	
 From 
 	#Temp_GoodsRaw T1
@@ -218,12 +221,14 @@ From
 Group By 
 	Номенклатура._IDRRef,
 	Упаковки._IDRRef,
-	Номенклатура._Fld21822RRef
+	Номенклатура._Fld21822RRef,
+	Номенклатура._Fld3515RRef
 union all
 Select 
 	Номенклатура._IDRRef,
 	Упаковки._IDRRef,
 	Номенклатура._Fld21822RRef,
+	Номенклатура._Fld3515RRef,
 	Sum(T1.Количество)	
 From 
 	#Temp_GoodsOrder T1
@@ -241,7 +246,8 @@ Where
 Group By 
 	Номенклатура._IDRRef,
 	Упаковки._IDRRef,
-	Номенклатура._Fld21822RRef
+	Номенклатура._Fld21822RRef,
+	Номенклатура._Fld3515RRef
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 /*Конец товаров*/
 
@@ -1452,13 +1458,12 @@ Select
 	IntervalsWithOutShifting.ВремяНачала
 INTO #Temp_UnavailableDates
 From #Temp_Goods as TempGoods
-inner join dbo._InfoRg27183 as ПрослеживаемыеТНВЭД WITH(NOLOCK)
+inner join dbo._InfoRg28348 as ПрослеживаемыеТоварныеКатегории WITH(NOLOCK)
 		on 1 = 1 -- это будет значение ГП ПрименятьСмещениеДоступностиПрослеживаемыхМаркируемыхТоваров
-			and ПрослеживаемыеТНВЭД._Fld27184RRef = TempGoods.ТНВЭДСсылка
-			and (ПрослеживаемыеТНВЭД._Fld27185 = 0x01 or ПрослеживаемыеТНВЭД._Fld28120 = 0x01)
-			and @P_DateTimeNow <= DateAdd(DAY, 2, ПрослеживаемыеТНВЭД._Period)  -- количество дней будет из ГП
+			and ПрослеживаемыеТоварныеКатегории._Fld28349RRef = TempGoods.ТоварнаяКатегорияСсылка
+			and @P_DateTimeNow <= DateAdd(DAY, 2, ПрослеживаемыеТоварныеКатегории._Period)  -- количество дней будет из ГП
 inner join #Temp_IntervalsWithOutShifting as IntervalsWithOutShifting
-		on IntervalsWithOutShifting.ВремяНачала between ПрослеживаемыеТНВЭД._period AND DateAdd(DAY, 2, ПрослеживаемыеТНВЭД._Period)
+		on IntervalsWithOutShifting.ВремяНачала between ПрослеживаемыеТоварныеКатегории._period AND DateAdd(DAY, 2, ПрослеживаемыеТоварныеКатегории._Period)
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
 select IntervalsWithOutShifting.* 
