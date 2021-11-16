@@ -75,7 +75,11 @@ DECLARE @P_MaxDate datetime;
    DECLARE @P_OrderDate datetime;
  Set @P_OrderDate = ''; --'4021-07-20T16:42:52'--'4021-07-20T14:23:51';
 
+DECLARE @P_ApplyShifting numeric(2);
+set @P_ApplyShifting = 1;
 
+DECLARE @P_DaysToShift numeric(2);
+set @P_DaysToShift = 3;
 
 Create Table #Temp_GoodsRaw   
 (	
@@ -1459,11 +1463,11 @@ Select
 INTO #Temp_UnavailableDates
 From #Temp_Goods as TempGoods
 inner join dbo._InfoRg28348 as ПрослеживаемыеТоварныеКатегории WITH(NOLOCK)
-		on 1 = 1 -- это будет значение ГП ПрименятьСмещениеДоступностиПрослеживаемыхМаркируемыхТоваров
+		on 1 = @P_ApplyShifting -- это будет значение ГП ПрименятьСмещениеДоступностиПрослеживаемыхМаркируемыхТоваров
 			and ПрослеживаемыеТоварныеКатегории._Fld28349RRef = TempGoods.ТоварнаяКатегорияСсылка
-			and @P_DateTimeNow <= DateAdd(DAY, 2, ПрослеживаемыеТоварныеКатегории._Period)  -- количество дней будет из ГП
+			and @P_DateTimeNow <= DateAdd(DAY, @P_DaysToShift, ПрослеживаемыеТоварныеКатегории._Period)  -- количество дней будет из ГП
 inner join #Temp_IntervalsWithOutShifting as IntervalsWithOutShifting
-		on IntervalsWithOutShifting.ВремяНачала between ПрослеживаемыеТоварныеКатегории._period AND DateAdd(DAY, 2, ПрослеживаемыеТоварныеКатегории._Period)
+		on IntervalsWithOutShifting.ВремяНачала between ПрослеживаемыеТоварныеКатегории._period AND DateAdd(DAY, @P_DaysToShift, ПрослеживаемыеТоварныеКатегории._Period)
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
 select IntervalsWithOutShifting.* 

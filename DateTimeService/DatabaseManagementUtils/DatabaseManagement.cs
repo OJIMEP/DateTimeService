@@ -570,6 +570,12 @@ namespace DateTimeService.Data
                 cmd.Parameters.Add("@P_DaysToShow", SqlDbType.Int);
                 cmd.Parameters["@P_DaysToShow"].Value = 7;
 
+                cmd.Parameters.Add("@P_ApplyShifting", SqlDbType.Int);
+                cmd.Parameters["@P_ApplyShifting"].Value = Parameters1C.First(x => x.Name.Contains("ПрименятьСмещениеДоступностиПрослеживаемыхМаркируемыхТоваров")).ValueDouble;
+
+                cmd.Parameters.Add("@P_DaysToShift", SqlDbType.Int);
+                cmd.Parameters["@P_DaysToShift"].Value = Parameters1C.First(x => x.Name.Contains("КоличествоДнейСмещенияДоступностиПрослеживаемыхМаркируемыхТоваров")).ValueDouble;
+
                 cmd.CommandTimeout = 3;
 
 
@@ -594,9 +600,7 @@ namespace DateTimeService.Data
                     Parameters1C.First(x => x.Name.Contains("КоличествоДнейАнализаЛучшейЦеныПриОтсрочкеЗаказа")).ValueDouble,
                     Parameters1C.First(x => x.Name.Contains("ПроцентДнейАнализаЛучшейЦеныПриОтсрочкеЗаказа")).ValueDouble,
                     pickupWorkingHoursJoinType,
-                    "",
-                    Parameters1C.First(x => x.Name.Contains("ПрименятьСмещениеДоступностиПрослеживаемыхМаркируемыхТоваров")).ValueDouble,
-                    Parameters1C.First(x => x.Name.Contains("КоличествоДнейСмещенияДоступностиПрослеживаемыхМаркируемыхТоваров")).ValueDouble);
+                    "");
 
 
                 //execute the SQLCommand

@@ -61,7 +61,13 @@ SET @PickupPoint6 = '2';
  Set @P_CityCode = '17030' --код адреса
 
 DECLARE @P_DaysToShow numeric(2);
- Set @P_DaysToShow = 7;
+Set @P_DaysToShow = 7;
+
+DECLARE @P_ApplyShifting numeric(2);
+set @P_ApplyShifting = 1;
+
+DECLARE @P_DaysToShift numeric(2);
+set @P_DaysToShift = 3;
 
  Set @P_DateTimeNow = '4021-09-21T15:20:00' 
  Set @P_DateTimePeriodBegin = '4021-09-21T00:00:00'
@@ -715,7 +721,7 @@ SELECT
 	T1.article,
 	T1.code,
     T1.СкладНазначения,
-    Case when ПрослеживаемыеТоварныеКатегории._Fld28349RRef is null then T1.БлижайшаяДата else DateAdd(DAY, 100, ПрослеживаемыеТоварныеКатегории._Period) end as БлижайшаяДата,
+    Case when ПрослеживаемыеТоварныеКатегории._Fld28349RRef is null then T1.БлижайшаяДата else DateAdd(DAY, @P_DaysToShift, ПрослеживаемыеТоварныеКатегории._Period) end as БлижайшаяДата,
     T1.Количество,
     T1.Вес,
     T1.Объем,
@@ -728,9 +734,9 @@ into #Temp_ClosestDatesByGoods
 FROM
     #Temp_ClosestDatesByGoodsWithoutShifting T1 WITH(NOLOCK)
 	left join dbo._InfoRg28348 as ПрослеживаемыеТоварныеКатегории WITH(NOLOCK)
-		on 1 = 1 -- это будет значение ГП ПрименятьСмещениеДоступностиПрослеживаемыхМаркируемыхТоваров
+		on 1 = @P_ApplyShifting -- это будет значение ГП ПрименятьСмещениеДоступностиПрослеживаемыхМаркируемыхТоваров
 			and ПрослеживаемыеТоварныеКатегории._Fld28349RRef = T1.ТоварнаяКатегорияСсылка 
-			and T1.БлижайшаяДата BETWEEN ПрослеживаемыеТоварныеКатегории._Period AND DateAdd(DAY, 100, ПрослеживаемыеТоварныеКатегории._Period)
+			and T1.БлижайшаяДата BETWEEN ПрослеживаемыеТоварныеКатегории._Period AND DateAdd(DAY, @P_DaysToShift, ПрослеживаемыеТоварныеКатегории._Period)
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
 

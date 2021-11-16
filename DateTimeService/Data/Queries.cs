@@ -435,7 +435,7 @@ GROUP BY
     T2.Fld24100_
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
-/*Время огбслуживания началось выше и тут итоговая цифра*/
+/*Время обслуживания началось выше и тут итоговая цифра*/
 SELECT
     ISNULL(T2.МинимальноеВремя, 0) + ISNULL(T2.УсловиеКоличествоСтрок, 0) + ISNULL(T1.УсловиеМинскЧас, 0) + ISNULL(T2.УсловиеЭтажМассаОбщ, 0) + ISNULL(T2.УсловиеВесОбъем, 0) + ISNULL(T1.УсловиеСпособОплаты, 0) AS ВремяВыполнения
 Into #Temp_TimeService
@@ -1382,11 +1382,11 @@ Select
 INTO #Temp_UnavailableDates
 From #Temp_Goods as TempGoods
 inner join dbo._InfoRg28348 as ПрослеживаемыеТоварныеКатегории WITH(NOLOCK)
-		on 1 = {7} -- это будет значение ГП ПрименятьСмещениеДоступностиПрослеживаемыхМаркируемыхТоваров
+		on 1 = @P_ApplyShifting -- это будет значение ГП ПрименятьСмещениеДоступностиПрослеживаемыхМаркируемыхТоваров
 			and ПрослеживаемыеТоварныеКатегории._Fld28349RRef = TempGoods.ТоварнаяКатегорияСсылка
-			and @P_DateTimeNow <= DateAdd(DAY, {8}, ПрослеживаемыеТоварныеКатегории._Period)  -- количество дней будет из ГП
+			and @P_DateTimeNow <= DateAdd(DAY, @P_DaysToShift, ПрослеживаемыеТоварныеКатегории._Period)  -- количество дней будет из ГП
 inner join #Temp_IntervalsWithOutShifting as IntervalsWithOutShifting
-		on IntervalsWithOutShifting.ВремяНачала between ПрослеживаемыеТоварныеКатегории._period AND DateAdd(DAY, {8}, ПрослеживаемыеТоварныеКатегории._Period)
+		on IntervalsWithOutShifting.ВремяНачала between ПрослеживаемыеТоварныеКатегории._period AND DateAdd(DAY, @P_DaysToShift, ПрослеживаемыеТоварныеКатегории._Period)
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
 select IntervalsWithOutShifting.* 
@@ -1966,7 +1966,7 @@ SELECT
 	T1.article,
 	T1.code,
     T1.СкладНазначения,
-    Case when ПрослеживаемыеТоварныеКатегории._Fld28349RRef is null then T1.БлижайшаяДата else DateAdd(DAY, {9}, ПрослеживаемыеТоварныеКатегории._Period) end as БлижайшаяДата,
+    Case when ПрослеживаемыеТоварныеКатегории._Fld28349RRef is null then T1.БлижайшаяДата else DateAdd(DAY, @P_DaysToShift, ПрослеживаемыеТоварныеКатегории._Period) end as БлижайшаяДата,
     T1.Количество,
     T1.Вес,
     T1.Объем,
@@ -1979,9 +1979,9 @@ into #Temp_ClosestDatesByGoods
 FROM
     #Temp_ClosestDatesByGoodsWithoutShifting T1 WITH(NOLOCK)
 	left join dbo._InfoRg28348 as ПрослеживаемыеТоварныеКатегории WITH(NOLOCK)
-		on 1 = {8} 
+		on 1 = @P_ApplyShifting 
 			and ПрослеживаемыеТоварныеКатегории._Fld28349RRef = T1.ТоварнаяКатегорияСсылка 
-			and T1.БлижайшаяДата BETWEEN ПрослеживаемыеТоварныеКатегории._Period AND DateAdd(DAY, {9}, ПрослеживаемыеТоварныеКатегории._Period)
+			and T1.БлижайшаяДата BETWEEN ПрослеживаемыеТоварныеКатегории._Period AND DateAdd(DAY, @P_DaysToShift, ПрослеживаемыеТоварныеКатегории._Period)
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
 SELECT
@@ -3168,7 +3168,7 @@ SELECT
 	T1.article,
 	T1.code,
     T1.СкладНазначения,
-    Case when ПрослеживаемыеТоварныеКатегории._Fld28349RRef is null then T1.БлижайшаяДата else DateAdd(DAY, {9}, ПрослеживаемыеТоварныеКатегории._Period) end as БлижайшаяДата,
+    Case when ПрослеживаемыеТоварныеКатегории._Fld28349RRef is null then T1.БлижайшаяДата else DateAdd(DAY, @P_DaysToShift, ПрослеживаемыеТоварныеКатегории._Period) end as БлижайшаяДата,
     T1.Количество,
     T1.Вес,
     T1.Объем,
@@ -3181,9 +3181,9 @@ into #Temp_ClosestDatesByGoods
 FROM
     #Temp_ClosestDatesByGoodsWithoutShifting T1 WITH(NOLOCK)
 	left join dbo._InfoRg28348 as ПрослеживаемыеТоварныеКатегории WITH(NOLOCK)
-		on 1 = {8} 
+		on 1 = @P_ApplyShifting 
 			and ПрослеживаемыеТоварныеКатегории._Fld28349RRef = T1.ТоварнаяКатегорияСсылка 
-			and T1.БлижайшаяДата BETWEEN ПрослеживаемыеТоварныеКатегории._Period AND DateAdd(DAY, {9}, ПрослеживаемыеТоварныеКатегории._Period)
+			and T1.БлижайшаяДата BETWEEN ПрослеживаемыеТоварныеКатегории._Period AND DateAdd(DAY, @P_DaysToShift, ПрослеживаемыеТоварныеКатегории._Period)
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
 SELECT
