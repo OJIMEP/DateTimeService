@@ -27,16 +27,16 @@ DECLARE @P_TimeNow datetime;
 DECLARE @P_EmptyDate datetime;
 DECLARE @P_MaxDate datetime;
 
- SET @P_Article1 = '358649'; --артикулы
+ SET @P_Article1 = '936160'; --артикулы
  SET @P_Article2 = '424941';
  SET @P_Article3 = '69516';
  SET @P_Article4 = '5962720';
- SET @P_Article5 = '6310229';
+ SET @P_Article5 = '538584';
  SET @P_Article6 = '6045211';
  SET @P_Article7 = '5944337';
  SET @P_Article8 = '5657497';
 
- SET @P_Code1 = '00-00444697'; --коды для уценки
+ SET @P_Code1 = '00-005990263'; --коды для уценки
  SET @P_Code2 = '00-00527933';
  SET @P_Code3 = NULL;
  SET @P_Code4 = NULL;
@@ -45,13 +45,13 @@ DECLARE @P_MaxDate datetime;
  SET @P_Code7 = NULL;
  SET @P_Code8 = NULL;
 
- SET @PickupPoint1 = NULL;--'340';
+ SET @PickupPoint1 = '';
 
- Set @P_AdressCode = '';--'4948900';--'47175'--'47175000000'--'3298156' --код адреса
+ Set @P_AdressCode = '47175';--'4948900';--'47175'--'47175000000'--'3298156' --код адреса
  
-  Set @P_DateTimeNow = '4021-07-20T16:46:00' 
- Set @P_DateTimePeriodBegin = '4021-07-20T00:00:00'
- Set @P_DateTimePeriodEnd = '4021-07-24T00:00:00'
+  Set @P_DateTimeNow = '4021-11-10T16:46:00' 
+ Set @P_DateTimePeriodBegin = '4021-11-10T00:00:00'
+ Set @P_DateTimePeriodEnd = '4021-11-13T00:00:00'
  Set @P_TimeNow = '2001-01-01T16:46:00'
  Set @P_EmptyDate = '2001-01-01T00:00:00'
  Set @P_MaxDate = '5999-11-11T00:00:00'
@@ -70,12 +70,16 @@ DECLARE @P_MaxDate datetime;
  Set @P_GeoCode = '';
 
    DECLARE @P_OrderNumber nvarchar(11);
- Set @P_OrderNumber = '102.567.095';--'231.727.030';
+ Set @P_OrderNumber = '';--'102.567.095';--'231.727.030';
 
    DECLARE @P_OrderDate datetime;
- Set @P_OrderDate = '4021-07-20T16:42:52'--'4021-07-20T14:23:51';
+ Set @P_OrderDate = ''; --'4021-07-20T16:42:52'--'4021-07-20T14:23:51';
 
+DECLARE @P_ApplyShifting numeric(2);
+set @P_ApplyShifting = 1;
 
+DECLARE @P_DaysToShift numeric(2);
+set @P_DaysToShift = 3;
 
 Create Table #Temp_GoodsRaw   
 (	
@@ -85,22 +89,22 @@ Create Table #Temp_GoodsRaw
     quantity int
 )
 
---INSERT INTO 
---	#Temp_GoodsRaw ( 
---		Article, code, PickupPoint, quantity 
---	)
---VALUES
---	--(@P_Article1,@P_Code1,NULL,0),
---	--(@P_Article2,@P_Code2,NULL,0),
---	--(@P_Article1,@P_Code1,NULL,0),
---	--(@P_Article3,@P_Code3,NULL,1)--,
---	--('843414',NULL,NULL,1)
---	(@P_Article5,NULL,NULL,1)--,
---	--(@P_Article6,NULL,NULL,1),
---	--(@P_Article7,NULL,NULL,1),
---	--(@P_Article8,NULL,NULL,1)--,
---	--(@P8,1)
---	;
+INSERT INTO 
+	#Temp_GoodsRaw ( 
+		Article, code, PickupPoint, quantity 
+	)
+VALUES
+	--(@P_Article1,@P_Code1,NULL,0),
+	--(@P_Article2,@P_Code2,NULL,0),
+	--(@P_Article1,@P_Code1,NULL,0),
+	--(@P_Article3,@P_Code3,NULL,1)--,
+	--('843414',NULL,NULL,1)
+	(@P_Article1,NULL,NULL,1)--,
+	--(@P_Article6,NULL,NULL,1),
+	--(@P_Article7,NULL,NULL,1),
+	--(@P_Article8,NULL,NULL,1)--,
+	--(@P8,1)
+	;
 
 
 Select 
@@ -180,6 +184,8 @@ OPTION (KEEP PLAN, KEEPFIXED PLAN);
 Select 
 	Номенклатура._IDRRef AS НоменклатураСсылка,
 	Упаковки._IDRRef AS УпаковкаСсылка,
+	Номенклатура._Fld21822RRef as ТНВЭДСсылка,
+	Номенклатура._Fld3515RRef as ТоварнаяКатегорияСсылка,
 	Sum(T1.quantity) As Количество	
 INTO #Temp_Goods
 From 
@@ -195,11 +201,15 @@ From
 		AND Упаковки._Marked = 0x00
 Group By 
 	Номенклатура._IDRRef,
-	Упаковки._IDRRef
+	Упаковки._IDRRef,
+	Номенклатура._Fld21822RRef,
+	Номенклатура._Fld3515RRef
 union all
 Select 
 	Номенклатура._IDRRef,
 	Упаковки._IDRRef,
+	Номенклатура._Fld21822RRef,
+	Номенклатура._Fld3515RRef,
 	Sum(T1.quantity)	
 From 
 	#Temp_GoodsRaw T1
@@ -214,11 +224,15 @@ From
 		AND Упаковки._Marked = 0x00
 Group By 
 	Номенклатура._IDRRef,
-	Упаковки._IDRRef
+	Упаковки._IDRRef,
+	Номенклатура._Fld21822RRef,
+	Номенклатура._Fld3515RRef
 union all
 Select 
 	Номенклатура._IDRRef,
 	Упаковки._IDRRef,
+	Номенклатура._Fld21822RRef,
+	Номенклатура._Fld3515RRef,
 	Sum(T1.Количество)	
 From 
 	#Temp_GoodsOrder T1
@@ -235,7 +249,9 @@ Where
 	Номенклатура._Fld3514RRef = 0x84A6131B6DC5555A4627E85757507687 -- тип номенклатуры товар
 Group By 
 	Номенклатура._IDRRef,
-	Упаковки._IDRRef
+	Упаковки._IDRRef,
+	Номенклатура._Fld21822RRef,
+	Номенклатура._Fld3515RRef
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 /*Конец товаров*/
 
@@ -665,7 +681,7 @@ SELECT
 	MIN(T1._Fld23834) AS ДатаПрибытия 
 Into #Temp_MinimumWarehouseDates
 FROM
-    dbo._InfoRg23830 T1 With (READCOMMITTED, INDEX([_InfoRg23830_Custom2]))
+    dbo._InfoRg23830 T1 With (READCOMMITTED) ---, INDEX([_InfoRg23830_Custom2]))
 	Inner Join SourceWarehouses On T1._Fld23831RRef = SourceWarehouses.СкладИсточника
 WHERE
 	T1._Fld23833RRef IN (Select СкладСсылка From #Temp_GeoData UNION ALL Select СкладСсылка From #Temp_PickupPoints)
@@ -1385,6 +1401,7 @@ select
 	) 
 	AS КоличествоЗаказовЗаИнтервалВремени,
     #Temp_Intervals.Стимулировать 
+Into #Temp_IntervalsWithOutShifting
 From
 #Temp_Intervals With (NOLOCK)
 Inner Join #Temp_DateAvailable With (NOLOCK) 
@@ -1437,8 +1454,30 @@ Select
     0,
 	0
 From #Temp_AvailablePickUp
-Order by ВремяНачала
+--Order by ВремяНачала
 OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-07-20T00:00:00',@P_DateTimePeriodEnd='4021-07-24T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
+;
+
+Select 
+	IntervalsWithOutShifting.ВремяНачала
+INTO #Temp_UnavailableDates
+From #Temp_Goods as TempGoods
+inner join dbo._InfoRg28348 as ПрослеживаемыеТоварныеКатегории WITH(NOLOCK)
+		on 1 = @P_ApplyShifting -- это будет значение ГП ПрименятьСмещениеДоступностиПрослеживаемыхМаркируемыхТоваров
+			and ПрослеживаемыеТоварныеКатегории._Fld28349RRef = TempGoods.ТоварнаяКатегорияСсылка
+			and @P_DateTimeNow <= DateAdd(DAY, @P_DaysToShift, ПрослеживаемыеТоварныеКатегории._Period)  -- количество дней будет из ГП
+inner join #Temp_IntervalsWithOutShifting as IntervalsWithOutShifting
+		on IntervalsWithOutShifting.ВремяНачала between ПрослеживаемыеТоварныеКатегории._period AND DateAdd(DAY, @P_DaysToShift, ПрослеживаемыеТоварныеКатегории._Period)
+OPTION (KEEP PLAN, KEEPFIXED PLAN);
+
+select IntervalsWithOutShifting.* 
+from #Temp_IntervalsWithOutShifting as IntervalsWithOutShifting  
+left join #Temp_UnavailableDates as UnavailableDates 
+	on IntervalsWithOutShifting.ВремяНачала = UnavailableDates.ВремяНачала
+where 
+	UnavailableDates.ВремяНачала is NULL
+Order by ВремяНачала
+OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
 Drop table #Temp_GeoData
 Drop table #Temp_Goods
@@ -1470,3 +1509,5 @@ Drop Table #Temp_IntervalsAll_old
 Drop Table #Temp_OrderInfo
 Drop Table #Temp_GoodsRaw
 Drop Table #Temp_GoodsOrder
+Drop Table #Temp_IntervalsWithOutShifting
+DROP Table #Temp_UnavailableDates
