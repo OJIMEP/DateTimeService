@@ -597,7 +597,7 @@ exec sp_addpublication @publication = @publ_name, @description = N'Transactional
 --GO
 
 
-exec sp_addpublication_snapshot @publication = @publ_name, @frequency_type = 4, @frequency_interval = 1, @frequency_relative_interval = 1, @frequency_recurrence_factor = 0, @frequency_subday = 1, @frequency_subday_interval = 1, @active_start_time_of_day = 040000, @active_end_time_of_day = 235959, @active_start_date = 0, @active_end_date = 0, @job_login = @login, @job_password = @pass, @publisher_security_mode = 1
+exec sp_addpublication_snapshot @publication = @publ_name, @frequency_type = 1, @frequency_interval = 1, @frequency_relative_interval = 1, @frequency_recurrence_factor = 0, @frequency_subday = 1, @frequency_subday_interval = 1, @active_start_time_of_day = 040000, @active_end_time_of_day = 235959, @active_start_date = 0, @active_end_date = 0, @job_login = @login, @job_password = @pass, @publisher_security_mode = 1
 exec sp_grant_publication_access @publication = @publ_name, @login = N'sa'
 --GO
 exec sp_grant_publication_access @publication = @publ_name, @login = N'exampleDomain\exampleLogin'
