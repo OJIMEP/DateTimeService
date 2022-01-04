@@ -7,7 +7,7 @@
 (	
 	Article nvarchar(20), 
 	code nvarchar(20), 
-    PickupPoint nvarchar(45),
+    PickupPoint nvarchar(100),
     quantity int 
 )
 ;";
