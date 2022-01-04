@@ -664,7 +664,7 @@ namespace DateTimeService.Data
 
                 SqlCommand cmd = new(query, conn);
 
-                cmd.CommandTimeout = 3;
+                cmd.CommandTimeout = 20;
 
 
 
