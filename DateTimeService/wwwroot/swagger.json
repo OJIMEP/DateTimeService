@@ -50,8 +50,11 @@
                 "$ref": "#/components/schemas/payload_interval"
               },
               "examples": {
-                "Интервалы для курьерской доставки": {
+                "Интервалы для курьерской доставки по коду адреса": {
                   "$ref": "#/components/examples/interval_courier"
+                },
+                "Интервалы для курьерской доставки по координатам": {
+                  "$ref": "#/components/examples/interval_courier_coords"
                 },
                 "Интервалы для самовывоза с ПВЗ": {
                   "$ref": "#/components/examples/interval_self"
@@ -921,6 +924,16 @@
             "description": "Номер оформленного заказа",
             "example": "100.500.900"
           },
+          "x_coordinate": {
+            "type": "string",
+            "description": "Географическая координата Х",
+            "example": 54.303887
+          },
+          "y_coordinate": {
+            "type": "string",
+            "description": "Географическая координата Y",
+            "example": 26.844061
+          },
           "order_items": {
             "type": "array",
             "items": {
@@ -1170,6 +1183,25 @@
           "delivery_type": "courier",
           "floor": 8,
           "payment": "other",
+          "order_items": [
+            {
+              "code": "789734",
+              "sales_code": "2242670",
+              "quantity": 1
+            },
+            {
+              "code": "69516",
+              "quantity": 10
+            }
+          ]
+        }
+      },
+      "interval_courier_coords": {
+        "value": {
+          "delivery_type": "courier",
+          "floor": 8,
+          "x_coordinate": "54.303887",
+          "y_coordinate": "26.844061",
           "order_items": [
             {
               "code": "789734",
