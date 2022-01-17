@@ -11,6 +11,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
+using System.Collections.Generic;
 
 namespace DateTimeService.Data
 {
@@ -19,13 +20,6 @@ namespace DateTimeService.Data
         Task<string> GetGeoZoneID(AdressCoords coords);
         Task<AdressCoords> GetAddressCoordinates(string address_id);
         Boolean AdressExists(SqlConnection conn, string _addressId);
-    }
-
-    public class AdressCoords
-    {
-        public double X_coordinates { get; set; }
-        public double Y_coordinates { get; set; }
-        public Boolean AvailableToUse { get; set; }
     }
 
     public class GeoZones : IGeoZones
@@ -110,18 +104,21 @@ namespace DateTimeService.Data
         public async Task<AdressCoords> GetAddressCoordinates(string address_id)
         {
 
-            AdressCoords result = new();
-            result.X_coordinates = 0;
-            result.Y_coordinates = 0;
-            result.AvailableToUse = false;
+            AdressCoords result = null;
+            
 
             var client = _httpClientFactory.CreateClient();
 
-            client.Timeout = new TimeSpan(0, 0, 1);
+            client.Timeout = new TimeSpan(0, 0, 8);
             client.DefaultRequestHeaders.Add("Accept", "application/vnd.api+json");
             //client.DefaultRequestHeaders.Add("Content-Type", "application/vnd.api+json");
 
             string connString = _configuration.GetConnectionString("api21vekby_location");
+
+
+            if (!int.TryParse(_configuration["LocationMicroserviceVersion"], out int locationVersion))
+                locationVersion = 1;
+
             var uri = new Uri(connString + address_id);
             HttpRequestMessage request = new(HttpMethod.Get, uri)
             {
@@ -139,13 +136,29 @@ namespace DateTimeService.Data
                 if (response.IsSuccessStatusCode)
                 {
                     var responseString = await response.Content.ReadAsStringAsync();
-                    var locationsResponse = JsonSerializer.Deserialize<LocationsResponse>(responseString);
 
-                    IFormatProvider formatter = new NumberFormatInfo { NumberDecimalSeparator = "." };
-                    result.X_coordinates = Double.Parse(locationsResponse.Data.Attributes.X_coordinate, formatter);
-                    result.Y_coordinates = Double.Parse(locationsResponse.Data.Attributes.Y_coordinate, formatter);
-                    result.AvailableToUse = true;
-                }                
+                    if (locationVersion == 1)
+                    {
+                        var locationsResponse = JsonSerializer.Deserialize<LocationsResponse>(responseString);
+
+                        result = new(locationsResponse.Data.Attributes.X_coordinate, locationsResponse.Data.Attributes.Y_coordinate);
+
+                    }
+                    else if (locationVersion == 2)
+                    {
+                        IFormatProvider formatter = new NumberFormatInfo { NumberDecimalSeparator = "." };
+
+                        var locationsResponse = JsonSerializer.Deserialize<LocationsResponseV2>(responseString);
+
+                        foreach (var item in locationsResponse.Data)
+                        {
+
+                            result = new(item.Attributes.X_coordinate, item.Attributes.Y_coordinate);
+
+                            break;
+                        }
+                    }                    
+                }              
             }
             catch(FormatException )
             {
@@ -160,6 +173,7 @@ namespace DateTimeService.Data
                 var logstringElement = JsonSerializer.Serialize(logElement);
 
                 _logger.LogInformation(logstringElement);
+                
             }
             catch (Exception ex)
             {
@@ -173,7 +187,7 @@ namespace DateTimeService.Data
 
                 var logstringElement = JsonSerializer.Serialize(logElement);
 
-                _logger.LogInformation(logstringElement);
+                _logger.LogInformation(logstringElement);                
             }
 
             return result;
@@ -249,6 +263,13 @@ namespace DateTimeService.Data
         [JsonPropertyName("data")]
         public LocationsResponseElem Data { get; set; }
     }
+
+    public class LocationsResponseV2
+    {
+        [JsonPropertyName("data")]
+        public List<LocationsResponseElemV2> Data { get; set; }
+    }
+
     public class LocationsResponseElem
     {
         [JsonPropertyName("attributes")]
@@ -258,6 +279,17 @@ namespace DateTimeService.Data
         [JsonPropertyName("id")]
         public string Id { get; set; }
     }
+
+    public class LocationsResponseElemV2
+    {
+        [JsonPropertyName("attributes")]
+        public LocationsResponseElemAttrib Attributes { get; set; }
+        [JsonPropertyName("type")]
+        public string Type { get; set; }
+        [JsonPropertyName("id")]
+        public decimal Id { get; set; }
+    }
+
     public class LocationsResponseElemAttrib
     {
         [JsonPropertyName("x_coordinate")]

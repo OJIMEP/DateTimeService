@@ -27,6 +27,12 @@ namespace DateTimeService.Models
         [JsonPropertyName("order_date")]
         public DateTime OrderDate { get; set; }
 
+        [JsonPropertyName("x_coordinate")]
+        public string Xcoordinate { get; set; }
+
+        [JsonPropertyName("y_coordinate")]
+        public string Ycoordinate { get; set; }
+
         [JsonPropertyName("order_items")]
         public List<RequestDataCodeItemDTO> OrderItems { get; set; }
     }
@@ -54,6 +60,13 @@ namespace DateTimeService.Models
         [JsonPropertyName("order_date")]
         public DateTime OrderDate { get; set; }
 
+        [JsonPropertyName("x_coordinate")]
+        public string Xcoordinate { get; set; }
+
+        [JsonPropertyName("y_coordinate")]
+        public string Ycoordinate { get; set; }
+
+
         [JsonPropertyName("order_items")]
         public List<RequestDataCodeItem> OrderItems { get; set; }
 
@@ -69,9 +82,17 @@ namespace DateTimeService.Models
 
             if (DeliveryType == "courier")
             {
-                if (String.IsNullOrEmpty(AddressId))
+                if (String.IsNullOrEmpty(AddressId) && (String.IsNullOrEmpty(Xcoordinate) && String.IsNullOrEmpty(Ycoordinate)))
                 {
-                    errors.Add("address_id", "При курьерской доставке должен быть заполнен код адреса");
+                    errors.Add("address_id", "При курьерской доставке должен быть заполнен код адреса или координаты");
+                }
+                if (String.IsNullOrEmpty(Xcoordinate) && !String.IsNullOrEmpty(Ycoordinate))
+                {
+                    errors.Add("x_coordinate", "Обе координаты должны быть заполнены");
+                }
+                if (String.IsNullOrEmpty(Ycoordinate) && !String.IsNullOrEmpty(Xcoordinate))
+                {
+                    errors.Add("y_coordinate", "Обе координаты должны быть заполнены");
                 }
                 if (!String.IsNullOrEmpty(PickupPoint))
                 {
