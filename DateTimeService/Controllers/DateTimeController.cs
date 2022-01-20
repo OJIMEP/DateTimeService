@@ -731,13 +731,26 @@ namespace DateTimeService.Controllers
 
             if (!adressExists || alwaysCheckGeozone)
             {
-                //TODO: добавить обращение к сервисам для получения геозоны
+                
+
+                AdressCoords coords;
                 Stopwatch stopwatch = new();
-                stopwatch.Start();
-                var coords = await _geoZones.GetAddressCoordinates(data.AddressId);
-                stopwatch.Stop();
-                logElement.TimeLocationExecution = stopwatch.ElapsedMilliseconds;
-                stopwatch.Reset();
+
+                if (!String.IsNullOrEmpty(data.Xcoordinate) && !String.IsNullOrEmpty(data.Ycoordinate))
+                {
+                    coords = new(data.Xcoordinate, data.Ycoordinate);
+                   
+                    logElement.TimeLocationExecution = 0;
+                }
+                else
+                {                    
+                    stopwatch.Start();
+                    coords = await _geoZones.GetAddressCoordinates(data.AddressId);
+                    stopwatch.Stop();
+                    logElement.TimeLocationExecution = stopwatch.ElapsedMilliseconds;
+                    stopwatch.Reset();
+                }
+                
                 stopwatch.Start();
                 if (coords.AvailableToUse)
                 {

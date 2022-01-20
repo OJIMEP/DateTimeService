@@ -781,7 +781,7 @@ FROM
         AND T1.Источник_RTRef = Резервирование._RecorderTRef
         AND T1.Источник_RRRef = Резервирование._RecorderRRef
     )
-OPTION (KEEP PLAN, KEEPFIXED PLAN);
+OPTION (KEEP PLAN, KEEPFIXED PLAN, maxdop 4);
 
 With Temp_SupplyDocs AS
 (
@@ -815,7 +815,7 @@ SELECT
 Into #Temp_BestPriceAfterClosestDate
 FROM
     #Temp_SourcesWithPrices T1 WITH(NOLOCK)
-    INNER JOIN Temp_SupplyDocs T2 WITH(NOLOCK)
+    INNER HASH JOIN Temp_SupplyDocs T2 WITH(NOLOCK)
     ON (T1.НоменклатураСсылка = T2.НоменклатураСсылка)
     AND (T1.ДатаДоступности >= T2.ДатаДоступности)
     AND (T1.ДатаДоступности <= T2.ДатаДоступностиПлюс)
@@ -915,7 +915,7 @@ Group By
 Group by 
 	T4.НоменклатураСсылка,
 	T4.СкладНазначения
-OPTION (KEEP PLAN, KEEPFIXED PLAN);
+OPTION (HASH GROUP, KEEP PLAN, KEEPFIXED PLAN);
 
 Select
     Top 1 
@@ -1787,7 +1787,7 @@ FROM
         AND T1.Источник_RTRef = Резервирование._RecorderTRef
         AND T1.Источник_RRRef = Резервирование._RecorderRRef
     )
-OPTION (KEEP PLAN, KEEPFIXED PLAN);
+OPTION (KEEP PLAN, KEEPFIXED PLAN, maxdop 4);
 
 With Temp_SupplyDocs AS
 (
@@ -1821,7 +1821,7 @@ SELECT
 Into #Temp_BestPriceAfterClosestDate
 FROM
     #Temp_SourcesWithPrices T1 WITH(NOLOCK)
-    INNER JOIN Temp_SupplyDocs T2 WITH(NOLOCK)
+    INNER HASH JOIN Temp_SupplyDocs T2 WITH(NOLOCK)
     ON (T1.НоменклатураСсылка = T2.НоменклатураСсылка)
     AND (T1.ДатаДоступности >= T2.ДатаДоступности)
     AND (T1.ДатаДоступности <= T2.ДатаДоступностиПлюс)
@@ -1858,7 +1858,7 @@ SELECT
             AND (T4.ТипИсточника = 1)
 			AND T4.ДатаДоступности <= DATEADD(DAY, {4}, T5.ДатаДоступности)
 Group by T4.НоменклатураСсылка, T4.СкладНазначения
-OPTION (KEEP PLAN, KEEPFIXED PLAN);
+OPTION (HASH GROUP, KEEP PLAN, KEEPFIXED PLAN);
 
 
 With Temp_SourcesCorrectedDate AS
@@ -2905,7 +2905,7 @@ FROM
         AND T1.Источник_RTRef = Резервирование._RecorderTRef
         AND T1.Источник_RRRef = Резервирование._RecorderRRef
     )
-OPTION (KEEP PLAN, KEEPFIXED PLAN);
+OPTION (KEEP PLAN, KEEPFIXED PLAN, maxdop 4);
 
 With Temp_SupplyDocs AS
 (
@@ -2939,7 +2939,7 @@ SELECT
 Into #Temp_BestPriceAfterClosestDate
 FROM
     #Temp_SourcesWithPrices T1 WITH(NOLOCK)
-    INNER JOIN Temp_SupplyDocs T2 WITH(NOLOCK)
+    INNER HASH JOIN Temp_SupplyDocs T2 WITH(NOLOCK)
     ON (T1.НоменклатураСсылка = T2.НоменклатураСсылка)
     AND (T1.ДатаДоступности >= T2.ДатаДоступности)
     AND (T1.ДатаДоступности <= T2.ДатаДоступностиПлюс)
@@ -2976,7 +2976,7 @@ SELECT
             AND (T4.ТипИсточника = 1)
 			AND T4.ДатаДоступности <= DATEADD(DAY, {4}, T5.ДатаДоступности)
 Group by T4.НоменклатураСсылка, T4.СкладНазначения
-OPTION (KEEP PLAN, KEEPFIXED PLAN);
+OPTION (HASH GROUP, KEEP PLAN, KEEPFIXED PLAN);
 
 
 With Temp_SourcesCorrectedDate AS
