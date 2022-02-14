@@ -7,6 +7,9 @@ namespace DateTimeService.Data
     {
         public AdressCoords()
         {
+            X_coordinates = 0;
+            Y_coordinates = 0;
+            AvailableToUse = false;
         }
 
         public AdressCoords(string x_coordinates, string y_coordinates)

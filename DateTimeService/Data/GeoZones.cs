@@ -104,7 +104,7 @@ namespace DateTimeService.Data
         public async Task<AdressCoords> GetAddressCoordinates(string address_id)
         {
 
-            AdressCoords result = null;
+            AdressCoords result = new();
             
 
             var client = _httpClientFactory.CreateClient();
@@ -199,10 +199,14 @@ namespace DateTimeService.Data
             string login = _configuration.GetValue<string>("BTS_login");
             string pass = _configuration.GetValue<string>("BTS_pass");
 
+            var client = _httpClientFactory.CreateClient();
+
+            client.Timeout = new TimeSpan(0, 0, 8);
+
             var request = new HttpRequestMessage(HttpMethod.Post,
             connString);
             //request.Headers.Add("Content-Type", "text/xml");
-            request.Headers.Add("User-Agent", "HttpClientFactory-Sample");
+            //request.Headers.Add("User-Agent", "HttpClientFactory-Sample");
             IFormatProvider formatter = new NumberFormatInfo { NumberDecimalSeparator = "." };
             string content = @"
 <soap:Envelope xmlns:soap=""http://schemas.xmlsoap.org/soap/envelope/"">
@@ -225,25 +229,42 @@ namespace DateTimeService.Data
             var authenticationString = login + ":" + pass;
             var base64EncodedAuthenticationString = Convert.ToBase64String(Encoding.ASCII.GetBytes(authenticationString));
 
-            var client = new HttpClient();
+           
             request.Headers.Authorization = new AuthenticationHeaderValue("Basic", base64EncodedAuthenticationString);
-
-
-            var response = await client.SendAsync(request);
             string result = "";
-            if (response.IsSuccessStatusCode)
+            try
             {
-                using var responseStream = await response.Content.ReadAsStreamAsync();
-                var xml = new XmlSerializer(typeof(Envelope));
-                var responseData = (Envelope)xml.Deserialize(responseStream);
-                result = responseData.Items[0].getZoneByCoordsResponse.zone.id;
+                var response = await client.SendAsync(request);
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    using var responseStream = await response.Content.ReadAsStreamAsync();
+                    var xml = new XmlSerializer(typeof(Envelope));
+                    var responseData = (Envelope)xml.Deserialize(responseStream);
+                    result = responseData.Items[0].getZoneByCoordsResponse.zone.id;
+                }
+                else
+                {
+                    var logElement = new ElasticLogElement
+                    {
+                        TimeSQLExecution = 0,
+                        ErrorDescription = response.ToString(),
+                        Status = "Error",
+                        DatabaseConnection = connString
+                    };
+
+                    var logstringElement = JsonSerializer.Serialize(logElement);
+
+                    _logger.LogInformation(logstringElement);
+
+                }
             }
-            else
+            catch (Exception ex)
             {
                 var logElement = new ElasticLogElement
                 {
                     TimeSQLExecution = 0,
-                    ErrorDescription = response.ToString(),
+                    ErrorDescription = ex.Message,
                     Status = "Error",
                     DatabaseConnection = connString
                 };
@@ -251,7 +272,6 @@ namespace DateTimeService.Data
                 var logstringElement = JsonSerializer.Serialize(logElement);
 
                 _logger.LogInformation(logstringElement);
-
             }
             return result;
         }
