@@ -964,7 +964,7 @@ namespace DateTimeService.Controllers
                 return StatusCode(500, errorDesc);
             }
 
-            
+            await conn.CloseAsync();
             return StatusCode(200, new { Status = "Ok"});
         }
 
