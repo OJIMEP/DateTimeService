@@ -936,6 +936,37 @@ namespace DateTimeService.Controllers
             return Ok(result);
         }
 
+        [Route("HealthCheck")]
+        [HttpGet]
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        public async Task<IActionResult> HealthCheckAsync()
+        {
+
+            SqlConnection conn;
+
+            try
+            {
+                var dbConnection = await _loadBalacing.GetDatabaseConnectionAsync();
+                conn = dbConnection.Connection;
+            }
+            catch
+            {                
+                return StatusCode(500);
+            }
+            
+
+
+            if (conn == null)
+            {                
+                Dictionary<string, string> errorDesc = new();
+                errorDesc.Add("ErrorDescription", "Не найдено доступное соединение к БД");
+
+                return StatusCode(500, errorDesc);
+            }
+
+            
+            return StatusCode(200, new { Status = "Ok"});
+        }
 
         private static string TextFillGoodsTable(RequestIntervalList data, SqlCommand cmdGoodsTable, bool optimizeRowsCount)
         {

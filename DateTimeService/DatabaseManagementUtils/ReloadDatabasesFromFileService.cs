@@ -26,7 +26,13 @@ namespace DateTimeService.DatabaseManagementUtils
             while (!cancellationToken.IsCancellationRequested)
             {
 
-                await DatabaseList.CreateUpdateDatabases(_configuration.GetSection("OneSDatabases").Get<List<DatabaseConnectionParameter>>(), _logger);
+                var dbList = _configuration.GetSection("OneSDatabases").Get<List<DatabaseConnectionParameter>>();
+
+                if (dbList == null)
+                {
+                    dbList = new();
+                }
+                await DatabaseList.CreateUpdateDatabases(dbList, _logger);
 
                 await Task.Delay(TimeSpan.FromSeconds(11), cancellationToken);
             }

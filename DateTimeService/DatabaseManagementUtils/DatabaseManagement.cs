@@ -405,7 +405,7 @@ namespace DateTimeService.Data
 
                 }
 
-                if (item.AvailableToUse && DateTimeOffset.Now - item.LastCheckAggregations > TimeSpan.FromSeconds(30))
+                if (item.AvailableToUse && DateTimeOffset.Now - item.LastCheckAggregations > TimeSpan.FromSeconds(60))
                 {
 
                     item.LastCheckAggregations = DateTimeOffset.Now;
@@ -425,7 +425,7 @@ namespace DateTimeService.Data
                         {
                             item.CustomAggsFailCount++;
 
-                            if (item.CustomAggsFailCount >= 4)
+                            if (item.CustomAggsFailCount >= 6)
                             {
                                 item.CustomAggregationsAvailable = false;
                             }

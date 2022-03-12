@@ -137,7 +137,11 @@ namespace DateTimeService
                 app.UseHsts();
             }
 
-            app.UseHttpsRedirection();
+            if (Configuration.GetValue<bool>("onlyHttps"))
+            {
+                app.UseHttpsRedirection();
+            }
+            
 
             app.UseRouting();
 
