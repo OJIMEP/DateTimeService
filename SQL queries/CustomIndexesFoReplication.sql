@@ -977,6 +977,7 @@ begin
 	into #Temp_IntervalsAll_old
 	FROM
 		dbo._AccumRg25110 T5 With (READCOMMITTED)
+		Where T5._Period Between DateAdd(YEAR,2000,DateAdd(DAY,-1,GETDATE())) AND DateAdd(YEAR,2000,DateAdd(DAY,7,GETDATE()))
 	GROUP BY
 		T5._Period,
 		T5._Fld25112RRef,
