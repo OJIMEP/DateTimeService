@@ -1749,9 +1749,9 @@ FROM
 WHERE
     NOT T6.Регистратор_RRRef IS NULL
 	And T6.Источник_RTRef = 0x00000153
-OPTION (KEEP PLAN, KEEPFIXED PLAN);
+OPTION (KEEP PLAN, KEEPFIXED PLAN);";
 
-With Temp_ExchangeRates AS (
+        public const string AvailableDate4SourcesWithPricesBasic = @"With Temp_ExchangeRates AS (
 SELECT
 	T1._Period AS Период,
 	T1._Fld14558RRef AS Валюта,
@@ -1787,7 +1787,47 @@ FROM
         AND T1.Источник_RTRef = Резервирование._RecorderTRef
         AND T1.Источник_RRRef = Резервирование._RecorderRRef
     )
-OPTION (KEEP PLAN, KEEPFIXED PLAN, maxdop 4);
+OPTION (KEEP PLAN, KEEPFIXED PLAN, maxdop 2);";
+
+        public const string AvailableDate4SourcesWithPricesCustom = @"With Temp_ExchangeRates AS (
+SELECT
+	T1._Period AS Период,
+	T1._Fld14558RRef AS Валюта,
+	T1._Fld14559 AS Курс,
+	T1._Fld14560 AS Кратность
+FROM _InfoRgSL26678 T1 With (NOLOCK)
+)
+SELECT
+    T1.НоменклатураСсылка,
+    T1.Источник_TYPE,
+    T1.Источник_RTRef,
+    T1.Источник_RRRef,
+    T1.СкладИсточника,
+    T1.СкладНазначения,
+    T1.ДатаСобытия,
+    T1.ДатаДоступности,
+    CAST(
+        (
+            CAST(
+                (Резервирование._Fld21442 * T3.Курс) AS NUMERIC(27, 8)
+            ) / T3.Кратность
+        ) AS NUMERIC(15, 2)
+    )  AS Цена
+Into #Temp_SourcesWithPrices
+FROM
+    #Temp_Sources T1 WITH(NOLOCK)
+    INNER JOIN dbo._AccumRg21407 Резервирование WITH(READCOMMITTED, Index([_AccumRg21407_Custom2]))
+    INNER JOIN Temp_ExchangeRates T3 WITH(NOLOCK)
+        ON (Резервирование._Fld21443RRef = T3.Валюта)
+    ON (T1.НоменклатураСсылка = Резервирование._Fld21408RRef)
+    AND T1.Источник_TYPE = 0x08
+        AND Резервирование.[_Fld21410_TYPE] = 0x08 --чтобы работал filtered index
+        AND T1.Источник_RTRef = Резервирование._RecorderTRef
+        AND T1.Источник_RRRef = Резервирование._RecorderRRef
+OPTION (KEEP PLAN, KEEPFIXED PLAN, maxdop 2);";
+
+
+        public const string AvailableDate5 = @"
 
 With Temp_SupplyDocs AS
 (
@@ -2182,7 +2222,7 @@ Group by
 	#Temp_ShipmentDatesPickUp.code
 OPTION (HASH GROUP, KEEP PLAN, KEEPFIXED PLAN);";
 
-        public const string AvailableDate4IntervalsBasic = @"With PlanningGroups AS(
+        public const string AvailableDate6IntervalsBasic = @"With PlanningGroups AS(
 Select Distinct 
 	#Temp_ShipmentDatesDeliveryCourier.ГруппаПланирования,
 	#Temp_ShipmentDatesDeliveryCourier.Приоритет
@@ -2229,7 +2269,7 @@ HAVING
     )
 OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'),KEEP PLAN, KEEPFIXED PLAN);";
 
-        public const string AvailableDate4IntervalsCustom = @"With PlanningGroups AS(
+        public const string AvailableDate6IntervalsCustom = @"With PlanningGroups AS(
 Select Distinct 
 	#Temp_ShipmentDatesDeliveryCourier.ГруппаПланирования,
 	#Temp_ShipmentDatesDeliveryCourier.Приоритет
@@ -2266,7 +2306,7 @@ GROUP BY
 	PlanningGroups.Приоритет
 OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'),KEEP PLAN, KEEPFIXED PLAN);";
 
-        public const string AvailableDate5 = @"
+        public const string AvailableDate7 = @"
 select
 DATEADD(
         SECOND,
@@ -2364,7 +2404,7 @@ Group By
     #Temp_IntervalsAll.Приоритет
 OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'), KEEP PLAN, KEEPFIXED PLAN);";
 
-        public const string AvailableDate6DeliveryPowerBasic = @"With Temp_DeliveryPower AS
+        public const string AvailableDate8DeliveryPowerBasic = @"With Temp_DeliveryPower AS
 (
 SELECT
     SUM(
@@ -2395,7 +2435,7 @@ GROUP BY
     CAST(CAST(МощностиДоставки._Period  AS DATE) AS DATETIME)
 ), ";
 
-        public const string AvailableDate6DeliveryPowerCustom = @"With Temp_DeliveryPower AS
+        public const string AvailableDate8DeliveryPowerCustom = @"With Temp_DeliveryPower AS
 (
 SELECT   
         МощностиДоставки.МассаОборот AS МассаОборот,    
@@ -2409,7 +2449,7 @@ WHERE
 	AND МощностиДоставки.ЗонаДоставки IN (Select ЗонаДоставкиРодительСсылка From  #Temp_GeoData)
 ),";
 
-        public const string AvailableDate7 = @"Temp_PlanningGroupPriority AS
+        public const string AvailableDate9 = @"Temp_PlanningGroupPriority AS
 (
 select Период, Max(Приоритет) AS Приоритет from #Temp_Intervals Group by Период
 )
@@ -2867,46 +2907,9 @@ Group by
 	Источники1.НоменклатураСсылка,
 	Источники1.ДатаДоступности,
 	Источники1.СкладНазначения
-OPTION (HASH GROUP, KEEP PLAN, KEEPFIXED PLAN);
+OPTION (HASH GROUP, KEEP PLAN, KEEPFIXED PLAN);";
 
-With Temp_ExchangeRates AS (
-SELECT
-	T1._Period AS Период,
-	T1._Fld14558RRef AS Валюта,
-	T1._Fld14559 AS Курс,
-	T1._Fld14560 AS Кратность
-FROM _InfoRgSL26678 T1 With (NOLOCK)
-)
-SELECT
-    T1.НоменклатураСсылка,
-    T1.Источник_TYPE,
-    T1.Источник_RTRef,
-    T1.Источник_RRRef,
-    T1.СкладИсточника,
-    T1.СкладНазначения,
-    T1.ДатаСобытия,
-    T1.ДатаДоступности,
-    CAST(
-        (
-            CAST(
-                (Резервирование._Fld21442 * T3.Курс) AS NUMERIC(27, 8)
-            ) / T3.Кратность
-        ) AS NUMERIC(15, 2)
-    )  AS Цена
-Into #Temp_SourcesWithPrices
-FROM
-    #Temp_Sources T1 WITH(NOLOCK)
-    INNER JOIN dbo._AccumRg21407 Резервирование WITH(READCOMMITTED)
-    LEFT OUTER JOIN Temp_ExchangeRates T3 WITH(NOLOCK)
-        ON (Резервирование._Fld21443RRef = T3.Валюта) 
-    ON (T1.НоменклатураСсылка = Резервирование._Fld21408RRef)
-    AND (
-        T1.Источник_TYPE = 0x08
-        AND T1.Источник_RTRef = Резервирование._RecorderTRef
-        AND T1.Источник_RRRef = Резервирование._RecorderRRef
-    )
-OPTION (KEEP PLAN, KEEPFIXED PLAN, maxdop 4);
-
+        public const string AvailableDateWithCount5 = @"
 With Temp_SupplyDocs AS
 (
 SELECT

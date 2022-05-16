@@ -314,10 +314,12 @@ namespace DateTimeService.Controllers
                 queryParts.Add(data.CheckQuantity == true ? Queries.AvailableDateWithCount1 : Queries.AvailableDate1);
                 queryParts.Add(customAggs == true ? Queries.AvailableDate2MinimumWarehousesCustom : Queries.AvailableDate2MinimumWarehousesBasic);
                 queryParts.Add(data.CheckQuantity == true ? Queries.AvailableDateWithCount3 : Queries.AvailableDate3);
-                queryParts.Add(customAggs == true ? Queries.AvailableDate4IntervalsCustom : Queries.AvailableDate4IntervalsBasic);
-                queryParts.Add(Queries.AvailableDate5);
-                queryParts.Add(customAggs == true ? Queries.AvailableDate6DeliveryPowerCustom : Queries.AvailableDate6DeliveryPowerBasic);
+                queryParts.Add(customAggs == true ? Queries.AvailableDate4SourcesWithPricesCustom : Queries.AvailableDate4SourcesWithPricesBasic);
+                queryParts.Add(data.CheckQuantity == true ? Queries.AvailableDateWithCount5 : Queries.AvailableDate5);
+                queryParts.Add(customAggs == true ? Queries.AvailableDate6IntervalsCustom : Queries.AvailableDate6IntervalsBasic);
                 queryParts.Add(Queries.AvailableDate7);
+                queryParts.Add(customAggs == true ? Queries.AvailableDate8DeliveryPowerCustom : Queries.AvailableDate8DeliveryPowerBasic);
+                queryParts.Add(Queries.AvailableDate9);
 
                 query = String.Join("", queryParts);
 
