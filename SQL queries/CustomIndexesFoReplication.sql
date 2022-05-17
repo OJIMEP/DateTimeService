@@ -4,6 +4,9 @@ GO
 SET ANSI_PADDING ON
 GO
 
+SET QUOTED_IDENTIFIER ON
+GO
+
 DROP INDEX IF EXISTS [_AccumRg21407_Custom1] ON [dbo].[_AccumRg21407]
 GO
 /****** Object:  Index [_AccumRg21407_Custom1]    Script Date: 26.05.2021 17:46:52 ******/
