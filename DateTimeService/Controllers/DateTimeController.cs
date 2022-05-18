@@ -239,6 +239,7 @@ namespace DateTimeService.Controllers
             logElement.AdditionalData.Add("Referer", Request.Headers["Referer"].ToString());
             logElement.AdditionalData.Add("User-Agent", Request.Headers["User-Agent"].ToString());
             logElement.AdditionalData.Add("RemoteIpAddress", Request.HttpContext.Connection.RemoteIpAddress.ToString());
+            
 
 
             var dataErrors = data.LogicalCheckInputData();
@@ -307,9 +308,26 @@ namespace DateTimeService.Controllers
 
                 //open connection
                 //conn.Open();
-                string query = "";
+                string query = "";                
 
-                List<string> queryParts=new();
+                var DateMove = DateTime.Now.AddMonths(24000);
+                var TimeNow = new DateTime(2001, 1, 1, DateMove.Hour, DateMove.Minute, DateMove.Second);
+                var EmptyDate = new DateTime(2001, 1, 1, 0, 0, 0);
+                var MaxDate = new DateTime(5999, 11, 11, 0, 0, 0);
+
+                SqlCommand cmd = new(query, conn);
+
+                List<string> pickups = new();
+
+                var queryTextBegin = TextFillGoodsTable(data, cmd, true, pickups);
+
+                if (_configuration.GetValue<bool>("disableKeepFixedPlan"))
+                {
+                    query = query.Replace(", KEEPFIXED PLAN", "");
+                    queryTextBegin = queryTextBegin.Replace(", KEEPFIXED PLAN", "");
+                }
+
+                List<string> queryParts = new();
 
                 queryParts.Add(data.CheckQuantity == true ? Queries.AvailableDateWithCount1 : Queries.AvailableDate1);
                 queryParts.Add(customAggs == true ? Queries.AvailableDate2MinimumWarehousesCustom : Queries.AvailableDate2MinimumWarehousesBasic);
@@ -323,23 +341,6 @@ namespace DateTimeService.Controllers
 
                 query = String.Join("", queryParts);
 
-                var DateMove = DateTime.Now.AddMonths(24000);
-                var TimeNow = new DateTime(2001, 1, 1, DateMove.Hour, DateMove.Minute, DateMove.Second);
-                var EmptyDate = new DateTime(2001, 1, 1, 0, 0, 0);
-                var MaxDate = new DateTime(5999, 11, 11, 0, 0, 0);
-
-                SqlCommand cmd = new(query, conn);
-
-
-                List<string> pickups = new();
-
-                var queryTextBegin = TextFillGoodsTable(data, cmd, true, pickups);
-
-                if (_configuration.GetValue<bool>("disableKeepFixedPlan"))
-                {
-                    query = query.Replace(", KEEPFIXED PLAN", "");
-                    queryTextBegin = queryTextBegin.Replace(", KEEPFIXED PLAN", "");
-                }
 
                 //define the SqlCommand object
                 List<string> pickupParameters = new();
@@ -450,6 +451,7 @@ namespace DateTimeService.Controllers
                 logElement.ResponseContent = JsonSerializer.Serialize(dbResult);
                 logElement.Status = "Ok";
                 logElement.AdditionalData.Add("stats", JsonSerializer.Serialize(stats));
+                logElement.AdditionalData.Add("CheckQuantityFact", JsonSerializer.Serialize(data.CheckQuantity));
             }
             catch (Exception ex)
             {
@@ -990,6 +992,17 @@ namespace DateTimeService.Controllers
             var parameters = new List<string>();
 
             var maxCodes = data.Codes.Length;
+
+            data.Codes = data.Codes.Where(x =>
+            {
+                if (data.CheckQuantity)
+                {
+                    return x.Quantity > 0;
+                }
+                else return true;
+            }).ToArray();
+
+            data.CheckQuantity = data.Codes.Any(x => x.Quantity != 1); //we can use basic query if all quantity is 1
 
             foreach (var codesElem in data.Codes)
             {
