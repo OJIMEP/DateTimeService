@@ -991,8 +991,6 @@ namespace DateTimeService.Controllers
 
             var parameters = new List<string>();
 
-            var maxCodes = data.Codes.Length;
-
             data.Codes = data.Codes.Where(x =>
             {
                 if (data.CheckQuantity)
@@ -1002,7 +1000,12 @@ namespace DateTimeService.Controllers
                 else return true;
             }).ToArray();
 
-            data.CheckQuantity = data.Codes.Any(x => x.Quantity != 1); //we can use basic query if all quantity is 1
+            if (data.CheckQuantity)
+            {
+                data.CheckQuantity = data.Codes.Any(x => x.Quantity != 1); //we can use basic query if all quantity is 1
+            }
+
+            var maxCodes = data.Codes.Length;
 
             foreach (var codesElem in data.Codes)
             {
