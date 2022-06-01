@@ -56,10 +56,10 @@ set @P_ApplyShifting = 1;
 DECLARE @P_DaysToShift numeric(2);
 set @P_DaysToShift = 3;
 
- Set @P_DateTimeNow = '4022-05-31T18:00:00' 
- Set @P_DateTimePeriodBegin = '4022-05-31T00:00:00'
- Set @P_DateTimePeriodEnd = '4022-06-06T00:00:00'
- Set @P_TimeNow = '2001-01-01T18:00:00'
+ Set @P_DateTimeNow = '4022-06-01T11:20:00' 
+ Set @P_DateTimePeriodBegin = '4022-06-01T00:00:00'
+ Set @P_DateTimePeriodEnd = '4022-06-07T00:00:00'
+ Set @P_TimeNow = '2001-01-01T11:20:00'
  Set @P_EmptyDate = '2001-01-01T00:00:00'
  Set @P_MaxDate = '5999-11-11T00:00:00'
 
@@ -401,25 +401,38 @@ SELECT
     T2._Fld21410_TYPE AS Источник_TYPE,
 	T2._Fld21410_RTRef AS Источник_RTRef,
 	T2._Fld21410_RRRef AS Источник_RRRef,
-	Цены._Fld21410_TYPE AS Регистратор_TYPE,
-    Цены._Fld21410_RTRef AS Регистратор_RTRef,
-    Цены._Fld21410_RRRef AS Регистратор_RRRef,
+	ЦеныТолькоПрайсы._Fld21410_TYPE AS Регистратор_TYPE,
+    ЦеныТолькоПрайсы._Fld21410_RTRef AS Регистратор_RTRef,
+    ЦеныТолькоПрайсы._Fld21410_RRRef AS Регистратор_RRRef,
     T2._Fld23568RRef AS СкладИсточника,
     T2._Fld21424 AS ДатаСобытия,
-	Цены._Fld21442 * Temp_ExchangeRates.Курс / Temp_ExchangeRates.Кратность AS Цена,
+	Цены._Fld21442 * ExchangeRates.Курс / ExchangeRates.Кратность AS Цена,
     SUM(T2._Fld21411) - SUM(T2._Fld21412) AS Количество
 Into #Temp_Remains
 FROM
     dbo._AccumRgT21444 T2 With (READCOMMITTED)
-	Left Join _AccumRg21407 Цены With (READCOMMITTED)
+	Left Join _AccumRg21407 ЦеныТолькоПрайсы With (READCOMMITTED)
 		Inner Join Temp_ExchangeRates With (NOLOCK)
-			On Цены._Fld21443RRef = Temp_ExchangeRates.Валюта 
+			On ЦеныТолькоПрайсы._Fld21443RRef = Temp_ExchangeRates.Валюта 
+		On T2._Fld21408RRef = ЦеныТолькоПрайсы._Fld21408RRef
+		AND T2._Fld21410_RTRef = 0x00000153
+		AND ЦеныТолькоПрайсы._Fld21410_RTRef = 0x00000153  --Цены.Регистратор ССЫЛКА Документ.мегапрайсРегистрацияПрайса
+		AND T2._Fld21410_RRRef = ЦеныТолькоПрайсы._Fld21410_RRRef
+        And ЦеныТолькоПрайсы._Fld21442<>0 
+		AND (ЦеныТолькоПрайсы._Fld21442 * Temp_ExchangeRates.Курс / Temp_ExchangeRates.Кратность >= ЦеныТолькоПрайсы._Fld21982 OR ЦеныТолькоПрайсы._Fld21411 >= ЦеныТолькоПрайсы._Fld21616)
+		And ЦеныТолькоПрайсы._Fld21408RRef IN(SELECT
+                НоменклатураСсылка
+            FROM
+                #Temp_Goods)
+	Left Join _AccumRg21407 Цены With (READCOMMITTED)
+		Inner Join Temp_ExchangeRates ExchangeRates With (NOLOCK)
+			On Цены._Fld21443RRef = ExchangeRates.Валюта 
 		On T2._Fld21408RRef = Цены._Fld21408RRef
 		AND T2._Fld21410_RTRef IN(0x00000141,0x00000153)
-		AND Цены._Fld21410_RTRef IN(0x00000141,0x00000153)  --Цены.Регистратор ССЫЛКА Документ.мегапрайсРегистрацияПрайса
+		AND Цены._Fld21410_RTRef IN(0x00000141,0x00000153)  --Цены.Регистратор ССЫЛКА Документ.мегапрайсРегистрацияПрайса, ЗаказПоставщику
 		AND T2._Fld21410_RRRef = Цены._Fld21410_RRRef
         And Цены._Fld21442<>0 
-		AND (Цены._Fld21410_RTRef = 0x00000141 OR (Цены._Fld21442 * Temp_ExchangeRates.Курс / Temp_ExchangeRates.Кратность >= Цены._Fld21982 OR Цены._Fld21411 >= Цены._Fld21616))
+		AND (Цены._Fld21410_RTRef = 0x00000141 OR (Цены._Fld21442 * ExchangeRates.Курс / ExchangeRates.Кратность >= Цены._Fld21982 OR Цены._Fld21411 >= Цены._Fld21616))
 		And Цены._Fld21408RRef IN(SELECT
                 НоменклатураСсылка
             FROM
@@ -441,16 +454,17 @@ GROUP BY
     T2._Fld21410_TYPE,
     T2._Fld21410_RTRef,
     T2._Fld21410_RRRef,
-	Цены._Fld21410_TYPE,
-	Цены._Fld21410_RTRef,
-	Цены._Fld21410_RRRef,
+	ЦеныТолькоПрайсы._Fld21410_TYPE,
+	ЦеныТолькоПрайсы._Fld21410_RTRef,
+	ЦеныТолькоПрайсы._Fld21410_RRRef,
     T2._Fld23568RRef,
     T2._Fld21424,
-	Цены._Fld21442 * Temp_ExchangeRates.Курс / Temp_ExchangeRates.Кратность
+	Цены._Fld21442 * ExchangeRates.Курс / ExchangeRates.Кратность
 HAVING
     (SUM(T2._Fld21412) <> 0.0
     OR SUM(T2._Fld21411) <> 0.0)
 	AND SUM(T2._Fld21411) - SUM(T2._Fld21412) > 0.0
+OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimeNow='4022-01-20T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
 
 SELECT Distinct
     T1._Fld23831RRef AS СкладИсточника,
@@ -486,7 +500,7 @@ WHERE
 		AND	T1.ДатаСобытия BETWEEN @P_DateTimeNow AND DateAdd(DAY,6,@P_DateTimeNow)
 GROUP BY T1.СкладИсточника,
 T1.СкладНазначения
-OPTION (OPTIMIZE FOR (@P_DateTimeNow='4022-05-31T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
+OPTION (OPTIMIZE FOR (@P_DateTimeNow='4022-06-01T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
 
 SELECT
     T1.НоменклатураСсылка,
@@ -1077,7 +1091,7 @@ GROUP BY
 	T5.ВремяНачала,
 	T5.ВремяОкончания,
 	PlanningGroups.Приоритет
-OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimePeriodBegin='4022-05-31T00:00:00',@P_DateTimePeriodEnd='4022-06-06T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
+OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimePeriodBegin='4022-06-01T00:00:00',@P_DateTimePeriodEnd='4022-06-07T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
 
 
 select
@@ -1112,7 +1126,7 @@ Group By
 	#Temp_IntervalsAll.Геозона,
 	T2._Fld25137,
 	#Temp_IntervalsAll.Приоритет
-OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4022-05-31T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4022-06-01T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
 
 INsert into #Temp_Intervals
 select
@@ -1146,7 +1160,7 @@ Group By
 	#Temp_IntervalsAll.ГруппаПланирования,
 	#Temp_IntervalsAll.Геозона,
     #Temp_IntervalsAll.Приоритет
-OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4022-05-31T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4022-06-01T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
 
 INsert into #Temp_Intervals
 select
@@ -1175,7 +1189,7 @@ Group By
 	#Temp_IntervalsAll.ГруппаПланирования,
 	#Temp_IntervalsAll.Геозона,
     #Temp_IntervalsAll.Приоритет
-OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4022-05-31T00:00:00',@P_DateTimePeriodEnd='4022-06-06T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4022-06-01T00:00:00',@P_DateTimePeriodEnd='4022-06-07T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
 
 /*если основная база или реплика, то заменить таблицу ниже на исходный вариант*/
 /*
@@ -1264,7 +1278,7 @@ GROUP BY
 	T1.НоменклатураСсылка,
     T1.article,
 	T1.code
-OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimePeriodBegin='4022-05-31T00:00:00',@P_DateTimePeriodEnd='4022-06-06T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
+OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimePeriodBegin='4022-06-01T00:00:00',@P_DateTimePeriodEnd='4022-06-07T00:00:00'),KEEP PLAN, KEEPFIXED PLAN);
 
 Select 
 	IsNull(#Temp_AvailableCourier.article,#Temp_AvailablePickUp.article) AS article,
