@@ -1,6 +1,8 @@
 using DateTimeService.Areas.Identity.Data;
 using DateTimeService.Controllers;
 using DateTimeService.Data;
+using DateTimeService.DatabaseManagementNewServices.Interfaces;
+using Hangfire;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -59,7 +61,7 @@ namespace DateTimeService
                     logger.LogError(ex, "An error occurred while clearing the database.");
                 }
 
-
+                
             }
 
             host.Run();

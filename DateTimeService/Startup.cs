@@ -1,7 +1,11 @@
 using DateTimeService.Areas.Identity.Data;
 using DateTimeService.Data;
+using DateTimeService.DatabaseManagementNewServices.Interfaces;
+using DateTimeService.DatabaseManagementNewServices.Services;
 using DateTimeService.DatabaseManagementUtils;
 using DateTimeService.Logging;
+using Hangfire;
+using Hangfire.MemoryStorage;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -43,7 +47,8 @@ namespace DateTimeService
             services.AddDbContext<DateTimeServiceContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DateTimeServiceContextConnection")));
 
             // For Identity  
-            services.AddIdentity<DateTimeServiceUser, IdentityRole>()
+            services.AddDefaultIdentity<DateTimeServiceUser>()
+                .AddRoles<IdentityRole>()
                 .AddEntityFrameworkStores<DateTimeServiceContext>()
                 .AddDefaultTokenProviders();
 
@@ -82,6 +87,11 @@ namespace DateTimeService
                 };
             });
 
+            services.AddAuthorization(builder =>
+            {
+                builder.AddPolicy("Hangfire", policy => policy.RequireRole(UserRoles.Admin));
+            });
+
             services.AddScoped<IUserService, UserService>();
 
             services.AddScoped<ILoadBalancing, LoadBalancing>();
@@ -101,13 +111,25 @@ namespace DateTimeService
 
             //DatabaseList.CreateDatabases(Configuration.GetSection("OneSDatabases").Get<List<DatabaseConnectionParameter>>());            
 
-            services.AddSingleton<IHostedService, ReloadDatabasesFromFileService>();
+            services.AddSingleton<IReadableDatabase, ReadableDatabases>();
+            services.AddSingleton<IReloadDatabasesService, DatabaseManagementNewServices.Services.ReloadDatabasesFromFileService>();
+
+
+            services.AddSingleton<IHostedService, DatabaseManagementUtils.ReloadDatabasesFromFileService>();
 
             services.AddSingleton<DatabaseManagement>();
             services.AddSingleton<IHostedService, DatabaseManagementService>();
+
+            services.AddHangfire(x => x.UseMemoryStorage());
+            
+            services.AddHangfireServer(options =>
+            {
+                options.SchedulePollingInterval = TimeSpan.FromMilliseconds(5000);
+            });
+
         }
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory, IServiceProvider serviceProvider)
         {
 
             app.UseForwardedHeaders(new ForwardedHeadersOptions
@@ -155,11 +177,25 @@ namespace DateTimeService
             loggerFactory.AddHttp(Configuration["loggerHost"], Configuration.GetValue<int>("loggerPortUdp"), Configuration.GetValue<int>("loggerPortHttp"), Configuration["loggerEnv"]);
             var logger = loggerFactory.CreateLogger("HttpLogger");
 
+            app.UseHangfireDashboard();
 
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapRazorPages();
+                //endpoints.MapHangfireDashboardWithAuthorizationPolicy("Hangfire");
             });
+
+            try
+            {
+                var reloadDatabasesService = serviceProvider.GetRequiredService<IReloadDatabasesService>();
+                RecurringJob.AddOrUpdate("ReloadDatabasesFromFiles", () => reloadDatabasesService.Reload(), "*/10 * * * * *");
+            }
+            catch (Exception ex)
+            {
+                var logger1 = serviceProvider.GetRequiredService<ILogger<Startup>>();
+                logger1.LogError(ex, "An error occurred while starting recurring job.");
+            }
         }
     }
 }

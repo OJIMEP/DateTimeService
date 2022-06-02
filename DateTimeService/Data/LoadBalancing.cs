@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Data.SqlClient;
+using DateTimeService.DatabaseManagementNewServices.Interfaces;
 
 namespace DateTimeService.Data
 {
@@ -19,11 +20,13 @@ namespace DateTimeService.Data
     {
         private readonly IConfiguration _configuration;
         private readonly ILogger<DateTimeController> _logger;
+        private readonly IReadableDatabase _databaseService;
 
-        public LoadBalancing(IConfiguration configuration, ILogger<DateTimeController> logger)
+        public LoadBalancing(IConfiguration configuration, ILogger<DateTimeController> logger, IReadableDatabase databaseService)
         {
             _configuration = configuration;
             _logger = logger;
+            _databaseService = databaseService;
         }
 
         public async Task<DbConnection> GetDatabaseConnectionAsync()
@@ -33,6 +36,8 @@ namespace DateTimeService.Data
             var result = new DbConnection();
 
             var connectionParameters = DatabaseList.Databases;//_configuration.GetSection("OneSDatabases").Get<List<DatabaseConnectionParameter>>();
+
+            connectionParameters = _databaseService.GetAllDatabases();
 
             var timeMS = DateTime.Now.Millisecond % 100;
 
