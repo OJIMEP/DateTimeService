@@ -1770,7 +1770,7 @@ WHERE
 	And T6.Источник_RTRef = 0x00000153
 OPTION (KEEP PLAN, KEEPFIXED PLAN);";
 
-        public const string AvailableDate4SourcesWithPricesBasic = @"
+        public const string AvailableDate4SourcesWithPrices = @"
 SELECT
     T1.НоменклатураСсылка,
     T1.Источник_TYPE,
@@ -1787,24 +1787,7 @@ FROM
 Where  T1.Цена <> 0
 OPTION (KEEP PLAN, KEEPFIXED PLAN, maxdop 2);";
 
-        public const string AvailableDate4SourcesWithPricesCustom = @"
-SELECT
-    T1.НоменклатураСсылка,
-    T1.Источник_TYPE,
-    T1.Источник_RTRef,
-    T1.Источник_RRRef,
-    T1.СкладИсточника,
-    T1.СкладНазначения,
-    T1.ДатаСобытия,
-    T1.ДатаДоступности,
-	T1.Цена AS Цена
-Into #Temp_SourcesWithPrices
-FROM
-    #Temp_Sources T1 WITH(NOLOCK)
-Where  T1.Цена <> 0
-OPTION (KEEP PLAN, KEEPFIXED PLAN, maxdop 2);";
-
-
+        
         public const string AvailableDate5 = @"
 
 With Temp_SupplyDocs AS

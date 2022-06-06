@@ -332,7 +332,7 @@ namespace DateTimeService.Controllers
                 queryParts.Add(data.CheckQuantity == true ? Queries.AvailableDateWithCount1 : Queries.AvailableDate1);
                 queryParts.Add(customAggs == true ? Queries.AvailableDate2MinimumWarehousesCustom : Queries.AvailableDate2MinimumWarehousesBasic);
                 queryParts.Add(data.CheckQuantity == true ? Queries.AvailableDateWithCount3 : Queries.AvailableDate3);
-                queryParts.Add(customAggs == true ? Queries.AvailableDate4SourcesWithPricesCustom : Queries.AvailableDate4SourcesWithPricesBasic);
+                queryParts.Add(Queries.AvailableDate4SourcesWithPrices);
                 queryParts.Add(data.CheckQuantity == true ? Queries.AvailableDateWithCount5 : Queries.AvailableDate5);
                 queryParts.Add(customAggs == true ? Queries.AvailableDate6IntervalsCustom : Queries.AvailableDate6IntervalsBasic);
                 queryParts.Add(Queries.AvailableDate7);
