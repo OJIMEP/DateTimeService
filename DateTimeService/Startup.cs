@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
+using System.Threading;
 
 namespace DateTimeService
 {
@@ -111,14 +112,16 @@ namespace DateTimeService
 
             //DatabaseList.CreateDatabases(Configuration.GetSection("OneSDatabases").Get<List<DatabaseConnectionParameter>>());            
 
-            services.AddSingleton<IReadableDatabase, ReadableDatabases>();
+            //new
+            services.AddSingleton<IReadableDatabase, ReadableDatabasesService>();
             services.AddSingleton<IReloadDatabasesService, DatabaseManagementNewServices.Services.ReloadDatabasesFromFileService>();
+            services.AddScoped<IDatabaseCheck, DatabaseCheckService>();
 
-
+            //old
             services.AddSingleton<IHostedService, DatabaseManagementUtils.ReloadDatabasesFromFileService>();
-
             services.AddSingleton<DatabaseManagement>();
             services.AddSingleton<IHostedService, DatabaseManagementService>();
+
 
             services.AddHangfire(x => x.UseMemoryStorage());
             
@@ -175,7 +178,7 @@ namespace DateTimeService
             //loggerFactory = LoggerFactory.Create(builder => builder.ClearProviders());
 
             loggerFactory.AddHttp(Configuration["loggerHost"], Configuration.GetValue<int>("loggerPortUdp"), Configuration.GetValue<int>("loggerPortHttp"), Configuration["loggerEnv"]);
-            var logger = loggerFactory.CreateLogger("HttpLogger");
+            loggerFactory.CreateLogger("HttpLogger");
 
             app.UseHangfireDashboard();
 
@@ -189,12 +192,15 @@ namespace DateTimeService
             try
             {
                 var reloadDatabasesService = serviceProvider.GetRequiredService<IReloadDatabasesService>();
-                RecurringJob.AddOrUpdate("ReloadDatabasesFromFiles", () => reloadDatabasesService.Reload(), "*/10 * * * * *");
+                RecurringJob.AddOrUpdate("ReloadDatabasesFromFiles", () => reloadDatabasesService.Reload(CancellationToken.None), "*/10 * * * * *"); //every 10 seconds
+
+                var checkStatusService = serviceProvider.GetRequiredService<IDatabaseAvailabilityControl>();
+                RecurringJob.AddOrUpdate("ReloadDatabasesFromFiles", () => checkStatusService.CheckAndUpdateDatabasesStatus(CancellationToken.None), Cron.Minutely());
             }
             catch (Exception ex)
             {
-                var logger1 = serviceProvider.GetRequiredService<ILogger<Startup>>();
-                logger1.LogError(ex, "An error occurred while starting recurring job.");
+                var logger = serviceProvider.GetRequiredService<ILogger<Startup>>();
+                logger.LogError(ex, "An error occurred while starting recurring job.");
             }
         }
     }

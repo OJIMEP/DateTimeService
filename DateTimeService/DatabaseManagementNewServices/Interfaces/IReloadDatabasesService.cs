@@ -1,7 +1,9 @@
-﻿namespace DateTimeService.DatabaseManagementNewServices.Interfaces
+﻿using System.Threading;
+
+namespace DateTimeService.DatabaseManagementNewServices.Interfaces
 {
     public interface IReloadDatabasesService
     {
-        public void Reload();
+        public void Reload(CancellationToken cancellationToken);
     }
 }

@@ -34,15 +34,70 @@ namespace DateTimeService.DatabaseManagementNewServices.Services
             _httpClientFactory = httpClientFactory;
         }
 
-        public async Task<bool> CheckAggregationsAsync(DatabaseInfo database, CancellationToken cancellationToken)
+        public async Task<bool> CheckAggregationsAsync(string databaseConnectionString, CancellationToken cancellationToken)
         {
-            
-            
-            throw new NotImplementedException();
+
+            int result = -1;
+
+            Stopwatch watch = new();
+            watch.Start();
+            try
+            {
+                using SqlConnection conn = new(databaseConnectionString);
+
+                //open connection
+                conn.Open();
+
+                string query = Queries.CheckAggregations;
+
+                SqlCommand cmd = new(query, conn);
+
+                cmd.CommandTimeout = 20;
+                cmd.CommandText = query;
+
+                //execute the SQLCommand
+                var dataReader = await cmd.ExecuteReaderAsync(cancellationToken);
+                if (dataReader.HasRows)
+                {
+                    if (dataReader.Read())
+                    {
+
+                        if (dataReader.GetInt32(0) == 0)
+                        {
+                            result = 0;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                result = -1;
+
+                var logElement = new ElasticLogElement
+                {
+                    LoadBalancingExecution = 0,
+                    ErrorDescription = ex.Message,
+                    Status = "Error",
+                    DatabaseConnection = LoadBalancing.RemoveCredentialsFromConnectionString(databaseConnectionString)
+                };
+
+                var logstringElement = JsonSerializer.Serialize(logElement);
+
+                _logger.LogInformation(logstringElement);
+
+            }
+            watch.Stop();
+
+            return result >= 0;
         }
 
         public async Task<bool> CheckAvailabilityAsync(string databaseConnectionString, CancellationToken cancellationToken, long executionLimit = 3000)
         {
+            if (!_configuration.GetValue<bool>("UseLoadBalance2"))
+            {
+                return true;
+            }
+
             int result;
 
             Stopwatch watch = new();
@@ -231,9 +286,8 @@ namespace DateTimeService.DatabaseManagementNewServices.Services
             return result >= 0;
         }
 
-        public async Task<ElasticResponse> GetElasticLogsInformationAsync(string databaseConnectionWithOutCredentials, CancellationToken cancellationToken)
+        public async Task<ElasticDatabaseStats> GetElasticLogsInformationAsync(string databaseConnectionWithOutCredentials, CancellationToken cancellationToken)
         {
-
             if (!_configuration.GetValue<bool>("UseLoadBalance2"))
             {
                 return null;
@@ -378,8 +432,36 @@ namespace DateTimeService.DatabaseManagementNewServices.Services
                 _logger.LogError(logstringElement);
             }
 
-            return elasticResponse;
+            if (elasticResponse == null)
+            {
+                return null;
+            }
 
+            if (!elasticResponse.Aggregations.TryGetValue("load_time_outlier", out Aggregations aggregation))
+            {
+                return null; //TODO log error
+            }
+
+            var responseBucket = aggregation.Buckets.Find(x => x.Key == databaseConnectionWithOutCredentials);
+            if (responseBucket == null)
+            {
+                return null; //TODO log error
+            }
+
+            var databaseStats = new ElasticDatabaseStats
+            {
+                RecordCount = responseBucket.DocCount,
+                LoadBalanceTime = responseBucket.LoadBalance.Value,
+                AverageTime = responseBucket.WeekAvg.Value,
+                Percentile95Time = responseBucket.TimePercentile.Values.GetValueOrDefault("95.0")
+            };
+
+            if (databaseStats.LoadBalanceTime == default || databaseStats.AverageTime == default || databaseStats.Percentile95Time == default)
+            {
+                return null;
+            }
+
+            return databaseStats;
         }
     }
 }

@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 
 namespace DateTimeService.DatabaseManagementNewServices.Services
 {
@@ -24,7 +25,7 @@ namespace DateTimeService.DatabaseManagementNewServices.Services
             _configuration = configuration;
         }
 
-        public void Reload()
+        public void Reload(CancellationToken cancellationToken)
         {
             var dbList = _configuration.GetSection("OneSDatabases").Get<List<DatabaseConnectionParameter>>();
             bool useLoadBalance2 = _configuration.GetValue<bool>("UseLoadBalance2");

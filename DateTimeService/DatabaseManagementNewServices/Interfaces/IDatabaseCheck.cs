@@ -6,11 +6,11 @@ namespace DateTimeService.DatabaseManagementNewServices.Interfaces
 {
     public interface IDatabaseCheck
     {
-        public Task<ElasticResponse> GetElasticLogsInformationAsync(string databaseConnectionWithOutCredentials, CancellationToken cancellationToken);
+        public Task<ElasticDatabaseStats> GetElasticLogsInformationAsync(string databaseConnectionWithOutCredentials, CancellationToken cancellationToken);
 
         public Task<bool> CheckAvailabilityAsync(string databaseConnectionString, CancellationToken cancellationToken, long executionLimit);
 
-        public Task<bool> CheckAggregationsAsync(DatabaseInfo database, CancellationToken cancellationToken);
+        public Task<bool> CheckAggregationsAsync(string databaseConnectionString, CancellationToken cancellationToken);
 
 
     }

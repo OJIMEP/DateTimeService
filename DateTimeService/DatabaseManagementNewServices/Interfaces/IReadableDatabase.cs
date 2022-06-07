@@ -11,5 +11,12 @@ namespace DateTimeService.DatabaseManagementNewServices.Interfaces
         public bool AddDatabase(DatabaseInfo newDatabaseEntity);
         public bool DeleteDatabase(string connection);
         public bool UpdateDatabaseFromFile(DatabaseInfo newDatabaseEntity);
+        public bool DisableDatabase(string connection, string reason = "");
+        public bool EnableDatabase(string connection, string reason = "");
+        public bool DisableDatabaseAggs(string connection, string reason = "");
+        public bool EnableDatabaseAggs(string connection, string reason = "");
+        public bool UpdateDatabasePerfomanceFailCount(string connection, int oldFailCount, int newFailCount);
+        public bool UpdateDatabaseAggregationsFailCount(string connection, int oldFailCount, int newFailCount);
+        public bool UpdateDatabaseLastChecksTime(string connection, bool clearCache, bool availability, bool aggregations, bool perfomance);
     }
 }

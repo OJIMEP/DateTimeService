@@ -615,7 +615,7 @@ namespace DateTimeService.Data
                 var logElement = new ElasticLogElement
                 {
                     LoadBalancingExecution = 0,
-                    ErrorDescription = ex.Message,
+                    ErrorDescription = "Availability false because of" + ex.Message,
                     Status = "Error",
                     DatabaseConnection = LoadBalancing.RemoveCredentialsFromConnectionString(connstring)
                 };

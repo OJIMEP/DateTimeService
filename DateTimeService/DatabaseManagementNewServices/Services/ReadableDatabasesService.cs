@@ -8,13 +8,13 @@ using System.Text.Json;
 
 namespace DateTimeService.DatabaseManagementNewServices.Services
 {
-    public class ReadableDatabases : Interfaces.IReadableDatabase
+    public class ReadableDatabasesService : Interfaces.IReadableDatabase
     {
-        private readonly ILogger<ReadableDatabases> _logger;
+        private readonly ILogger<ReadableDatabasesService> _logger;
 
         private readonly ConcurrentDictionary<string, DatabaseInfo> dbDictionary = new();
 
-        public ReadableDatabases(ILogger<ReadableDatabases> logger)
+        public ReadableDatabasesService(ILogger<ReadableDatabasesService> logger)
         {
             _logger = logger;
         }
