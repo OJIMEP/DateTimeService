@@ -1578,23 +1578,38 @@ SELECT
     T2._Fld21410_TYPE AS Источник_TYPE,
 	T2._Fld21410_RTRef AS Источник_RTRef,
 	T2._Fld21410_RRRef AS Источник_RRRef,
-	Цены._Fld21410_TYPE AS Регистратор_TYPE,
-    Цены._Fld21410_RTRef AS Регистратор_RTRef,
-    Цены._Fld21410_RRRef AS Регистратор_RRRef,
+	ЦеныТолькоПрайсы._Fld21410_TYPE AS Регистратор_TYPE,
+    ЦеныТолькоПрайсы._Fld21410_RTRef AS Регистратор_RTRef,
+    ЦеныТолькоПрайсы._Fld21410_RRRef AS Регистратор_RRRef,
     T2._Fld23568RRef AS СкладИсточника,
     T2._Fld21424 AS ДатаСобытия,
+	Цены._Fld21442 * ExchangeRates.Курс / ExchangeRates.Кратность AS Цена,
     SUM(T2._Fld21411) - SUM(T2._Fld21412) AS Количество
 Into #Temp_Remains
 FROM
     dbo._AccumRgT21444 T2 With (READCOMMITTED)
-	Left Join _AccumRg21407 Цены With (READCOMMITTED)
+	Left Join _AccumRg21407 ЦеныТолькоПрайсы With (READCOMMITTED)
 		Inner Join Temp_ExchangeRates With (NOLOCK)
-			On Цены._Fld21443RRef = Temp_ExchangeRates.Валюта 
-		On T2._Fld21408RRef = Цены._Fld21408RRef
+			On ЦеныТолькоПрайсы._Fld21443RRef = Temp_ExchangeRates.Валюта 
+		On T2._Fld21408RRef = ЦеныТолькоПрайсы._Fld21408RRef
 		AND T2._Fld21410_RTRef = 0x00000153
-		AND Цены._Fld21410_RTRef = 0x00000153 --Цены.Регистратор ССЫЛКА Документ.мегапрайсРегистрацияПрайса
+		AND ЦеныТолькоПрайсы._Fld21410_RTRef = 0x00000153  --Цены.Регистратор ССЫЛКА Документ.мегапрайсРегистрацияПрайса
+		AND T2._Fld21410_RRRef = ЦеныТолькоПрайсы._Fld21410_RRRef
+        And ЦеныТолькоПрайсы._Fld21442<>0 
+		AND (ЦеныТолькоПрайсы._Fld21442 * Temp_ExchangeRates.Курс / Temp_ExchangeRates.Кратность >= ЦеныТолькоПрайсы._Fld21982 OR ЦеныТолькоПрайсы._Fld21411 >= ЦеныТолькоПрайсы._Fld21616)
+		And ЦеныТолькоПрайсы._Fld21408RRef IN(SELECT
+                НоменклатураСсылка
+            FROM
+                #Temp_Goods)
+	Left Join _AccumRg21407 Цены With (READCOMMITTED)
+		Inner Join Temp_ExchangeRates ExchangeRates With (NOLOCK)
+			On Цены._Fld21443RRef = ExchangeRates.Валюта 
+		On T2._Fld21408RRef = Цены._Fld21408RRef
+		AND T2._Fld21410_RTRef IN(0x00000141,0x00000153)
+		AND Цены._Fld21410_RTRef IN(0x00000141,0x00000153)  --Цены.Регистратор ССЫЛКА Документ.мегапрайсРегистрацияПрайса, ЗаказПоставщику
 		AND T2._Fld21410_RRRef = Цены._Fld21410_RRRef
-        And Цены._Fld21442<>0 AND (Цены._Fld21442 * Temp_ExchangeRates.Курс / Temp_ExchangeRates.Кратность >= Цены._Fld21982 OR Цены._Fld21411 >= Цены._Fld21616)
+        And Цены._Fld21442<>0 
+		AND (Цены._Fld21410_RTRef = 0x00000141 OR (Цены._Fld21442 * ExchangeRates.Курс / ExchangeRates.Кратность >= Цены._Fld21982 OR Цены._Fld21411 >= Цены._Fld21616))
 		And Цены._Fld21408RRef IN(SELECT
                 НоменклатураСсылка
             FROM
@@ -1616,11 +1631,12 @@ GROUP BY
     T2._Fld21410_TYPE,
     T2._Fld21410_RTRef,
     T2._Fld21410_RRRef,
-	Цены._Fld21410_TYPE,
-	Цены._Fld21410_RTRef,
-	Цены._Fld21410_RRRef,
+	ЦеныТолькоПрайсы._Fld21410_TYPE,
+	ЦеныТолькоПрайсы._Fld21410_RTRef,
+	ЦеныТолькоПрайсы._Fld21410_RRRef,
     T2._Fld23568RRef,
-    T2._Fld21424
+    T2._Fld21424,
+	Цены._Fld21442 * ExchangeRates.Курс / ExchangeRates.Кратность
 HAVING
     (SUM(T2._Fld21412) <> 0.0
     OR SUM(T2._Fld21411) <> 0.0)
@@ -1691,6 +1707,7 @@ OPTION (OPTIMIZE FOR (@P_DateTimeNow='{1}'), KEEP PLAN, KEEPFIXED PLAN);";
     T1.Источник_RTRef,
     T1.Источник_RRRef,
     T1.СкладИсточника,
+    T1.Цена,
     T1.ДатаСобытия,
     ISNULL(T3.ДатаПрибытия, T2.ДатаПрибытия) AS ДатаДоступности,
     1 AS ТипИсточника,
@@ -1716,6 +1733,7 @@ SELECT
     T4.Источник_RTRef,
     T4.Источник_RRRef,
     T4.СкладИсточника,
+    T4.Цена,
     T4.ДатаСобытия,
     T5.ДатаПрибытия,
     2,
@@ -1737,6 +1755,7 @@ SELECT
     T6.Источник_RTRef,
     T6.Источник_RRRef,
     T6.СкладИсточника,
+    T6.Цена,
     T6.ДатаСобытия,
     T7.ДатаПрибытия,
     3,
@@ -1749,16 +1768,9 @@ FROM
 WHERE
     NOT T6.Регистратор_RRRef IS NULL
 	And T6.Источник_RTRef = 0x00000153
-OPTION (KEEP PLAN, KEEPFIXED PLAN);
+OPTION (KEEP PLAN, KEEPFIXED PLAN);";
 
-With Temp_ExchangeRates AS (
-SELECT
-	T1._Period AS Период,
-	T1._Fld14558RRef AS Валюта,
-	T1._Fld14559 AS Курс,
-	T1._Fld14560 AS Кратность
-FROM _InfoRgSL26678 T1 With (NOLOCK)
-)
+        public const string AvailableDate4SourcesWithPricesBasic = @"
 SELECT
     T1.НоменклатураСсылка,
     T1.Источник_TYPE,
@@ -1768,26 +1780,32 @@ SELECT
     T1.СкладНазначения,
     T1.ДатаСобытия,
     T1.ДатаДоступности,
-    CAST(
-        (
-            CAST(
-                (Резервирование._Fld21442 * T3.Курс) AS NUMERIC(27, 8)
-            ) / T3.Кратность
-        ) AS NUMERIC(15, 2)
-    )  AS Цена
+	T1.Цена AS Цена
 Into #Temp_SourcesWithPrices
 FROM
     #Temp_Sources T1 WITH(NOLOCK)
-    INNER JOIN dbo._AccumRg21407 Резервирование WITH(READCOMMITTED)
-    LEFT OUTER JOIN Temp_ExchangeRates T3 WITH(NOLOCK)
-        ON (Резервирование._Fld21443RRef = T3.Валюта)
-    ON (T1.НоменклатураСсылка = Резервирование._Fld21408RRef)
-    AND (
-        T1.Источник_TYPE = 0x08
-        AND T1.Источник_RTRef = Резервирование._RecorderTRef
-        AND T1.Источник_RRRef = Резервирование._RecorderRRef
-    )
-OPTION (KEEP PLAN, KEEPFIXED PLAN, maxdop 4);
+Where  T1.Цена <> 0
+OPTION (KEEP PLAN, KEEPFIXED PLAN, maxdop 2);";
+
+        public const string AvailableDate4SourcesWithPricesCustom = @"
+SELECT
+    T1.НоменклатураСсылка,
+    T1.Источник_TYPE,
+    T1.Источник_RTRef,
+    T1.Источник_RRRef,
+    T1.СкладИсточника,
+    T1.СкладНазначения,
+    T1.ДатаСобытия,
+    T1.ДатаДоступности,
+	T1.Цена AS Цена
+Into #Temp_SourcesWithPrices
+FROM
+    #Temp_Sources T1 WITH(NOLOCK)
+Where  T1.Цена <> 0
+OPTION (KEEP PLAN, KEEPFIXED PLAN, maxdop 2);";
+
+
+        public const string AvailableDate5 = @"
 
 With Temp_SupplyDocs AS
 (
@@ -1800,9 +1818,8 @@ SELECT
     MIN(T1.Цена / 100.0 * (100 - {5})) AS ЦенаИсточникаМинус --это параметр ПроцентДнейАнализа
 FROM
     #Temp_SourcesWithPrices T1 WITH(NOLOCK)
-WHERE
-    T1.Цена <> 0
-    AND T1.Источник_RTRef = 0x00000153    
+WHERE 
+    T1.Источник_RTRef = 0x00000153    
 GROUP BY
     T1.НоменклатураСсылка,
     T1.ДатаДоступности,
@@ -1826,7 +1843,6 @@ FROM
     AND (T1.ДатаДоступности >= T2.ДатаДоступности)
     AND (T1.ДатаДоступности <= T2.ДатаДоступностиПлюс)
     AND (T1.Цена <= T2.ЦенаИсточникаМинус)
-    AND (T1.Цена <> 0)
 GROUP BY
     T2.НоменклатураСсылка,
     T2.СкладНазначения,
@@ -2182,7 +2198,7 @@ Group by
 	#Temp_ShipmentDatesPickUp.code
 OPTION (HASH GROUP, KEEP PLAN, KEEPFIXED PLAN);";
 
-        public const string AvailableDate4IntervalsBasic = @"With PlanningGroups AS(
+        public const string AvailableDate6IntervalsBasic = @"With PlanningGroups AS(
 Select Distinct 
 	#Temp_ShipmentDatesDeliveryCourier.ГруппаПланирования,
 	#Temp_ShipmentDatesDeliveryCourier.Приоритет
@@ -2229,7 +2245,7 @@ HAVING
     )
 OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'),KEEP PLAN, KEEPFIXED PLAN);";
 
-        public const string AvailableDate4IntervalsCustom = @"With PlanningGroups AS(
+        public const string AvailableDate6IntervalsCustom = @"With PlanningGroups AS(
 Select Distinct 
 	#Temp_ShipmentDatesDeliveryCourier.ГруппаПланирования,
 	#Temp_ShipmentDatesDeliveryCourier.Приоритет
@@ -2266,7 +2282,7 @@ GROUP BY
 	PlanningGroups.Приоритет
 OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'),KEEP PLAN, KEEPFIXED PLAN);";
 
-        public const string AvailableDate5 = @"
+        public const string AvailableDate7 = @"
 select
 DATEADD(
         SECOND,
@@ -2364,7 +2380,7 @@ Group By
     #Temp_IntervalsAll.Приоритет
 OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'), KEEP PLAN, KEEPFIXED PLAN);";
 
-        public const string AvailableDate6DeliveryPowerBasic = @"With Temp_DeliveryPower AS
+        public const string AvailableDate8DeliveryPowerBasic = @"With Temp_DeliveryPower AS
 (
 SELECT
     SUM(
@@ -2395,7 +2411,7 @@ GROUP BY
     CAST(CAST(МощностиДоставки._Period  AS DATE) AS DATETIME)
 ), ";
 
-        public const string AvailableDate6DeliveryPowerCustom = @"With Temp_DeliveryPower AS
+        public const string AvailableDate8DeliveryPowerCustom = @"With Temp_DeliveryPower AS
 (
 SELECT   
         МощностиДоставки.МассаОборот AS МассаОборот,    
@@ -2409,7 +2425,7 @@ WHERE
 	AND МощностиДоставки.ЗонаДоставки IN (Select ЗонаДоставкиРодительСсылка From  #Temp_GeoData)
 ),";
 
-        public const string AvailableDate7 = @"Temp_PlanningGroupPriority AS
+        public const string AvailableDate9 = @"Temp_PlanningGroupPriority AS
 (
 select Период, Max(Приоритет) AS Приоритет from #Temp_Intervals Group by Период
 )
@@ -2706,23 +2722,38 @@ SELECT
     T2._Fld21410_TYPE AS Источник_TYPE,
 	T2._Fld21410_RTRef AS Источник_RTRef,
 	T2._Fld21410_RRRef AS Источник_RRRef,
-	Цены._Fld21410_TYPE AS Регистратор_TYPE,
-    Цены._Fld21410_RTRef AS Регистратор_RTRef,
-    Цены._Fld21410_RRRef AS Регистратор_RRRef,
+	ЦеныТолькоПрайсы._Fld21410_TYPE AS Регистратор_TYPE,
+    ЦеныТолькоПрайсы._Fld21410_RTRef AS Регистратор_RTRef,
+    ЦеныТолькоПрайсы._Fld21410_RRRef AS Регистратор_RRRef,
     T2._Fld23568RRef AS СкладИсточника,
     T2._Fld21424 AS ДатаСобытия,
+	Цены._Fld21442 * ExchangeRates.Курс / ExchangeRates.Кратность AS Цена,
     SUM(T2._Fld21411) - SUM(T2._Fld21412) AS Количество
 Into #Temp_Remains
 FROM
     dbo._AccumRgT21444 T2 With (READCOMMITTED)
-	Left Join _AccumRg21407 Цены With (READCOMMITTED)
+	Left Join _AccumRg21407 ЦеныТолькоПрайсы With (READCOMMITTED)
 		Inner Join Temp_ExchangeRates With (NOLOCK)
-			On Цены._Fld21443RRef = Temp_ExchangeRates.Валюта 
-		On T2._Fld21408RRef = Цены._Fld21408RRef
+			On ЦеныТолькоПрайсы._Fld21443RRef = Temp_ExchangeRates.Валюта 
+		On T2._Fld21408RRef = ЦеныТолькоПрайсы._Fld21408RRef
 		AND T2._Fld21410_RTRef = 0x00000153
-		AND Цены._Fld21410_RTRef = 0x00000153 --Цены.Регистратор ССЫЛКА Документ.мегапрайсРегистрацияПрайса
-        AND T2._Fld21410_RRRef = Цены._Fld21410_RRRef
-        And Цены._Fld21442<>0 AND (Цены._Fld21442 * Temp_ExchangeRates.Курс / Temp_ExchangeRates.Кратность >= Цены._Fld21982 OR Цены._Fld21411 >= Цены._Fld21616)
+		AND ЦеныТолькоПрайсы._Fld21410_RTRef = 0x00000153  --Цены.Регистратор ССЫЛКА Документ.мегапрайсРегистрацияПрайса
+		AND T2._Fld21410_RRRef = ЦеныТолькоПрайсы._Fld21410_RRRef
+        And ЦеныТолькоПрайсы._Fld21442<>0 
+		AND (ЦеныТолькоПрайсы._Fld21442 * Temp_ExchangeRates.Курс / Temp_ExchangeRates.Кратность >= ЦеныТолькоПрайсы._Fld21982 OR ЦеныТолькоПрайсы._Fld21411 >= ЦеныТолькоПрайсы._Fld21616)
+		And ЦеныТолькоПрайсы._Fld21408RRef IN(SELECT
+                НоменклатураСсылка
+            FROM
+                #Temp_Goods)
+	Left Join _AccumRg21407 Цены With (READCOMMITTED)
+		Inner Join Temp_ExchangeRates ExchangeRates With (NOLOCK)
+			On Цены._Fld21443RRef = ExchangeRates.Валюта 
+		On T2._Fld21408RRef = Цены._Fld21408RRef
+		AND T2._Fld21410_RTRef IN(0x00000141,0x00000153)
+		AND Цены._Fld21410_RTRef IN(0x00000141,0x00000153)  --Цены.Регистратор ССЫЛКА Документ.мегапрайсРегистрацияПрайса, ЗаказПоставщику
+		AND T2._Fld21410_RRRef = Цены._Fld21410_RRRef
+        And Цены._Fld21442<>0 
+		AND (Цены._Fld21410_RTRef = 0x00000141 OR (Цены._Fld21442 * ExchangeRates.Курс / ExchangeRates.Кратность >= Цены._Fld21982 OR Цены._Fld21411 >= Цены._Fld21616))
 		And Цены._Fld21408RRef IN(SELECT
                 НоменклатураСсылка
             FROM
@@ -2744,11 +2775,12 @@ GROUP BY
     T2._Fld21410_TYPE,
     T2._Fld21410_RTRef,
     T2._Fld21410_RRRef,
-	Цены._Fld21410_TYPE,
-	Цены._Fld21410_RTRef,
-	Цены._Fld21410_RRRef,
+	ЦеныТолькоПрайсы._Fld21410_TYPE,
+	ЦеныТолькоПрайсы._Fld21410_RTRef,
+	ЦеныТолькоПрайсы._Fld21410_RRRef,
     T2._Fld23568RRef,
-    T2._Fld21424
+    T2._Fld21424,
+	Цены._Fld21442 * ExchangeRates.Курс / ExchangeRates.Кратность
 HAVING
     (SUM(T2._Fld21412) <> 0.0
     OR SUM(T2._Fld21411) <> 0.0)
@@ -2776,6 +2808,7 @@ OPTION (KEEP PLAN, KEEPFIXED PLAN);";
     T1.Источник_RTRef,
     T1.Источник_RRRef,
     T1.СкладИсточника,
+    T1.Цена,
     T1.ДатаСобытия,
     ISNULL(T3.ДатаПрибытия, T2.ДатаПрибытия) AS ДатаДоступности,
     1 AS ТипИсточника,
@@ -2801,6 +2834,7 @@ SELECT
     T4.Источник_RTRef,
     T4.Источник_RRRef,
     T4.СкладИсточника,
+    T4.Цена,
     T4.ДатаСобытия,
     T5.ДатаПрибытия,
     2,
@@ -2822,6 +2856,7 @@ SELECT
     T6.Источник_RTRef,
     T6.Источник_RRRef,
     T6.СкладИсточника,
+    T6.Цена,
     T6.ДатаСобытия,
     T7.ДатаПрибытия,
     3,
@@ -2867,46 +2902,9 @@ Group by
 	Источники1.НоменклатураСсылка,
 	Источники1.ДатаДоступности,
 	Источники1.СкладНазначения
-OPTION (HASH GROUP, KEEP PLAN, KEEPFIXED PLAN);
+OPTION (HASH GROUP, KEEP PLAN, KEEPFIXED PLAN);";
 
-With Temp_ExchangeRates AS (
-SELECT
-	T1._Period AS Период,
-	T1._Fld14558RRef AS Валюта,
-	T1._Fld14559 AS Курс,
-	T1._Fld14560 AS Кратность
-FROM _InfoRgSL26678 T1 With (NOLOCK)
-)
-SELECT
-    T1.НоменклатураСсылка,
-    T1.Источник_TYPE,
-    T1.Источник_RTRef,
-    T1.Источник_RRRef,
-    T1.СкладИсточника,
-    T1.СкладНазначения,
-    T1.ДатаСобытия,
-    T1.ДатаДоступности,
-    CAST(
-        (
-            CAST(
-                (Резервирование._Fld21442 * T3.Курс) AS NUMERIC(27, 8)
-            ) / T3.Кратность
-        ) AS NUMERIC(15, 2)
-    )  AS Цена
-Into #Temp_SourcesWithPrices
-FROM
-    #Temp_Sources T1 WITH(NOLOCK)
-    INNER JOIN dbo._AccumRg21407 Резервирование WITH(READCOMMITTED)
-    LEFT OUTER JOIN Temp_ExchangeRates T3 WITH(NOLOCK)
-        ON (Резервирование._Fld21443RRef = T3.Валюта) 
-    ON (T1.НоменклатураСсылка = Резервирование._Fld21408RRef)
-    AND (
-        T1.Источник_TYPE = 0x08
-        AND T1.Источник_RTRef = Резервирование._RecorderTRef
-        AND T1.Источник_RRRef = Резервирование._RecorderRRef
-    )
-OPTION (KEEP PLAN, KEEPFIXED PLAN, maxdop 4);
-
+        public const string AvailableDateWithCount5 = @"
 With Temp_SupplyDocs AS
 (
 SELECT

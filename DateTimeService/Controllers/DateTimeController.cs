@@ -239,6 +239,7 @@ namespace DateTimeService.Controllers
             logElement.AdditionalData.Add("Referer", Request.Headers["Referer"].ToString());
             logElement.AdditionalData.Add("User-Agent", Request.Headers["User-Agent"].ToString());
             logElement.AdditionalData.Add("RemoteIpAddress", Request.HttpContext.Connection.RemoteIpAddress.ToString());
+            
 
 
             var dataErrors = data.LogicalCheckInputData();
@@ -307,19 +308,7 @@ namespace DateTimeService.Controllers
 
                 //open connection
                 //conn.Open();
-                string query = "";
-
-                List<string> queryParts=new();
-
-                queryParts.Add(data.CheckQuantity == true ? Queries.AvailableDateWithCount1 : Queries.AvailableDate1);
-                queryParts.Add(customAggs == true ? Queries.AvailableDate2MinimumWarehousesCustom : Queries.AvailableDate2MinimumWarehousesBasic);
-                queryParts.Add(data.CheckQuantity == true ? Queries.AvailableDateWithCount3 : Queries.AvailableDate3);
-                queryParts.Add(customAggs == true ? Queries.AvailableDate4IntervalsCustom : Queries.AvailableDate4IntervalsBasic);
-                queryParts.Add(Queries.AvailableDate5);
-                queryParts.Add(customAggs == true ? Queries.AvailableDate6DeliveryPowerCustom : Queries.AvailableDate6DeliveryPowerBasic);
-                queryParts.Add(Queries.AvailableDate7);
-
-                query = String.Join("", queryParts);
+                string query = "";                
 
                 var DateMove = DateTime.Now.AddMonths(24000);
                 var TimeNow = new DateTime(2001, 1, 1, DateMove.Hour, DateMove.Minute, DateMove.Second);
@@ -327,7 +316,6 @@ namespace DateTimeService.Controllers
                 var MaxDate = new DateTime(5999, 11, 11, 0, 0, 0);
 
                 SqlCommand cmd = new(query, conn);
-
 
                 List<string> pickups = new();
 
@@ -338,6 +326,21 @@ namespace DateTimeService.Controllers
                     query = query.Replace(", KEEPFIXED PLAN", "");
                     queryTextBegin = queryTextBegin.Replace(", KEEPFIXED PLAN", "");
                 }
+
+                List<string> queryParts = new();
+
+                queryParts.Add(data.CheckQuantity == true ? Queries.AvailableDateWithCount1 : Queries.AvailableDate1);
+                queryParts.Add(customAggs == true ? Queries.AvailableDate2MinimumWarehousesCustom : Queries.AvailableDate2MinimumWarehousesBasic);
+                queryParts.Add(data.CheckQuantity == true ? Queries.AvailableDateWithCount3 : Queries.AvailableDate3);
+                queryParts.Add(customAggs == true ? Queries.AvailableDate4SourcesWithPricesCustom : Queries.AvailableDate4SourcesWithPricesBasic);
+                queryParts.Add(data.CheckQuantity == true ? Queries.AvailableDateWithCount5 : Queries.AvailableDate5);
+                queryParts.Add(customAggs == true ? Queries.AvailableDate6IntervalsCustom : Queries.AvailableDate6IntervalsBasic);
+                queryParts.Add(Queries.AvailableDate7);
+                queryParts.Add(customAggs == true ? Queries.AvailableDate8DeliveryPowerCustom : Queries.AvailableDate8DeliveryPowerBasic);
+                queryParts.Add(Queries.AvailableDate9);
+
+                query = String.Join("", queryParts);
+
 
                 //define the SqlCommand object
                 List<string> pickupParameters = new();
@@ -448,6 +451,7 @@ namespace DateTimeService.Controllers
                 logElement.ResponseContent = JsonSerializer.Serialize(dbResult);
                 logElement.Status = "Ok";
                 logElement.AdditionalData.Add("stats", JsonSerializer.Serialize(stats));
+                logElement.AdditionalData.Add("CheckQuantityFact", JsonSerializer.Serialize(data.CheckQuantity));
             }
             catch (Exception ex)
             {
@@ -986,6 +990,20 @@ namespace DateTimeService.Controllers
             var insertRowsLimit = 900;
 
             var parameters = new List<string>();
+
+            data.Codes = data.Codes.Where(x =>
+            {
+                if (data.CheckQuantity)
+                {
+                    return x.Quantity > 0;
+                }
+                else return true;
+            }).ToArray();
+
+            if (data.CheckQuantity)
+            {
+                data.CheckQuantity = data.Codes.Any(x => x.Quantity != 1); //we can use basic query if all quantity is 1
+            }
 
             var maxCodes = data.Codes.Length;
 
