@@ -6,6 +6,7 @@ using DateTimeService.DatabaseManagementUtils;
 using DateTimeService.Logging;
 using Hangfire;
 using Hangfire.MemoryStorage;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -17,6 +18,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Net.Http.Headers;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
@@ -52,6 +54,8 @@ namespace DateTimeService
                 .AddRoles<IdentityRole>()
                 .AddEntityFrameworkStores<DateTimeServiceContext>()
                 .AddDefaultTokenProviders();
+            services.AddControllersWithViews();
+            services.AddRazorPages();
 
             services.Configure<IdentityOptions>(options =>
             {
@@ -67,9 +71,9 @@ namespace DateTimeService
             // Adding Authentication  
             services.AddAuthentication(options =>
             {
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+                //options.DefaultAuthenticateScheme = ;
+                //options.DefaultChallengeScheme = "JWT_OR_COOKIE";
+                //options.DefaultScheme = "JWT_OR_COOKIE";
             })
 
             // Adding Jwt Bearer  
@@ -86,7 +90,29 @@ namespace DateTimeService
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["JWT:Secret"])),
                     ValidateLifetime = true
                 };
-            });
+            })
+            //.AddIdentityCookies(options =>
+            //{
+                //options.LoginPath = "/Identity/Account/Login";
+               //options.ExpireTimeSpan = TimeSpan.FromDays(1);
+            //})
+            //.AddPolicyScheme("JWT_OR_COOKIE", "JWT_OR_COOKIE", options =>
+            //{
+            //    // runs on each request
+            //    options.ForwardDefaultSelector = context =>
+            //    {
+            //        // filter by auth type
+            //        string authorization = context.Request.Headers[HeaderNames.Authorization];
+            //        if (!string.IsNullOrEmpty(authorization) && authorization.StartsWith("Bearer "))
+            //            return JwtBearerDefaults.AuthenticationScheme;
+
+            //        // otherwise always check for cookie auth
+            //        return CookieAuthenticationDefaults.AuthenticationScheme;
+            //    };
+            //});
+            ;
+
+            
 
             services.AddAuthorization(builder =>
             {
@@ -185,9 +211,11 @@ namespace DateTimeService
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapControllers();
+                endpoints.MapControllerRoute(
+                    name: "default",
+                    pattern: "{controller=Home}/{action=Index}/{id?}");
                 endpoints.MapRazorPages();
-                //endpoints.MapHangfireDashboardWithAuthorizationPolicy("Hangfire");
+                endpoints.MapHangfireDashboardWithAuthorizationPolicy("Hangfire");
             });
 
             try
