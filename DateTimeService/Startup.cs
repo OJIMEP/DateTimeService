@@ -114,13 +114,14 @@ namespace DateTimeService
 
             //new
             services.AddSingleton<IReadableDatabase, ReadableDatabasesService>();
-            services.AddSingleton<IReloadDatabasesService, DatabaseManagementNewServices.Services.ReloadDatabasesFromFileService>();
-            services.AddScoped<IDatabaseCheck, DatabaseCheckService>();
+            services.AddTransient<IReloadDatabasesService, DatabaseManagementNewServices.Services.ReloadDatabasesFromFileService>();
+            services.AddTransient<IDatabaseCheck, DatabaseCheckService>();
+            services.AddTransient<IDatabaseAvailabilityControl, DatabaseAvailabilityControlService>();
 
             //old
-            services.AddSingleton<IHostedService, DatabaseManagementUtils.ReloadDatabasesFromFileService>();
+            /*services.AddSingleton<IHostedService, DatabaseManagementUtils.ReloadDatabasesFromFileService>();
             services.AddSingleton<DatabaseManagement>();
-            services.AddSingleton<IHostedService, DatabaseManagementService>();
+            services.AddSingleton<IHostedService, DatabaseManagementService>();*/
 
 
             services.AddHangfire(x => x.UseMemoryStorage());
@@ -192,10 +193,10 @@ namespace DateTimeService
             try
             {
                 var reloadDatabasesService = serviceProvider.GetRequiredService<IReloadDatabasesService>();
-                RecurringJob.AddOrUpdate("ReloadDatabasesFromFiles", () => reloadDatabasesService.Reload(CancellationToken.None), "*/10 * * * * *"); //every 10 seconds
+                RecurringJob.AddOrUpdate("ReloadDatabasesFromFiles", () => reloadDatabasesService.ReloadAsync(CancellationToken.None), "*/10 * * * * *"); //every 10 seconds
 
                 var checkStatusService = serviceProvider.GetRequiredService<IDatabaseAvailabilityControl>();
-                RecurringJob.AddOrUpdate("ReloadDatabasesFromFiles", () => checkStatusService.CheckAndUpdateDatabasesStatus(CancellationToken.None), Cron.Minutely());
+                RecurringJob.AddOrUpdate("CheckAndUpdateDatabasesStatus", () => checkStatusService.CheckAndUpdateDatabasesStatus(CancellationToken.None), Cron.Minutely());
             }
             catch (Exception ex)
             {

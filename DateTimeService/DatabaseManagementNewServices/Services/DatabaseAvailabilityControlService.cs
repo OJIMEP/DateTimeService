@@ -24,6 +24,7 @@ namespace DateTimeService.DatabaseManagementNewServices.Services
         private readonly List<ClearCacheCriteria> clearCacheCriterias;
         private readonly string analyzeInterval = "now-1m";
         private readonly int errorsCountToSendClearCache;
+        private readonly int delayBetweenClearCache;
 
         public DatabaseAvailabilityControlService(IDatabaseCheck databaseCheckService,
                                                   IReadableDatabase readableDatabaseService,
@@ -41,11 +42,16 @@ namespace DateTimeService.DatabaseManagementNewServices.Services
             {
                 errorsCountToSendClearCache = 1;
             }
+
+            delayBetweenClearCache = _configuration.GetValue<int>("DelayBetweenClearCache");
+            if (delayBetweenClearCache == 0)
+            {
+                delayBetweenClearCache = 180;
+            }
         }
 
         public async Task CheckAndUpdateDatabasesStatus(CancellationToken cancellationToken)
         {
-            
             var dbList = _readableDatabaseService.GetAllDatabases();
 
             foreach (var databaseInfo in dbList)
@@ -58,28 +64,40 @@ namespace DateTimeService.DatabaseManagementNewServices.Services
                 if (databaseInfo.AvailableToUse)
                 {
                     string connection = databaseInfo.Connection;
-                    string connectionWithoutCreds = databaseInfo.ConnectionWithoutCredentials;
                     int customAggsFailCount = databaseInfo.CustomAggsFailCount;
                     int timeCriteriaFailCount = databaseInfo.TimeCriteriaFailCount;
 
-                    await CheckAndUpdateAggregations(connection, customAggsFailCount, cancellationToken);
-                    await CheckAndUpdatePerfomance(connection, connectionWithoutCreds, timeCriteriaFailCount, cancellationToken);
+                    if (databaseInfo.Type == "replica_tables")
+                    {
+                        await CheckAndUpdateAggregations(connection, customAggsFailCount, cancellationToken);
+                    }
+                    
+                    await CheckAndUpdatePerfomance(connection, databaseInfo.LastFreeProcCacheCommand, timeCriteriaFailCount, databaseInfo.Type != "main", cancellationToken);
                 }
                 else
                 {
-                    var availabilityResult = await _databaseCheckService.CheckAvailabilityAsync(databaseInfo.Connection, cancellationToken, 5000);
-                    if (availabilityResult)
+                    if (databaseInfo.LastCheckAvailability == default 
+                        || DateTimeOffset.Now - databaseInfo.LastCheckAvailability > TimeSpan.FromSeconds(60))
                     {
-                        _readableDatabaseService.UpdateDatabaseLastChecksTime(databaseInfo.Connection, false, true, false, false);
-                        _readableDatabaseService.EnableDatabase(databaseInfo.Connection);
+                        var availabilityResult = await _databaseCheckService.CheckAvailabilityAsync(databaseInfo.Connection, cancellationToken, 5000);
+                        if (availabilityResult)
+                        {
+                            _readableDatabaseService.EnableDatabase(databaseInfo.Connection);
+                        }
+                        _readableDatabaseService.UpdateDatabaseLastAvailabilityCheckTime(databaseInfo.Connection);
                     }
                 }
             }
         }
 
-        private async Task CheckAndUpdatePerfomance(string connection, string connectionWithoutCreds, int timeCriteriaFailCount, CancellationToken cancellationToken)
+        private async Task CheckAndUpdatePerfomance(string connection, DateTimeOffset lastFreeProcCacheCommand, int timeCriteriaFailCount, bool clearCacheAllowed, CancellationToken cancellationToken)
         {
-            var stats = await _databaseCheckService.GetElasticLogsInformationAsync(connection, cancellationToken);
+            if (!_configuration.GetValue<bool>("UseLoadBalance2"))
+            {
+                return;
+            }
+
+            var stats = await _databaseCheckService.GetElasticLogsInformationAsync(LoadBalancing.RemoveCredentialsFromConnectionString(connection), cancellationToken);
             if (stats != null)
             {
                 var dbAction = AnalyzeElasticResponse(stats);
@@ -91,40 +109,50 @@ namespace DateTimeService.DatabaseManagementNewServices.Services
                     case DatabaseActions.None:
                         break;
                     case DatabaseActions.SendClearCache:
-
-
-                        if (timeCriteriaFailCount > errorsCountToSendClearCache)
+                        if (clearCacheAllowed)
                         {
-                            await SendClearCacheScript(connection, connectionWithoutCreds, cancellationToken);
-                            _readableDatabaseService.UpdateDatabaseLastChecksTime(connection, true, false, false, false);
-                        }
-                        else
-                        {
-                            _readableDatabaseService.UpdateDatabasePerfomanceFailCount(connection, timeCriteriaFailCount, timeCriteriaFailCount + 1);
-                        }
-
+                            await ProcessSendClearCacheAction(connection, lastFreeProcCacheCommand, timeCriteriaFailCount, cancellationToken);
+                        }                        
                         break;
                     case DatabaseActions.DisableZeroExecutionTime:
-                        //TODO log it
-                        _readableDatabaseService.DisableDatabase(connection);
+                        _readableDatabaseService.DisableDatabase(connection, "zero execution time");
                         break;
                     case DatabaseActions.DisableBigExecutionTime:
-                        //TODO log it
-                        _readableDatabaseService.DisableDatabase(connection);
+                        _readableDatabaseService.DisableDatabase(connection, "big execution time");
                         break;
                     case DatabaseActions.DisableBigLoadBalanceTime:
-                        //TODO log it
-                        _readableDatabaseService.DisableDatabase(connection);
+                        _readableDatabaseService.DisableDatabase(connection, "big load balance time");
                         break;
                     default:
                         break;
                 }
-
-                _readableDatabaseService.UpdateDatabaseLastChecksTime(connection, false, false, false, true);
+                _readableDatabaseService.UpdateDatabaseLastPerfomanceCheckTime(connection);
             }
             else
             {
                 //todo log it
+            }
+        }
+
+        private async Task ProcessSendClearCacheAction(string connection, DateTimeOffset lastFreeProcCacheCommand, int timeCriteriaFailCount, CancellationToken cancellationToken)
+        {
+            if (lastFreeProcCacheCommand == default
+                                        || DateTimeOffset.Now - lastFreeProcCacheCommand > TimeSpan.FromSeconds(delayBetweenClearCache))
+            {
+                if (timeCriteriaFailCount > errorsCountToSendClearCache)
+                {
+                    await SendClearCacheScript(connection, cancellationToken);
+                    _readableDatabaseService.UpdateDatabasePerfomanceFailCount(connection, timeCriteriaFailCount, 0);
+                    _readableDatabaseService.UpdateDatabaseLastClearCacheTime(connection);
+                }
+                else
+                {
+                    _readableDatabaseService.UpdateDatabasePerfomanceFailCount(connection, timeCriteriaFailCount, timeCriteriaFailCount + 1);
+                }
+            }
+            else
+            {
+                _readableDatabaseService.UpdateDatabasePerfomanceFailCount(connection, timeCriteriaFailCount, 0);
             }
         }
 
@@ -151,10 +179,10 @@ namespace DateTimeService.DatabaseManagementNewServices.Services
                 _readableDatabaseService.EnableDatabaseAggs(connection);
             }
 
-            _readableDatabaseService.UpdateDatabaseLastChecksTime(connection, false, false, true, false);
+            _readableDatabaseService.UpdateDatabaseLastAggregationCheckTime(connection);
         }
 
-        private async Task<bool> SendClearCacheScript(string databaseConnectionString, string databaseConnectionStringWithoutCredentials, CancellationToken cancellationToken)
+        private async Task<bool> SendClearCacheScript(string databaseConnectionString, CancellationToken cancellationToken)
         {
             bool result = false;
 
@@ -187,7 +215,7 @@ namespace DateTimeService.DatabaseManagementNewServices.Services
                     LoadBalancingExecution = 0,
                     ErrorDescription = "Send dbcc freeproccache",
                     Status = "Ok",
-                    DatabaseConnection = databaseConnectionStringWithoutCredentials
+                    DatabaseConnection = LoadBalancing.RemoveCredentialsFromConnectionString(databaseConnectionString)
                 };
 
                 var logstringElement = JsonSerializer.Serialize(logElement);
@@ -203,7 +231,7 @@ namespace DateTimeService.DatabaseManagementNewServices.Services
                     LoadBalancingExecution = 0,
                     ErrorDescription = ex.Message,
                     Status = "Error",
-                    DatabaseConnection = databaseConnectionStringWithoutCredentials
+                    DatabaseConnection = LoadBalancing.RemoveCredentialsFromConnectionString(databaseConnectionString)
                 };
 
                 var logstringElement = JsonSerializer.Serialize(logElement);

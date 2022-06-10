@@ -26,12 +26,15 @@ namespace DateTimeService.DatabaseManagementNewServices.Services
         private readonly ILogger<DatabaseCheckService> _logger;
         private readonly IConfiguration _configuration;
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly bool _productionEnv;
 
         public DatabaseCheckService(ILogger<DatabaseCheckService> logger, IConfiguration configuration, IHttpClientFactory httpClientFactory)
         {
             _logger = logger;
             _configuration = configuration;
             _httpClientFactory = httpClientFactory;
+
+            _productionEnv = _configuration["loggerEnv"] == "Production";
         }
 
         public async Task<bool> CheckAggregationsAsync(string databaseConnectionString, CancellationToken cancellationToken)
@@ -91,13 +94,8 @@ namespace DateTimeService.DatabaseManagementNewServices.Services
             return result >= 0;
         }
 
-        public async Task<bool> CheckAvailabilityAsync(string databaseConnectionString, CancellationToken cancellationToken, long executionLimit = 3000)
+        public async Task<bool> CheckAvailabilityAsync(string databaseConnectionString, CancellationToken cancellationToken, long executionLimit = 5000)
         {
-            if (!_configuration.GetValue<bool>("UseLoadBalance2"))
-            {
-                return true;
-            }
-
             int result;
 
             Stopwatch watch = new();
@@ -439,13 +437,18 @@ namespace DateTimeService.DatabaseManagementNewServices.Services
 
             if (!elasticResponse.Aggregations.TryGetValue("load_time_outlier", out Aggregations aggregation))
             {
-                return null; //TODO log error
+                _logger.LogError("Aggregation load_time_outlier not found in Elastic response");
+                return null;
             }
 
             var responseBucket = aggregation.Buckets.Find(x => x.Key == databaseConnectionWithOutCredentials);
             if (responseBucket == null)
             {
-                return null; //TODO log error
+                if (_productionEnv)
+                {
+                    _logger.LogError($"Database with key {databaseConnectionWithOutCredentials} not found in Elastic response");
+                }                
+                return null;
             }
 
             var databaseStats = new ElasticDatabaseStats
@@ -458,6 +461,11 @@ namespace DateTimeService.DatabaseManagementNewServices.Services
 
             if (databaseStats.LoadBalanceTime == default || databaseStats.AverageTime == default || databaseStats.Percentile95Time == default)
             {
+                if (_productionEnv)
+                {
+                    _logger.LogError($"db stats for {databaseConnectionWithOutCredentials} is empty");
+                }
+                
                 return null;
             }
 

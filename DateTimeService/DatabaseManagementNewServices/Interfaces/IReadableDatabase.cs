@@ -7,8 +7,8 @@ namespace DateTimeService.DatabaseManagementNewServices.Interfaces
     public interface IReadableDatabase
     {
         public List<DatabaseInfo> GetAllDatabases();
-        public bool SynchronizeDatabasesListFromFile(List<DatabaseInfo> newDatabases);
-        public bool AddDatabase(DatabaseInfo newDatabaseEntity);
+        public Task<bool> SynchronizeDatabasesListFromFile(List<DatabaseInfo> newDatabases);
+        public Task<bool> AddDatabase(DatabaseInfo newDatabaseEntity);
         public bool DeleteDatabase(string connection);
         public bool UpdateDatabaseFromFile(DatabaseInfo newDatabaseEntity);
         public bool DisableDatabase(string connection, string reason = "");
@@ -17,6 +17,9 @@ namespace DateTimeService.DatabaseManagementNewServices.Interfaces
         public bool EnableDatabaseAggs(string connection, string reason = "");
         public bool UpdateDatabasePerfomanceFailCount(string connection, int oldFailCount, int newFailCount);
         public bool UpdateDatabaseAggregationsFailCount(string connection, int oldFailCount, int newFailCount);
-        public bool UpdateDatabaseLastChecksTime(string connection, bool clearCache, bool availability, bool aggregations, bool perfomance);
+        public bool UpdateDatabaseLastClearCacheTime(string connection);
+        public bool UpdateDatabaseLastAvailabilityCheckTime(string connection);
+        public bool UpdateDatabaseLastAggregationCheckTime(string connection);
+        public bool UpdateDatabaseLastPerfomanceCheckTime(string connection);
     }
 }

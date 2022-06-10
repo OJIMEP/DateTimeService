@@ -5,29 +5,43 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace DateTimeService.DatabaseManagementNewServices.Services
 {
     public class ReadableDatabasesService : Interfaces.IReadableDatabase
     {
         private readonly ILogger<ReadableDatabasesService> _logger;
+        private readonly Interfaces.IDatabaseCheck _databaseCheckService;
 
         private readonly ConcurrentDictionary<string, DatabaseInfo> dbDictionary = new();
 
-        public ReadableDatabasesService(ILogger<ReadableDatabasesService> logger)
+        public ReadableDatabasesService(ILogger<ReadableDatabasesService> logger, Interfaces.IDatabaseCheck databaseCheckService)
         {
             _logger = logger;
+            _databaseCheckService = databaseCheckService;
         }
 
-        public bool AddDatabase(DatabaseInfo database)
+        public async Task<bool> AddDatabase(DatabaseInfo database)
         {
             bool addResult;
             try
             {
+                database.AvailableToUse = await _databaseCheckService.CheckAvailabilityAsync(database.Connection, CancellationToken.None);
+                if (database.Type == "replica_tables")
+                {
+                    database.CustomAggregationsAvailable = await _databaseCheckService.CheckAggregationsAsync(database.Connection, CancellationToken.None);
+                }
+
                 addResult = dbDictionary.TryAdd(database.Connection, database);
                 if (addResult)
                 {
                     LogUpdatedChanges(database.ConnectionWithoutCredentials, "Added database", "");
+                    if (database.CustomAggregationsAvailable)
+                    {
+                        LogUpdatedChanges(database.ConnectionWithoutCredentials, $"Database aggs enabled", "");
+                    }
                 }
                 else
                 {
@@ -70,6 +84,159 @@ namespace DateTimeService.DatabaseManagementNewServices.Services
             return removeResult;
         }
 
+        public bool DisableDatabase(string connection, string reason = "")
+        {
+            bool updateResult;
+            try
+            {
+                var getResult = dbDictionary.TryGetValue(connection, out DatabaseInfo currentDatabaseEntity);
+                if (getResult)
+                {
+                    if (!currentDatabaseEntity.AvailableToUse)
+                    {
+                        return true;
+                    }
+
+                    var changedEntity = (DatabaseInfo)currentDatabaseEntity.Clone();
+                    changedEntity.AvailableToUse = false;
+
+                    updateResult = dbDictionary.TryUpdate(connection, changedEntity, currentDatabaseEntity);
+
+                    if (updateResult)
+                    {
+                        LogUpdatedChanges(changedEntity.ConnectionWithoutCredentials, $"Database disabled due to {reason}", "");   
+                    }
+                    else
+                        throw new Exception("Database update failed");
+                }
+                else
+                    throw new Exception("Database not found");
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning("Updating database failed", ex);
+                updateResult = false;
+            }
+
+            return updateResult;
+        }
+
+        public bool DisableDatabaseAggs(string connection, string reason = "")
+        {
+            bool updateResult;
+            try
+            {
+                var getResult = dbDictionary.TryGetValue(connection, out DatabaseInfo currentDatabaseEntity);
+                if (getResult)
+                {
+                    
+                    if(!currentDatabaseEntity.CustomAggregationsAvailable)
+                    {
+                        return true;
+                    }
+                    
+                    var changedEntity = (DatabaseInfo)currentDatabaseEntity.Clone();
+                    changedEntity.CustomAggregationsAvailable = false;
+
+                    updateResult = dbDictionary.TryUpdate(connection, changedEntity, currentDatabaseEntity);
+
+                    if (updateResult)
+                    {
+                        LogUpdatedChanges(changedEntity.ConnectionWithoutCredentials, $"Database aggs disabled due to {reason}", "");
+                    }
+                    else
+                        throw new Exception("Database update failed");
+                }
+                else
+                    throw new Exception("Database not found");
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning("Updating database failed", ex);
+                updateResult = false;
+            }
+
+            return updateResult;
+        }
+
+        public bool EnableDatabase(string connection, string reason = "")
+        {
+            bool updateResult;
+            try
+            {
+                var getResult = dbDictionary.TryGetValue(connection, out DatabaseInfo currentDatabaseEntity);
+                if (getResult)
+                {
+                    if (currentDatabaseEntity.AvailableToUse)
+                    {
+                        return true;
+                    }
+
+                    var changedEntity = (DatabaseInfo)currentDatabaseEntity.Clone();
+                    changedEntity.AvailableToUse = true;
+
+                    updateResult = dbDictionary.TryUpdate(connection, changedEntity, currentDatabaseEntity);
+
+                    if (updateResult)
+                    {
+                        LogUpdatedChanges(changedEntity.ConnectionWithoutCredentials, $"Database enabled {reason}", "");
+                    }
+                    else
+                        throw new Exception("Database update failed");
+                }
+                else
+                    throw new Exception("Database not found");
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning("Updating database failed", ex);
+                updateResult = false;
+            }
+
+            return updateResult;
+        }
+
+        public bool EnableDatabaseAggs(string connection, string reason = "")
+        {
+            bool updateResult;
+            try
+            {
+                var getResult = dbDictionary.TryGetValue(connection, out DatabaseInfo currentDatabaseEntity);
+                if (getResult)
+                {
+                    if (currentDatabaseEntity.CustomAggregationsAvailable)
+                    {
+                        return true;
+                    }
+
+                    var changedEntity = (DatabaseInfo)currentDatabaseEntity.Clone();
+                    changedEntity.CustomAggregationsAvailable = true;
+
+                    updateResult = dbDictionary.TryUpdate(connection, changedEntity, currentDatabaseEntity);
+
+                    if (updateResult)
+                    {
+                        LogUpdatedChanges(changedEntity.ConnectionWithoutCredentials, $"Database aggs enabled {reason}", "");
+                    }
+                    else
+                        throw new Exception("Database update failed");
+                }
+                else
+                    throw new Exception("Database not found");
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning("Updating database failed", ex);
+                updateResult = false;
+            }
+
+            return updateResult;
+        }
+
         public List<DatabaseInfo> GetAllDatabases()
         {
             var result = dbDictionary.Values.ToList();
@@ -77,7 +244,7 @@ namespace DateTimeService.DatabaseManagementNewServices.Services
             return result;
         }
 
-        public bool SynchronizeDatabasesListFromFile(List<DatabaseInfo> newDatabases)
+        public async Task<bool> SynchronizeDatabasesListFromFile(List<DatabaseInfo> newDatabases)
         {
             bool result = true;
 
@@ -96,11 +263,49 @@ namespace DateTimeService.DatabaseManagementNewServices.Services
                 }
                 else
                 {
-                    result = result && AddDatabase(newDb);
+                    result = result && await AddDatabase(newDb);
                 }
             }
 
             return result;
+        }
+
+        public bool UpdateDatabaseAggregationsFailCount(string connection, int oldFailCount, int newFailCount)
+        {
+            bool updateResult;
+            try
+            {
+                var getResult = dbDictionary.TryGetValue(connection, out DatabaseInfo currentDatabaseEntity);
+                if (getResult)
+                {
+                    if (currentDatabaseEntity.CustomAggsFailCount != oldFailCount)
+                    {
+                        throw new Exception("Database CustomAggsFailCount old is different from current");
+                    }
+
+                    var changedEntity = (DatabaseInfo)currentDatabaseEntity.Clone();
+                    changedEntity.CustomAggsFailCount = newFailCount;
+
+                    updateResult = dbDictionary.TryUpdate(connection, changedEntity, currentDatabaseEntity);
+
+                    if (updateResult)
+                    {
+                        //LogUpdatedChanges(newDatabaseEntity.ConnectionWithoutCredentials, "Priority changed", $"New priority = {newDatabaseEntity.Priority}");   
+                    }
+                    else
+                        throw new Exception("Database update failed");
+                }
+                else
+                    throw new Exception("Database not found");
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning("Updating database failed", ex);
+                updateResult = false;
+            }
+
+            return updateResult;
         }
 
         public bool UpdateDatabaseFromFile(DatabaseInfo newDatabaseEntity)
@@ -151,6 +356,161 @@ namespace DateTimeService.DatabaseManagementNewServices.Services
 
             return updateResult;
 
+        }
+
+        public bool UpdateDatabaseLastAggregationCheckTime(string connection)
+        {
+            bool updateResult;
+            try
+            {
+                var getResult = dbDictionary.TryGetValue(connection, out DatabaseInfo currentDatabaseEntity);
+                if (getResult)
+                {
+                    var changedEntity = (DatabaseInfo)currentDatabaseEntity.Clone();
+                    changedEntity.LastCheckAggregations = DateTimeOffset.Now;
+
+                    updateResult = dbDictionary.TryUpdate(connection, changedEntity, currentDatabaseEntity);
+
+                    if (!updateResult)
+                        throw new Exception("Database update failed");
+                }
+                else
+                    throw new Exception("Database not found");
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning("Updating database failed", ex);
+                updateResult = false;
+            }
+
+            return updateResult;
+        }
+
+        public bool UpdateDatabaseLastAvailabilityCheckTime(string connection)
+        {
+            bool updateResult;
+            try
+            {
+                var getResult = dbDictionary.TryGetValue(connection, out DatabaseInfo currentDatabaseEntity);
+                if (getResult)
+                {
+                    var changedEntity = (DatabaseInfo)currentDatabaseEntity.Clone();
+                    changedEntity.LastCheckAvailability = DateTimeOffset.Now;
+
+                    updateResult = dbDictionary.TryUpdate(connection, changedEntity, currentDatabaseEntity);
+
+                    if (!updateResult)
+                        throw new Exception("Database update failed");
+                }
+                else
+                    throw new Exception("Database not found");
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning("Updating database failed", ex);
+                updateResult = false;
+            }
+
+            return updateResult;
+        }
+
+        public bool UpdateDatabaseLastClearCacheTime(string connection)
+        {
+            bool updateResult;
+            try
+            {
+                var getResult = dbDictionary.TryGetValue(connection, out DatabaseInfo currentDatabaseEntity);
+                if (getResult)
+                {
+                    var changedEntity = (DatabaseInfo)currentDatabaseEntity.Clone();
+                    changedEntity.LastFreeProcCacheCommand = DateTimeOffset.Now;
+
+                    updateResult = dbDictionary.TryUpdate(connection, changedEntity, currentDatabaseEntity);
+
+                    if (!updateResult)
+                        throw new Exception("Database update failed");
+                }
+                else
+                    throw new Exception("Database not found");
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning("Updating database failed", ex);
+                updateResult = false;
+            }
+
+            return updateResult;
+        }
+
+        public bool UpdateDatabaseLastPerfomanceCheckTime(string connection)
+        {
+            bool updateResult;
+            try
+            {
+                var getResult = dbDictionary.TryGetValue(connection, out DatabaseInfo currentDatabaseEntity);
+                if (getResult)
+                {
+                    var changedEntity = (DatabaseInfo)currentDatabaseEntity.Clone();
+                    changedEntity.LastCheckPerfomance = DateTimeOffset.Now;
+
+                    updateResult = dbDictionary.TryUpdate(connection, changedEntity, currentDatabaseEntity);
+
+                    if (!updateResult)
+                        throw new Exception("Database update failed");
+                }
+                else
+                    throw new Exception("Database not found");
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning("Updating database failed", ex);
+                updateResult = false;
+            }
+
+            return updateResult;
+        }
+
+        public bool UpdateDatabasePerfomanceFailCount(string connection, int oldFailCount, int newFailCount)
+        {
+
+            bool updateResult;
+            try
+            {
+                var getResult = dbDictionary.TryGetValue(connection, out DatabaseInfo currentDatabaseEntity);
+                if (getResult)
+                {
+                    if (currentDatabaseEntity.TimeCriteriaFailCount != oldFailCount)
+                    {
+                        throw new Exception("Database PerfomanceFailCount old is diffrent from current");
+                    }
+                    
+                    var changedEntity = (DatabaseInfo)currentDatabaseEntity.Clone();
+                    changedEntity.TimeCriteriaFailCount = newFailCount;
+
+                    updateResult = dbDictionary.TryUpdate(connection, changedEntity, currentDatabaseEntity);
+
+                    if (updateResult)
+                    {
+                        //LogUpdatedChanges(newDatabaseEntity.ConnectionWithoutCredentials, "Priority changed", $"New priority = {newDatabaseEntity.Priority}");   
+                    }
+                    else
+                        throw new Exception("Database update failed");
+                }
+                else
+                    throw new Exception("Database not found");
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning("Updating database failed", ex);
+                updateResult = false;
+            }
+
+            return updateResult;
         }
 
         private void LogUpdatedChanges(string connectionName, string description, string updateDesc, string status = "Ok")

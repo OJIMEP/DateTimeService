@@ -15,6 +15,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using DateTimeService.DatabaseManagementNewServices.Interfaces;
 
 namespace DateTimeService.Controllers
 {
@@ -28,15 +29,17 @@ namespace DateTimeService.Controllers
         private readonly ILoadBalancing _loadBalacing;
         private readonly IGeoZones _geoZones;
         private readonly IMapper _mapper;
+        private readonly IReadableDatabase _readableDatabaseService;
 
         public DateTimeController(ILogger<DateTimeController> logger, IConfiguration configuration, ILoadBalancing loadBalancing,
-                                    IGeoZones geoZones, IMapper mapper)
+                                    IGeoZones geoZones, IMapper mapper, IReadableDatabase readableDatabaseService)
         {
             _logger = logger;
             _configuration = configuration;
             _loadBalacing = loadBalancing;
             _geoZones = geoZones;
             _mapper = mapper;
+            _readableDatabaseService = readableDatabaseService;
         }
 
         [Authorize(Roles = UserRoles.MaxAvailableCount + "," + UserRoles.Admin)]
@@ -970,6 +973,17 @@ namespace DateTimeService.Controllers
 
             await conn.CloseAsync();
             return StatusCode(200, new { Status = "Ok"});
+        }
+
+        [Route("Databases")]
+        [Authorize(Roles = UserRoles.Admin)]
+        [HttpGet]
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        public async Task<IActionResult> CurrenDBStatesAsync()
+        {
+            var dbList = _readableDatabaseService.GetAllDatabases();
+
+            return Ok(dbList);
         }
 
         private static string TextFillGoodsTable(RequestIntervalList data, SqlCommand cmdGoodsTable, bool optimizeRowsCount)

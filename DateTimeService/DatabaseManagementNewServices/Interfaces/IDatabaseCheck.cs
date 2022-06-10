@@ -8,7 +8,7 @@ namespace DateTimeService.DatabaseManagementNewServices.Interfaces
     {
         public Task<ElasticDatabaseStats> GetElasticLogsInformationAsync(string databaseConnectionWithOutCredentials, CancellationToken cancellationToken);
 
-        public Task<bool> CheckAvailabilityAsync(string databaseConnectionString, CancellationToken cancellationToken, long executionLimit);
+        public Task<bool> CheckAvailabilityAsync(string databaseConnectionString, CancellationToken cancellationToken, long executionLimit = 5000);
 
         public Task<bool> CheckAggregationsAsync(string databaseConnectionString, CancellationToken cancellationToken);
 

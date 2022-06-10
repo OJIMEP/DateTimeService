@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace DateTimeService.DatabaseManagementNewServices.Services
 {
@@ -25,28 +26,18 @@ namespace DateTimeService.DatabaseManagementNewServices.Services
             _configuration = configuration;
         }
 
-        public void Reload(CancellationToken cancellationToken)
+        public async Task ReloadAsync(CancellationToken cancellationToken)
         {
             var dbList = _configuration.GetSection("OneSDatabases").Get<List<DatabaseConnectionParameter>>();
-            bool useLoadBalance2 = _configuration.GetValue<bool>("UseLoadBalance2");
 
             if (dbList == null)
             {
                 dbList = new();
             }
 
-            List<DatabaseInfo> databases = dbList.Select(x => 
-            {
-                DatabaseInfo database = new DatabaseInfo(x);
-                if (!useLoadBalance2)
-                {
-                    database.AvailableToUse = true;
-                }
-                return database; 
-            }
-            ).ToList();
+            List<DatabaseInfo> databases = dbList.Select(x => new DatabaseInfo(x)).ToList();
 
-            var result = _databasesService.SynchronizeDatabasesListFromFile(databases);
+            var result = await _databasesService.SynchronizeDatabasesListFromFile(databases);
 
             if (!result)
             {

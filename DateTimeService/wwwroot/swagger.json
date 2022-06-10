@@ -16,7 +16,7 @@
   },
   "servers": [
     {
-      "url": "https://courier.21vek.by:739/NetMS"
+      "url": "https://site.com/NetMS"
     }
   ],
   "tags": [
