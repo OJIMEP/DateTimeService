@@ -54,8 +54,6 @@ namespace DateTimeService
                 .AddRoles<IdentityRole>()
                 .AddEntityFrameworkStores<DateTimeServiceContext>()
                 .AddDefaultTokenProviders();
-            services.AddControllersWithViews();
-            services.AddRazorPages();
 
             services.Configure<IdentityOptions>(options =>
             {
@@ -71,11 +69,10 @@ namespace DateTimeService
             // Adding Authentication  
             services.AddAuthentication(options =>
             {
-                //options.DefaultAuthenticateScheme = ;
-                //options.DefaultChallengeScheme = "JWT_OR_COOKIE";
-                //options.DefaultScheme = "JWT_OR_COOKIE";
+                options.DefaultAuthenticateScheme = "JWT_OR_COOKIE";
+                options.DefaultChallengeScheme = "JWT_OR_COOKIE";
+                options.DefaultScheme = "JWT_OR_COOKIE";
             })
-
             // Adding Jwt Bearer  
             .AddJwtBearer(options =>
             {
@@ -91,26 +88,21 @@ namespace DateTimeService
                     ValidateLifetime = true
                 };
             })
-            //.AddIdentityCookies(options =>
-            //{
-                //options.LoginPath = "/Identity/Account/Login";
-               //options.ExpireTimeSpan = TimeSpan.FromDays(1);
-            //})
-            //.AddPolicyScheme("JWT_OR_COOKIE", "JWT_OR_COOKIE", options =>
-            //{
-            //    // runs on each request
-            //    options.ForwardDefaultSelector = context =>
-            //    {
-            //        // filter by auth type
-            //        string authorization = context.Request.Headers[HeaderNames.Authorization];
-            //        if (!string.IsNullOrEmpty(authorization) && authorization.StartsWith("Bearer "))
-            //            return JwtBearerDefaults.AuthenticationScheme;
+            .AddPolicyScheme("JWT_OR_COOKIE", "JWT_OR_COOKIE", options =>
+            {
+                // runs on each request
+                options.ForwardDefaultSelector = context =>
+                {
+                    // filter by auth type
+                    string authorization = context.Request.Headers[HeaderNames.Authorization];
+                    if (!string.IsNullOrEmpty(authorization) && authorization.StartsWith("Bearer "))
+                        return JwtBearerDefaults.AuthenticationScheme;
 
-            //        // otherwise always check for cookie auth
-            //        return CookieAuthenticationDefaults.AuthenticationScheme;
-            //    };
-            //});
-            ;
+                    // otherwise always check for Identity cookie auth
+                    return IdentityConstants.ApplicationScheme;
+                };
+            });
+            
 
             
 
@@ -135,8 +127,6 @@ namespace DateTimeService
             });
 
             services.AddHttpClient<ILogger, HttpLogger>();
-
-            //DatabaseList.CreateDatabases(Configuration.GetSection("OneSDatabases").Get<List<DatabaseConnectionParameter>>());            
 
             //new
             services.AddSingleton<IReadableDatabase, ReadableDatabasesService>();
@@ -168,14 +158,10 @@ namespace DateTimeService
                            ForwardedHeaders.XForwardedProto
             });
 
-            //app.UseCors(builder => builder.AllowAnyHeader().AllowAnyMethod().SetIsOriginAllowedToAllowWildcardSubdomains().WithOrigins("https://*.21vek.by", "https://localhost*", "https://*.swagger.io"));
             app.UseCors(builder => builder.AllowAnyHeader().AllowAnyMethod().SetIsOriginAllowedToAllowWildcardSubdomains().WithOrigins(Configuration.GetSection("CorsOrigins").Get<List<string>>().ToArray()));
-
-
 
             app.UseStaticFiles();
             app.UseSwagger();
-
 
             if (env.IsDevelopment())
             {
@@ -194,15 +180,10 @@ namespace DateTimeService
                 app.UseHttpsRedirection();
             }
             
-
             app.UseRouting();
-
-
 
             app.UseAuthentication();
             app.UseAuthorization();
-
-            //loggerFactory = LoggerFactory.Create(builder => builder.ClearProviders());
 
             loggerFactory.AddHttp(Configuration["loggerHost"], Configuration.GetValue<int>("loggerPortUdp"), Configuration.GetValue<int>("loggerPortHttp"), Configuration["loggerEnv"]);
             loggerFactory.CreateLogger("HttpLogger");
@@ -211,9 +192,10 @@ namespace DateTimeService
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapControllerRoute(
-                    name: "default",
-                    pattern: "{controller=Home}/{action=Index}/{id?}");
+                endpoints.MapControllers();
+                //endpoints.MapControllerRoute(
+                //    name: "default",
+                //    pattern: "{controller=Home}/{action=Index}/{id?}");
                 endpoints.MapRazorPages();
                 endpoints.MapHangfireDashboardWithAuthorizationPolicy("Hangfire");
             });
