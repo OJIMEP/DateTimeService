@@ -520,7 +520,7 @@ FROM
 		AND T2._Fld21410_RTRef = 0x00000153
 		AND Цены._Fld21410_RTRef = 0x00000153 --Цены.Регистратор ССЫЛКА Документ.мегапрайсРегистрацияПрайса
 		AND T2._Fld21410_RRRef = Цены._Fld21410_RRRef
-        And Цены._Fld21442<>0 AND (Цены._Fld21442 * Temp_ExchangeRates.Курс / Temp_ExchangeRates.Кратность >= Цены._Fld21982 OR Цены._Fld21411 >= Цены._Fld21616)
+        And (Цены._Fld21982<>0 AND Цены._Fld21442 * Temp_ExchangeRates.Курс / Temp_ExchangeRates.Кратность >= Цены._Fld21982 OR Цены._Fld21411 >= Цены._Fld21616)
 		And Цены._Fld21408RRef IN(SELECT
                 НоменклатураСсылка
             FROM
@@ -1595,8 +1595,8 @@ FROM
 		AND T2._Fld21410_RTRef = 0x00000153
 		AND ЦеныТолькоПрайсы._Fld21410_RTRef = 0x00000153  --Цены.Регистратор ССЫЛКА Документ.мегапрайсРегистрацияПрайса
 		AND T2._Fld21410_RRRef = ЦеныТолькоПрайсы._Fld21410_RRRef
-        And ЦеныТолькоПрайсы._Fld21442<>0 
-		AND (ЦеныТолькоПрайсы._Fld21442 * Temp_ExchangeRates.Курс / Temp_ExchangeRates.Кратность >= ЦеныТолькоПрайсы._Fld21982 OR ЦеныТолькоПрайсы._Fld21411 >= ЦеныТолькоПрайсы._Fld21616)
+        And (ЦеныТолькоПрайсы._Fld21982<>0 
+		AND ЦеныТолькоПрайсы._Fld21442 * Temp_ExchangeRates.Курс / Temp_ExchangeRates.Кратность >= ЦеныТолькоПрайсы._Fld21982 OR ЦеныТолькоПрайсы._Fld21411 >= ЦеныТолькоПрайсы._Fld21616)
 		And ЦеныТолькоПрайсы._Fld21408RRef IN(SELECT
                 НоменклатураСсылка
             FROM
@@ -1608,8 +1608,8 @@ FROM
 		AND T2._Fld21410_RTRef IN(0x00000141,0x00000153)
 		AND Цены._Fld21410_RTRef IN(0x00000141,0x00000153)  --Цены.Регистратор ССЫЛКА Документ.мегапрайсРегистрацияПрайса, ЗаказПоставщику
 		AND T2._Fld21410_RRRef = Цены._Fld21410_RRRef
-        And Цены._Fld21442<>0 
-		AND (Цены._Fld21410_RTRef = 0x00000141 OR (Цены._Fld21442 * ExchangeRates.Курс / ExchangeRates.Кратность >= Цены._Fld21982 OR Цены._Fld21411 >= Цены._Fld21616))
+        And (Цены._Fld21982<>0 
+		AND Цены._Fld21410_RTRef = 0x00000141 OR (Цены._Fld21442 * ExchangeRates.Курс / ExchangeRates.Кратность >= Цены._Fld21982 OR Цены._Fld21411 >= Цены._Fld21616))
 		And Цены._Fld21408RRef IN(SELECT
                 НоменклатураСсылка
             FROM
@@ -2722,8 +2722,8 @@ FROM
 		AND T2._Fld21410_RTRef = 0x00000153
 		AND ЦеныТолькоПрайсы._Fld21410_RTRef = 0x00000153  --Цены.Регистратор ССЫЛКА Документ.мегапрайсРегистрацияПрайса
 		AND T2._Fld21410_RRRef = ЦеныТолькоПрайсы._Fld21410_RRRef
-        And ЦеныТолькоПрайсы._Fld21442<>0 
-		AND (ЦеныТолькоПрайсы._Fld21442 * Temp_ExchangeRates.Курс / Temp_ExchangeRates.Кратность >= ЦеныТолькоПрайсы._Fld21982 OR ЦеныТолькоПрайсы._Fld21411 >= ЦеныТолькоПрайсы._Fld21616)
+        And (ЦеныТолькоПрайсы._Fld21982<>0 
+		AND ЦеныТолькоПрайсы._Fld21442 * Temp_ExchangeRates.Курс / Temp_ExchangeRates.Кратность >= ЦеныТолькоПрайсы._Fld21982 OR ЦеныТолькоПрайсы._Fld21411 >= ЦеныТолькоПрайсы._Fld21616)
 		And ЦеныТолькоПрайсы._Fld21408RRef IN(SELECT
                 НоменклатураСсылка
             FROM
@@ -2735,8 +2735,8 @@ FROM
 		AND T2._Fld21410_RTRef IN(0x00000141,0x00000153)
 		AND Цены._Fld21410_RTRef IN(0x00000141,0x00000153)  --Цены.Регистратор ССЫЛКА Документ.мегапрайсРегистрацияПрайса, ЗаказПоставщику
 		AND T2._Fld21410_RRRef = Цены._Fld21410_RRRef
-        And Цены._Fld21442<>0 
-		AND (Цены._Fld21410_RTRef = 0x00000141 OR (Цены._Fld21442 * ExchangeRates.Курс / ExchangeRates.Кратность >= Цены._Fld21982 OR Цены._Fld21411 >= Цены._Fld21616))
+        And (Цены._Fld21982<>0 
+		AND Цены._Fld21410_RTRef = 0x00000141 OR (Цены._Fld21442 * ExchangeRates.Курс / ExchangeRates.Кратность >= Цены._Fld21982 OR Цены._Fld21411 >= Цены._Fld21616))
 		And Цены._Fld21408RRef IN(SELECT
                 НоменклатураСсылка
             FROM
