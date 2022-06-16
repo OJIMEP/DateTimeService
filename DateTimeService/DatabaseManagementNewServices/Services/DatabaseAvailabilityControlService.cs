@@ -257,11 +257,6 @@ namespace DateTimeService.DatabaseManagementNewServices.Services
                 return DatabaseActions.Error; //TODO log error
             }
 
-            if (percentile95rate > criteria.Percentile_95)
-            {
-                return DatabaseActions.SendClearCache;
-            }
-
             if (recordsByMinute >= 100 && elasticStats.AverageTime == 0)
             {
                 return DatabaseActions.DisableZeroExecutionTime;
@@ -275,7 +270,12 @@ namespace DateTimeService.DatabaseManagementNewServices.Services
             if (recordsByMinute >= 100 && elasticStats.AverageTime > criteriaMaxTime.Percentile_95)
             {
                 return DatabaseActions.DisableBigExecutionTime;
-            }           
+            }
+
+            if (percentile95rate > criteria.Percentile_95)
+            {
+                return DatabaseActions.SendClearCache;
+            }
 
             return DatabaseActions.None;
         }
