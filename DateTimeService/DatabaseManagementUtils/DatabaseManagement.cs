@@ -475,7 +475,7 @@ namespace DateTimeService.Data
                 queryParts.Add(Queries.AvailableDate1);
                 queryParts.Add(Queries.AvailableDate2MinimumWarehousesBasic);
                 queryParts.Add(Queries.AvailableDate3);
-                queryParts.Add(Queries.AvailableDate4SourcesWithPricesBasic);
+                queryParts.Add(Queries.AvailableDate4SourcesWithPrices);
                 queryParts.Add(Queries.AvailableDate5);
                 queryParts.Add(Queries.AvailableDate6IntervalsBasic);
                 queryParts.Add(Queries.AvailableDate7);
@@ -615,7 +615,7 @@ namespace DateTimeService.Data
                 var logElement = new ElasticLogElement
                 {
                     LoadBalancingExecution = 0,
-                    ErrorDescription = ex.Message,
+                    ErrorDescription = "Availability false because of" + ex.Message,
                     Status = "Error",
                     DatabaseConnection = LoadBalancing.RemoveCredentialsFromConnectionString(connstring)
                 };

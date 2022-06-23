@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace DateTimeService.Models
 {
-    public class DatabaseInfo : DatabaseConnectionParameter
+    public class DatabaseInfo : DatabaseConnectionParameter, ICloneable
     {
 
         public string ConnectionWithoutCredentials { get; set; }
@@ -28,6 +28,26 @@ namespace DateTimeService.Models
             Priority = connectionParameter.Priority;
             Type = connectionParameter.Type;
             ActualPriority = connectionParameter.Priority;
+        }
+
+        public object Clone()
+        {
+            var result = new DatabaseInfo(this)
+            {
+                AvailableToUse = AvailableToUse,
+                LastFreeProcCacheCommand = LastFreeProcCacheCommand,
+                LastCheckAvailability = LastCheckAvailability,
+                LastCheckAggregations = LastCheckAggregations,
+                LastCheckPerfomance = LastCheckPerfomance,
+                ActualPriority = ActualPriority,
+                ExistsInFile = ExistsInFile,
+                CustomAggregationsAvailable = CustomAggregationsAvailable,
+                CustomAggsFailCount = CustomAggsFailCount,
+                TimeCriteriaFailCount = TimeCriteriaFailCount
+            };
+
+            return result;
+
         }
     }
 

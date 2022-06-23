@@ -1,7 +1,12 @@
 using DateTimeService.Areas.Identity.Data;
 using DateTimeService.Data;
+using DateTimeService.DatabaseManagementNewServices.Interfaces;
+using DateTimeService.DatabaseManagementNewServices.Services;
 using DateTimeService.DatabaseManagementUtils;
 using DateTimeService.Logging;
+using Hangfire;
+using Hangfire.MemoryStorage;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -13,10 +18,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Net.Http.Headers;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
+using System.Threading;
 
 namespace DateTimeService
 {
@@ -43,7 +50,8 @@ namespace DateTimeService
             services.AddDbContext<DateTimeServiceContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DateTimeServiceContextConnection")));
 
             // For Identity  
-            services.AddIdentity<DateTimeServiceUser, IdentityRole>()
+            services.AddDefaultIdentity<DateTimeServiceUser>()
+                .AddRoles<IdentityRole>()
                 .AddEntityFrameworkStores<DateTimeServiceContext>()
                 .AddDefaultTokenProviders();
 
@@ -61,11 +69,10 @@ namespace DateTimeService
             // Adding Authentication  
             services.AddAuthentication(options =>
             {
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultAuthenticateScheme = "JWT_OR_COOKIE";
+                options.DefaultChallengeScheme = "JWT_OR_COOKIE";
+                options.DefaultScheme = "JWT_OR_COOKIE";
             })
-
             // Adding Jwt Bearer  
             .AddJwtBearer(options =>
             {
@@ -80,6 +87,28 @@ namespace DateTimeService
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["JWT:Secret"])),
                     ValidateLifetime = true
                 };
+            })
+            .AddPolicyScheme("JWT_OR_COOKIE", "JWT_OR_COOKIE", options =>
+            {
+                // runs on each request
+                options.ForwardDefaultSelector = context =>
+                {
+                    // filter by auth type
+                    string authorization = context.Request.Headers[HeaderNames.Authorization];
+                    if (!string.IsNullOrEmpty(authorization) && authorization.StartsWith("Bearer "))
+                        return JwtBearerDefaults.AuthenticationScheme;
+
+                    // otherwise always check for Identity cookie auth
+                    return IdentityConstants.ApplicationScheme;
+                };
+            });
+            
+
+            
+
+            services.AddAuthorization(builder =>
+            {
+                builder.AddPolicy("Hangfire", policy => policy.RequireRole(UserRoles.Admin));
             });
 
             services.AddScoped<IUserService, UserService>();
@@ -99,15 +128,28 @@ namespace DateTimeService
 
             services.AddHttpClient<ILogger, HttpLogger>();
 
-            //DatabaseList.CreateDatabases(Configuration.GetSection("OneSDatabases").Get<List<DatabaseConnectionParameter>>());            
+            //new
+            services.AddSingleton<IReadableDatabase, ReadableDatabasesService>();
+            services.AddTransient<IReloadDatabasesService, DatabaseManagementNewServices.Services.ReloadDatabasesFromFileService>();
+            services.AddTransient<IDatabaseCheck, DatabaseCheckService>();
+            services.AddTransient<IDatabaseAvailabilityControl, DatabaseAvailabilityControlService>();
 
-            services.AddSingleton<IHostedService, ReloadDatabasesFromFileService>();
-
+            //old
+            /*services.AddSingleton<IHostedService, DatabaseManagementUtils.ReloadDatabasesFromFileService>();
             services.AddSingleton<DatabaseManagement>();
-            services.AddSingleton<IHostedService, DatabaseManagementService>();
+            services.AddSingleton<IHostedService, DatabaseManagementService>();*/
+
+
+            services.AddHangfire(x => x.UseMemoryStorage());
+            
+            services.AddHangfireServer(options =>
+            {
+                options.SchedulePollingInterval = TimeSpan.FromMilliseconds(5000);
+            });
+
         }
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory, IServiceProvider serviceProvider)
         {
 
             app.UseForwardedHeaders(new ForwardedHeadersOptions
@@ -116,14 +158,10 @@ namespace DateTimeService
                            ForwardedHeaders.XForwardedProto
             });
 
-            //app.UseCors(builder => builder.AllowAnyHeader().AllowAnyMethod().SetIsOriginAllowedToAllowWildcardSubdomains().WithOrigins("https://*.21vek.by", "https://localhost*", "https://*.swagger.io"));
             app.UseCors(builder => builder.AllowAnyHeader().AllowAnyMethod().SetIsOriginAllowedToAllowWildcardSubdomains().WithOrigins(Configuration.GetSection("CorsOrigins").Get<List<string>>().ToArray()));
-
-
 
             app.UseStaticFiles();
             app.UseSwagger();
-
 
             if (env.IsDevelopment())
             {
@@ -142,24 +180,36 @@ namespace DateTimeService
                 app.UseHttpsRedirection();
             }
             
-
             app.UseRouting();
-
-
 
             app.UseAuthentication();
             app.UseAuthorization();
 
-            //loggerFactory = LoggerFactory.Create(builder => builder.ClearProviders());
-
             loggerFactory.AddHttp(Configuration["loggerHost"], Configuration.GetValue<int>("loggerPortUdp"), Configuration.GetValue<int>("loggerPortHttp"), Configuration["loggerEnv"]);
-            var logger = loggerFactory.CreateLogger("HttpLogger");
+            loggerFactory.CreateLogger("HttpLogger");
 
+            app.UseHangfireDashboard();
 
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapRazorPages();
+                endpoints.MapHangfireDashboardWithAuthorizationPolicy("Hangfire");
             });
+
+            try
+            {
+                var reloadDatabasesService = serviceProvider.GetRequiredService<IReloadDatabasesService>();
+                RecurringJob.AddOrUpdate("ReloadDatabasesFromFiles", () => reloadDatabasesService.ReloadAsync(CancellationToken.None), "*/10 * * * * *"); //every 10 seconds
+
+                var checkStatusService = serviceProvider.GetRequiredService<IDatabaseAvailabilityControl>();
+                RecurringJob.AddOrUpdate("CheckAndUpdateDatabasesStatus", () => checkStatusService.CheckAndUpdateDatabasesStatus(CancellationToken.None), Cron.Minutely());
+            }
+            catch (Exception ex)
+            {
+                var logger = serviceProvider.GetRequiredService<ILogger<Startup>>();
+                logger.LogError(ex, "An error occurred while starting recurring job.");
+            }
         }
     }
 }

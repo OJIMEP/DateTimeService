@@ -18,6 +18,8 @@ namespace DateTimeService.Models
                     opt => { opt.MapFrom<CodeResolver>(); })
                 .ForMember(dest => dest.Article,
                     opt => { opt.MapFrom(src => src.Code); });
+
+            CreateMap<DatabaseInfo, ResponseDatabaseStatusList>();
         }
     }
 }

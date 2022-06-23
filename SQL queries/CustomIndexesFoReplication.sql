@@ -287,12 +287,12 @@ GO
 
 CREATE TABLE [dbo].[DeliveryPowerAggregate]
 (
-    [Период] [datetime] NOT NULL,
-    [ЗонаДоставки] [binary](16) NOT NULL,
-    [МассаОборот] [numeric](10, 3) NOT NULL,
-    [ОбъемОборот] [numeric](10, 3) NOT NULL,
-    [ВремяНаОбслуживаниеОборот] [numeric](10, 3) NOT NULL,
-    CONSTRAINT [PK_DeliveryPowerAggregate] PRIMARY KEY CLUSTERED 
+	[Период] [datetime] NOT NULL,
+	[ЗонаДоставки] [binary](16) NOT NULL,
+	[МассаОборот] [numeric](10, 3) NOT NULL,
+	[ОбъемОборот] [numeric](10, 3) NOT NULL,
+	[ВремяНаОбслуживаниеОборот] [numeric](10, 3) NOT NULL,
+	CONSTRAINT [PK_DeliveryPowerAggregate] PRIMARY KEY CLUSTERED 
 (
 	[Период] ASC,
 	[ЗонаДоставки] ASC
@@ -308,13 +308,13 @@ GO
 
 CREATE TABLE [dbo].[IntervalsAggregate]
 (
-    [Период] [datetime] NOT NULL,
-    [ГруппаПланирования] [binary](16) NOT NULL,
-    [Геозона] [binary](16) NOT NULL,
-    [ВремяНачала] [datetime] NOT NULL,
-    [ВремяОкончания] [datetime] NOT NULL,
-    [КоличествоЗаказовЗаИнтервалВремени] [numeric](10, 0) NOT NULL,
-    CONSTRAINT [PK_IntervalsAggregate] PRIMARY KEY CLUSTERED 
+	[Период] [datetime] NOT NULL,
+	[ГруппаПланирования] [binary](16) NOT NULL,
+	[Геозона] [binary](16) NOT NULL,
+	[ВремяНачала] [datetime] NOT NULL,
+	[ВремяОкончания] [datetime] NOT NULL,
+	[КоличествоЗаказовЗаИнтервалВремени] [numeric](10, 0) NOT NULL,
+	CONSTRAINT [PK_IntervalsAggregate] PRIMARY KEY CLUSTERED 
 (
 	[Период] ASC,
 	[ГруппаПланирования] ASC,
@@ -326,11 +326,14 @@ CREATE TABLE [dbo].[IntervalsAggregate]
 GO
 
 
-IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[WarehouseDatesAggregate]') AND type in (N'U'))
+IF  EXISTS (SELECT *
+FROM sys.objects
+WHERE object_id = OBJECT_ID(N'[dbo].[WarehouseDatesAggregate]') AND type in (N'U'))
 DROP TABLE [dbo].[WarehouseDatesAggregate]
 GO
 
-CREATE TABLE [dbo].[WarehouseDatesAggregate](
+CREATE TABLE [dbo].[WarehouseDatesAggregate]
+(
 	[СкладИсточника] [binary](16) NOT NULL,
 	[СкладНазначения] [binary](16) NOT NULL,
 	[ДатаПрибытия] [datetime] NOT NULL,
@@ -356,13 +359,13 @@ GO
 
 CREATE TABLE [dbo].[buffering_table_deliverypower]
 (
-    [id] [numeric](18, 0) IDENTITY(1,1) NOT NULL,
-    [Период] [date] NOT NULL,
-    [ЗонаДоставки] [binary](16) NOT NULL,
-    [МассаОборот] [numeric](10, 3) NOT NULL,
-    [ОбъемОборот] [numeric](10, 3) NOT NULL,
-    [ВремяНаОбслуживаниеОборот] [numeric](10, 3) NOT NULL,
-    PRIMARY KEY CLUSTERED 
+	[id] [numeric](18, 0) IDENTITY(1,1) NOT NULL,
+	[Период] [date] NOT NULL,
+	[ЗонаДоставки] [binary](16) NOT NULL,
+	[МассаОборот] [numeric](10, 3) NOT NULL,
+	[ОбъемОборот] [numeric](10, 3) NOT NULL,
+	[ВремяНаОбслуживаниеОборот] [numeric](10, 3) NOT NULL,
+	PRIMARY KEY CLUSTERED 
 (
 	[id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
@@ -377,14 +380,14 @@ GO
 
 CREATE TABLE [dbo].[buffering_table_intervals]
 (
-    [id] [numeric](18, 0) IDENTITY(1,1) NOT NULL,
-    [Период] [datetime] NOT NULL,
-    [ГруппаПланирования] [binary](16) NOT NULL,
-    [Геозона] [binary](16) NOT NULL,
-    [ВремяНачала] [datetime] NOT NULL,
-    [ВремяОкончания] [datetime] NOT NULL,
-    [КоличествоЗаказовЗаИнтервалВремени] [numeric](10, 0) NOT NULL,
-    PRIMARY KEY CLUSTERED 
+	[id] [numeric](18, 0) IDENTITY(1,1) NOT NULL,
+	[Период] [datetime] NOT NULL,
+	[ГруппаПланирования] [binary](16) NOT NULL,
+	[Геозона] [binary](16) NOT NULL,
+	[ВремяНачала] [datetime] NOT NULL,
+	[ВремяОкончания] [datetime] NOT NULL,
+	[КоличествоЗаказовЗаИнтервалВремени] [numeric](10, 0) NOT NULL,
+	PRIMARY KEY CLUSTERED 
 (
 	[id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
@@ -399,166 +402,196 @@ CREATE OR ALTER   procedure [dbo].[spUpdateAggregateDeliveryPower]
 as
 
 begin
-    set nocount on;
-    set xact_abort on;
+	set nocount on;
+	set xact_abort on;
 
-    create table #t
-    (
-        [Период] [date] ,
-        [ЗонаДоставки] [binary](16) ,
-        [МассаОборот] [numeric](10, 3) ,
-        [ОбъемОборот] [numeric](10, 3) ,
-        [ВремяНаОбслуживаниеОборот] [numeric](10, 3)
-    );
+	create table #t
+	(
+		[Период] [date] ,
+		[ЗонаДоставки] [binary](16) ,
+		[МассаОборот] [numeric](10, 3) ,
+		[ОбъемОборот] [numeric](10, 3) ,
+		[ВремяНаОбслуживаниеОборот] [numeric](10, 3)
+	);
 
-    if @@trancount > 0
+	if @@trancount > 0
   begin
-        raiserror('Outer transaction detected', 16, 1);
-        return;
-    end;
+		raiserror('Outer transaction detected', 16, 1);
+		return;
+	end;
 
-    begin tran;
+	begin tran;
 
-    declare @result int;
-    DECLARE @exec_count int;
-    set @exec_count = 5;
-    WHILE @exec_count > 0 AND @result < 0
+	declare @result int;
+	DECLARE @exec_count int;
+	set @exec_count = 5;
+	WHILE @exec_count > 0 AND @result < 0
     BEGIN
-       set @exec_count = @exec_count +1;
-       exec @result = sys.sp_getapplock @Resource = N'[dbo].[buffering_table_deliverypower]', @LockMode = 'Exclusive', @LockOwner = 'Transaction', @LockTimeout = 1000;
-    END;
-    
-    if @result < 0
+		set @exec_count = @exec_count +1;
+		exec @result = sys.sp_getapplock @Resource = N'[dbo].[buffering_table_deliverypower]', @LockMode = 'Exclusive', @LockOwner = 'Transaction', @LockTimeout = 1000;
+	END;
+
+	if @result < 0
 	THROW 51000, 'Cant get lock for delete', 1;
 
-    delete from [dbo].[buffering_table_deliverypower] 
+	delete from [dbo].[buffering_table_deliverypower] 
 	output deleted.[Период],deleted.[ЗонаДоставки],deleted.[МассаОборот],deleted.[ОбъемОборот],deleted.[ВремяНаОбслуживаниеОборот] into #t;
 
-    with
-        s ([Период], [ЗонаДоставки], [МассаОборот_delta], [ОбъемОборот_delta], [ВремяНаОбслуживаниеОборот_delta])
-        as
-        (
-            select
-                [Период], [ЗонаДоставки], sum([МассаОборот]), sum([ОбъемОборот]), sum([ВремяНаОбслуживаниеОборот])
-            from
-                #t
-            Group by
+	with
+		s ([Период], [ЗонаДоставки], [МассаОборот_delta], [ОбъемОборот_delta], [ВремяНаОбслуживаниеОборот_delta])
+		as
+		(
+			select
+				[Период], [ЗонаДоставки], sum([МассаОборот]), sum([ОбъемОборот]), sum([ВремяНаОбслуживаниеОборот])
+			from
+				#t
+			Group by
 	[Период],
 	[ЗонаДоставки]
-        )
+		)
  merge into [dbo].[DeliveryPowerAggregate] t
  using s on s.[Период] = t.[Период] and s.[ЗонаДоставки] = t.[ЗонаДоставки]
  when not matched then insert ([Период],[ЗонаДоставки],[МассаОборот],[ОбъемОборот],[ВремяНаОбслуживаниеОборот]) 
 	values (s.[Период],s.[ЗонаДоставки], s.[МассаОборот_delta], s.[ОбъемОборот_delta],s.[ВремяНаОбслуживаниеОборот_delta])
  when matched then update set [МассаОборот] += s.[МассаОборот_delta], [ОбъемОборот] += s.[ОбъемОборот_delta], [ВремяНаОбслуживаниеОборот] += s.[ВремяНаОбслуживаниеОборот_delta];
 
-    commit;
+	commit;
 end;
 GO
 
 CREATE OR ALTER   procedure [dbo].[spUpdateAggregateIntervals]
 as
 begin
-    set nocount on;
-    set xact_abort on;
+	set nocount on;
+	set xact_abort on;
 
-    create table #t
-    (
-        [Период] [datetime] NOT NULL,
-	    [ГруппаПланирования] [binary](16) NOT NULL,
-	    [Геозона] [binary](16) NOT NULL,
-	    [ВремяНачала] [datetime] NOT NULL,
-	    [ВремяОкончания] [datetime] NOT NULL,
-	    [КоличествоЗаказовЗаИнтервалВремени] [numeric](10, 0) NOT NULL
-    );
+	create table #t
+	(
+		[Период] [datetime] NOT NULL,
+		[ГруппаПланирования] [binary](16) NOT NULL,
+		[Геозона] [binary](16) NOT NULL,
+		[ВремяНачала] [datetime] NOT NULL,
+		[ВремяОкончания] [datetime] NOT NULL,
+		[КоличествоЗаказовЗаИнтервалВремени] [numeric](10, 0) NOT NULL
+	);
 
-    if @@trancount > 0
+	if @@trancount > 0
   begin
-        raiserror('Outer transaction detected', 16, 1);
-        return;
-    end;
+		raiserror('Outer transaction detected', 16, 1);
+		return;
+	end;
 
-    begin tran;
+	begin tran;
 
-    declare @result int;
-    DECLARE @exec_count int;
-    set @exec_count = 5;
-    WHILE @exec_count > 0 AND @result < 0
+	declare @result int;
+	DECLARE @exec_count int;
+	set @exec_count = 5;
+	WHILE @exec_count > 0 AND @result < 0
     BEGIN
-       set @exec_count = @exec_count +1;
-       exec @result = sys.sp_getapplock @Resource = N'[dbo].[buffering_table_intervals]', @LockMode = 'Exclusive', @LockOwner = 'Transaction', @LockTimeout = 1000;
-    END;
-    
-    if @result < 0
+		set @exec_count = @exec_count +1;
+		exec @result = sys.sp_getapplock @Resource = N'[dbo].[buffering_table_intervals]', @LockMode = 'Exclusive', @LockOwner = 'Transaction', @LockTimeout = 1000;
+	END;
+
+	if @result < 0
 	THROW 51000, 'Cant get lock for delete', 1;
 
-    delete from [dbo].[buffering_table_intervals] 
+	delete from [dbo].[buffering_table_intervals] 
 	output deleted.[Период],deleted.[ГруппаПланирования],deleted.[Геозона],deleted.[ВремяНачала],deleted.[ВремяОкончания], deleted.[КоличествоЗаказовЗаИнтервалВремени] into #t;
 
-    with
-        s ([Период], [ГруппаПланирования], [Геозона], [ВремяНачала], [ВремяОкончания], [КоличествоЗаказовЗаИнтервалВремени_delta] )
-        as
-        (
-            select
-                [Период], [ГруппаПланирования], [Геозона], [ВремяНачала], [ВремяОкончания], sum([КоличествоЗаказовЗаИнтервалВремени])
-            from
-                #t
-            Group by
+	with
+		s ([Период], [ГруппаПланирования], [Геозона], [ВремяНачала], [ВремяОкончания], [КоличествоЗаказовЗаИнтервалВремени_delta] )
+		as
+		(
+			select
+				[Период], [ГруппаПланирования], [Геозона], [ВремяНачала], [ВремяОкончания], sum([КоличествоЗаказовЗаИнтервалВремени])
+			from
+				#t
+			Group by
                 [Период], [ГруппаПланирования], [Геозона], [ВремяНачала], [ВремяОкончания]
-        )
+		)
  merge into [dbo].[IntervalsAggregate] t
- using s on s.[Период] = t.[Период] 
-    and s.[ГруппаПланирования] = t.[ГруппаПланирования]
-    and s.[Геозона] = t.[Геозона]
-    and s.[ВремяНачала] = t.[ВремяНачала]
-    and s.[ВремяОкончания] = t.[ВремяОкончания]
+ using s on s.[Период] = t.[Период]
+		and s.[ГруппаПланирования] = t.[ГруппаПланирования]
+		and s.[Геозона] = t.[Геозона]
+		and s.[ВремяНачала] = t.[ВремяНачала]
+		and s.[ВремяОкончания] = t.[ВремяОкончания]
  when not matched then insert ([Период], [ГруппаПланирования], [Геозона], [ВремяНачала], [ВремяОкончания], [КоличествоЗаказовЗаИнтервалВремени]) 
 	values (s.[Период],s.[ГруппаПланирования], s.[Геозона], s.[ВремяНачала],s.[ВремяОкончания], s.[КоличествоЗаказовЗаИнтервалВремени_delta])
  when matched then update set [КоличествоЗаказовЗаИнтервалВремени] += s.[КоличествоЗаказовЗаИнтервалВремени_delta];
 
-    commit;
+	commit;
 end;
 GO
 
 CREATE OR ALTER    procedure [dbo].[spUpdateAggregateWarehouseDates]
 as
 begin
-    set nocount on;
-    set xact_abort on;
+	set nocount on;
+	set xact_abort on;
 
-   
-    if @@trancount > 0
+
+	if @@trancount > 0
   begin
-        raiserror('Outer transaction detected', 16, 1);
-        return;
-    end;
+		raiserror('Outer transaction detected', 16, 1);
+		return;
+	end;
 
-    begin tran;
+	begin tran;
 
-    delete from [dbo].[WarehouseDatesAggregate];
-	
-	with t ([СкладИсточника], [СкладНазначения], [ДатаПрибытия],[ДатаСобытия], RN) as (
-	SELECT Distinct
-	  T1._Fld23831RRef AS [СкладИсточника], 
-	  T1._Fld23833RRef AS [СкладНазначения], 
-	  T1._Fld23834 AS [ДатаПрибытия], 
-	  T1._Fld23832 AS [ДатаСобытия],
-	  ROW_NUMBER() OVER(Partition by _Fld23831RRef,_Fld23833RRef order by _Fld23834) as RN 
-	FROM 
-		dbo._InfoRg23830 T1
-	Where T1._Fld23832 >= DateAdd(Minute, -5, DateAdd(YEAR,2000,GETDATE()))
-	Group by 
+	with
+		t ([СкладИсточника], [СкладНазначения], [ДатаПрибытия], [ДатаСобытия], RN)
+		as
+		(
+			SELECT Distinct
+				T1._Fld23831RRef AS [СкладИсточника],
+				T1._Fld23833RRef AS [СкладНазначения],
+				T1._Fld23834 AS [ДатаПрибытия],
+				T1._Fld23832 AS [ДатаСобытия],
+				ROW_NUMBER() OVER(Partition by _Fld23831RRef,_Fld23833RRef order by _Fld23834) as RN
+			FROM
+				dbo._InfoRg23830 T1
+
+			Where T1._Fld23832 >= DateAdd(Minute, -5, DateAdd(YEAR,2000,GETDATE()))
+
+
+			Group by 
 		T1._Fld23831RRef,
 		 T1._Fld23833RRef,
   T1._Fld23834,
   T1._Fld23832
-	)	 
+		)
+	select 
+		IsNull(T1.[СкладИсточника], T2.[СкладИсточника]) AS [СкладИсточника],
+		IsNull(T1.[СкладНазначения], T2.[СкладНазначения]) AS [СкладНазначения], 
+		IsNull(T1.[ДатаПрибытия], T2.[ДатаПрибытия]) AS [ДатаПрибытия], 
+		IsNull(T1.[ДатаСобытия], T2.[ДатаСобытия]) AS [ДатаСобытия], 
+		case when T2.[ДатаПрибытия] is null then 1 else 0 end As newRecord, 
+		case when T1.[ДатаПрибытия] is null then 1 else 0 end As deleteRecord
+	Into #Temp_NewRecords
+	from t T1
+		Full join [dbo].[WarehouseDatesAggregate] T2
+		ON T1.СкладИсточника = T2.СкладИсточника
+			AND T1.СкладНазначения = T2.СкладНазначения
+			AND T1.ДатаПрибытия = T2.ДатаПрибытия
+			AND T1.ДатаСобытия = T2.ДатаСобытия
+	where 
+	Isnull(RN,1) <= 10 
+	AND (T1.[ДатаПрибытия] is null OR T2.[ДатаПрибытия] is null);
+
+	delete T1 from [dbo].[WarehouseDatesAggregate] T1 Inner join #Temp_NewRecords T2 ON T1.СкладИсточника = T2.СкладИсточника
+			AND T1.СкладНазначения = T2.СкладНазначения
+			AND T1.ДатаПрибытия = T2.ДатаПрибытия
+			AND T1.ДатаСобытия = T2.ДатаСобытия 
+			AND T2.deleteRecord = 1
+
 	Insert Into [dbo].[WarehouseDatesAggregate]
-	select [СкладИсточника], [СкладНазначения], [ДатаПрибытия], [ДатаСобытия]
-	from t where RN <= 10;
+	Select [СкладИсточника], [СкладНазначения], [ДатаПрибытия], [ДатаСобытия]
+	From #Temp_NewRecords
+	Where newRecord = 1;
 
+	Drop Table #Temp_NewRecords;
 
-    commit;
+	commit;
 end;
 GO
 
@@ -568,67 +601,69 @@ on [dbo].[_AccumRg25104]
 after insert, update, delete
 as
 begin
- set nocount on;
+	set nocount on;
 
- declare @result int;
-exec @result = sys.sp_getapplock @Resource = N'[dbo].[buffering_table_deliverypower]', @LockMode = 'Shared', @LockOwner = 'Transaction', @LockTimeout = -1;
-if @result < 0
-	THROW 51000, 'Cant get lock for insert', 1; 
+	declare @result int;
+	exec @result = sys.sp_getapplock @Resource = N'[dbo].[buffering_table_deliverypower]', @LockMode = 'Shared', @LockOwner = 'Transaction', @LockTimeout = -1;
+	if @result < 0
+	THROW 51000, 'Cant get lock for insert', 1;
 
- insert into [dbo].[buffering_table_deliverypower] ([Период],[ЗонаДоставки],[МассаОборот],[ОбъемОборот],[ВремяНаОбслуживаниеОборот]) 
- select   
-       CAST(CAST([МощностиДоставки]._Period  AS DATE) AS DATETIME) AS [Период], 
-	   [МощностиДоставки]._Fld25105RRef As [ЗонаДоставки],
+	insert into [dbo].[buffering_table_deliverypower]
+		([Период],[ЗонаДоставки],[МассаОборот],[ОбъемОборот],[ВремяНаОбслуживаниеОборот])
+	select
+		CAST(CAST([МощностиДоставки]._Period  AS DATE) AS DATETIME) AS [Период],
+		[МощностиДоставки]._Fld25105RRef As [ЗонаДоставки],
 		SUM(
             CASE
                 WHEN ([МощностиДоставки]._RecordKind = 0.0) THEN [МощностиДоставки]._Fld25107
                 ELSE -([МощностиДоставки]._Fld25107)
         END        
-    ) AS [МассаОборот],    
-        SUM(
+    ) AS [МассаОборот],
+		SUM(
             CASE
                 WHEN ([МощностиДоставки]._RecordKind = 0.0) THEN [МощностиДоставки]._Fld25108
                 ELSE -([МощностиДоставки]._Fld25108)
         END        
-    ) AS [ОбъемОборот],    
-        SUM(
+    ) AS [ОбъемОборот],
+		SUM(
             CASE
                 WHEN ([МощностиДоставки]._RecordKind = 0.0) THEN [МощностиДоставки]._Fld25201
                 ELSE -([МощностиДоставки]._Fld25201)
         END        
-    ) AS [ВремяНаОбслуживаниеОборот]	 
-FROM
-    inserted As [МощностиДоставки] With (READCOMMITTED)
-GROUP BY
+    ) AS [ВремяНаОбслуживаниеОборот]
+	FROM
+		inserted As [МощностиДоставки] With (READCOMMITTED)
+	GROUP BY
     CAST(CAST([МощностиДоставки]._Period  AS DATE) AS DATETIME),
-	[МощностиДоставки]._Fld25105RRef 
-;
+	[МощностиДоставки]._Fld25105RRef
+	;
 
- insert into [dbo].[buffering_table_deliverypower] ([Период],[ЗонаДоставки],[МассаОборот],[ОбъемОборот],[ВремяНаОбслуживаниеОборот]) 
- select   
-       CAST(CAST([МощностиДоставки]._Period  AS DATE) AS DATETIME) AS Период, 
-	   [МощностиДоставки]._Fld25105RRef As [ЗонаДоставки],
+	insert into [dbo].[buffering_table_deliverypower]
+		([Период],[ЗонаДоставки],[МассаОборот],[ОбъемОборот],[ВремяНаОбслуживаниеОборот])
+	select
+		CAST(CAST([МощностиДоставки]._Period  AS DATE) AS DATETIME) AS Период,
+		[МощностиДоставки]._Fld25105RRef As [ЗонаДоставки],
 		-1*SUM(
             CASE
                 WHEN ([МощностиДоставки]._RecordKind = 0.0) THEN [МощностиДоставки]._Fld25107
                 ELSE -([МощностиДоставки]._Fld25107)
         END        
-    ) AS [МассаОборот],    
-        -1*SUM(
+    ) AS [МассаОборот],
+		-1*SUM(
             CASE
                 WHEN ([МощностиДоставки]._RecordKind = 0.0) THEN [МощностиДоставки]._Fld25108
                 ELSE -([МощностиДоставки]._Fld25108)
         END        
-    ) AS [ОбъемОборот],    
-        -1*SUM(
+    ) AS [ОбъемОборот],
+		-1*SUM(
             CASE
                 WHEN ([МощностиДоставки]._RecordKind = 0.0) THEN [МощностиДоставки]._Fld25201
                 ELSE -([МощностиДоставки]._Fld25201)
         END        
-    ) AS [ВремяНаОбслуживаниеОборот]	 
-FROM
-    deleted As [МощностиДоставки] With (READCOMMITTED)
-GROUP BY
+    ) AS [ВремяНаОбслуживаниеОборот]
+	FROM
+		deleted As [МощностиДоставки] With (READCOMMITTED)
+	GROUP BY
     CAST(CAST([МощностиДоставки]._Period  AS DATE) AS DATETIME),
 	[МощностиДоставки]._Fld25105RRef
 ;
@@ -642,52 +677,54 @@ on [dbo].[_AccumRg25110]
 after insert, update, delete
 as
 begin
- set nocount on;
+	set nocount on;
 
- declare @result int;
-exec @result = sys.sp_getapplock @Resource = N'[dbo].[buffering_table_intervals]', @LockMode = 'Shared', @LockOwner = 'Transaction', @LockTimeout = -1;
-if @result < 0
-	THROW 51000, 'Cant get lock for insert', 1; 
+	declare @result int;
+	exec @result = sys.sp_getapplock @Resource = N'[dbo].[buffering_table_intervals]', @LockMode = 'Shared', @LockOwner = 'Transaction', @LockTimeout = -1;
+	if @result < 0
+	THROW 51000, 'Cant get lock for insert', 1;
 
- insert into [dbo].[buffering_table_intervals] ([Период], [ГруппаПланирования], [Геозона], [ВремяНачала], [ВремяОкончания], [КоличествоЗаказовЗаИнтервалВремени]) 
- select   
-    T5._Period AS [Период],
-    T5._Fld25112RRef As [ГруппаПланирования], 
-	T5._Fld25111RRef As [Геозона],
-	T5._Fld25202 As [ВремяНачала],
-	T5._Fld25203 As [ВремяОкончания],
-	SUM(
+	insert into [dbo].[buffering_table_intervals]
+		([Период], [ГруппаПланирования], [Геозона], [ВремяНачала], [ВремяОкончания], [КоличествоЗаказовЗаИнтервалВремени])
+	select
+		T5._Period AS [Период],
+		T5._Fld25112RRef As [ГруппаПланирования],
+		T5._Fld25111RRef As [Геозона],
+		T5._Fld25202 As [ВремяНачала],
+		T5._Fld25203 As [ВремяОкончания],
+		SUM(
                 CASE
                     WHEN (T5._RecordKind = 0.0) THEN T5._Fld25113
                     ELSE -(T5._Fld25113)
                 END
-            ) AS [КоличествоЗаказовЗаИнтервалВремени]	 
-FROM
-    inserted As T5 With (READCOMMITTED)
-GROUP BY
+            ) AS [КоличествоЗаказовЗаИнтервалВремени]
+	FROM
+		inserted As T5 With (READCOMMITTED)
+	GROUP BY
    T5._Period,
     T5._Fld25112RRef,
     T5._Fld25111RRef,
     T5._Fld25202,
 	T5._Fld25203
-;
+	;
 
- insert into [dbo].[buffering_table_intervals] ([Период], [ГруппаПланирования], [Геозона], [ВремяНачала], [ВремяОкончания], [КоличествоЗаказовЗаИнтервалВремени]) 
- select   
-    T5._Period AS [Период],
-    T5._Fld25112RRef As [ГруппаПланирования], 
-	T5._Fld25111RRef As [Геозона],
-	T5._Fld25202 As [ВремяНачала],
-	T5._Fld25203 As [ВремяОкончания],
-	-1*SUM(
+	insert into [dbo].[buffering_table_intervals]
+		([Период], [ГруппаПланирования], [Геозона], [ВремяНачала], [ВремяОкончания], [КоличествоЗаказовЗаИнтервалВремени])
+	select
+		T5._Period AS [Период],
+		T5._Fld25112RRef As [ГруппаПланирования],
+		T5._Fld25111RRef As [Геозона],
+		T5._Fld25202 As [ВремяНачала],
+		T5._Fld25203 As [ВремяОкончания],
+		-1*SUM(
                 CASE
                     WHEN (T5._RecordKind = 0.0) THEN T5._Fld25113
                     ELSE -(T5._Fld25113)
                 END
-            ) AS [КоличествоЗаказовЗаИнтервалВремени]	 
-FROM
-    deleted As T5 With (READCOMMITTED)
-GROUP BY
+            ) AS [КоличествоЗаказовЗаИнтервалВремени]
+	FROM
+		deleted As T5 With (READCOMMITTED)
+	GROUP BY
     T5._Period,
     T5._Fld25112RRef,
     T5._Fld25111RRef,
@@ -709,39 +746,39 @@ delete  from [dbo].[buffering_table_intervals] with (tablock)
 delete  from [dbo].[IntervalsAggregate] with (tablock)
 
 Insert into [dbo].[DeliveryPowerAggregate]
-SELECT   
-       CAST(CAST([МощностиДоставки]._Period  AS DATE) AS DATETIME) AS [Период], 
-	   [МощностиДоставки]._Fld25105RRef As [ЗонаДоставки],
-		SUM(
+SELECT
+	CAST(CAST([МощностиДоставки]._Period  AS DATE) AS DATETIME) AS [Период],
+	[МощностиДоставки]._Fld25105RRef As [ЗонаДоставки],
+	SUM(
             CASE
                 WHEN ([МощностиДоставки]._RecordKind = 0.0) THEN [МощностиДоставки]._Fld25107
                 ELSE -([МощностиДоставки]._Fld25107)
         END        
-    ) AS [МассаОборот],    
-        SUM(
+    ) AS [МассаОборот],
+	SUM(
             CASE
                 WHEN ([МощностиДоставки]._RecordKind = 0.0) THEN [МощностиДоставки]._Fld25108
                 ELSE -([МощностиДоставки]._Fld25108)
         END        
-    ) AS [ОбъемОборот],    
-        SUM(
+    ) AS [ОбъемОборот],
+	SUM(
             CASE
                 WHEN ([МощностиДоставки]._RecordKind = 0.0) THEN [МощностиДоставки]._Fld25201
                 ELSE -([МощностиДоставки]._Fld25201)
         END        
     ) AS [ВремяНаОбслуживаниеОборот]
-    
-	 
+
+
 FROM
-    dbo._AccumRg25104 [МощностиДоставки] With (READCOMMITTED)
+	dbo._AccumRg25104 [МощностиДоставки] With (READCOMMITTED)
 GROUP BY
     CAST(CAST([МощностиДоставки]._Period  AS DATE) AS DATETIME),
 	[МощностиДоставки]._Fld25105RRef
 
 Insert into [dbo].[IntervalsAggregate]
 SELECT
-    T5._Period AS [Период],
-    T5._Fld25112RRef As [ГруппаПланирования], 
+	T5._Period AS [Период],
+	T5._Fld25112RRef As [ГруппаПланирования],
 	T5._Fld25111RRef As [Геозона],
 	T5._Fld25202 As [ВремяНачала],
 	T5._Fld25203 As [ВремяОкончания],
@@ -753,7 +790,7 @@ SELECT
             ) AS [КоличествоЗаказовЗаИнтервалВремени]
 
 FROM
-    dbo._AccumRg25110 T5 With (READCOMMITTED)
+	dbo._AccumRg25110 T5 With (READCOMMITTED)
 GROUP BY
     T5._Period,
     T5._Fld25112RRef,
@@ -772,10 +809,12 @@ GO
 /****** Object:  Job [UpdateAggregates]    Script Date: 18.08.2021 16:31:51 ******/
 DECLARE @jobId binary(16)
 
-SELECT @jobId = job_id FROM msdb.dbo.sysjobs WHERE (name = N'UpdateAggregates')
+SELECT @jobId = job_id
+FROM msdb.dbo.sysjobs
+WHERE (name = N'UpdateAggregates')
 IF (@jobId IS NOT NULL)
 BEGIN
-    EXEC msdb.dbo.sp_delete_job @jobId, @delete_unused_schedule=1
+	EXEC msdb.dbo.sp_delete_job @jobId, @delete_unused_schedule=1
 END
 --EXEC msdb.dbo.sp_delete_job @job_id=N'7403ec1f-4359-46ea-81e2-e4a99fdf415c', @delete_unused_schedule=1
 GO
@@ -785,10 +824,12 @@ BEGIN TRANSACTION
 DECLARE @ReturnCode INT
 SELECT @ReturnCode = 0
 /****** Object:  JobCategory [Data Collector]    Script Date: 18.08.2021 16:31:52 ******/
-IF NOT EXISTS (SELECT name FROM msdb.dbo.syscategories WHERE name=N'Data Collector' AND category_class=1)
+IF NOT EXISTS (SELECT name
+FROM msdb.dbo.syscategories
+WHERE name=N'Data Collector' AND category_class=1)
 BEGIN
-EXEC @ReturnCode = msdb.dbo.sp_add_category @class=N'JOB', @type=N'LOCAL', @name=N'Data Collector'
-IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
+	EXEC @ReturnCode = msdb.dbo.sp_add_category @class=N'JOB', @type=N'LOCAL', @name=N'Data Collector'
+	IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
 
 END
 
@@ -860,7 +901,7 @@ IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
 COMMIT TRANSACTION
 GOTO EndSave
 QuitWithRollback:
-    IF (@@TRANCOUNT > 0) ROLLBACK TRANSACTION
+IF (@@TRANCOUNT > 0) ROLLBACK TRANSACTION
 EndSave:
 GO
 
@@ -870,10 +911,12 @@ GO
 /****** Object:  Job [UpdateAggs1min]    Script Date: 23.08.2021 15:31:01 ******/
 DECLARE @jobId binary(16)
 
-SELECT @jobId = job_id FROM msdb.dbo.sysjobs WHERE (name = N'UpdateAggs1min')
+SELECT @jobId = job_id
+FROM msdb.dbo.sysjobs
+WHERE (name = N'UpdateAggs1min')
 IF (@jobId IS NOT NULL)
 BEGIN
-    EXEC msdb.dbo.sp_delete_job @jobId, @delete_unused_schedule=1
+	EXEC msdb.dbo.sp_delete_job @jobId, @delete_unused_schedule=1
 END
 --EXEC msdb.dbo.sp_delete_job @job_id=N'3710e681-19c0-4db7-956d-52983ef83730', @delete_unused_schedule=1
 GO
@@ -883,10 +926,12 @@ BEGIN TRANSACTION
 DECLARE @ReturnCode INT
 SELECT @ReturnCode = 0
 /****** Object:  JobCategory [Data Collector]    Script Date: 23.08.2021 15:31:01 ******/
-IF NOT EXISTS (SELECT name FROM msdb.dbo.syscategories WHERE name=N'Data Collector' AND category_class=1)
+IF NOT EXISTS (SELECT name
+FROM msdb.dbo.syscategories
+WHERE name=N'Data Collector' AND category_class=1)
 BEGIN
-EXEC @ReturnCode = msdb.dbo.sp_add_category @class=N'JOB', @type=N'LOCAL', @name=N'Data Collector'
-IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
+	EXEC @ReturnCode = msdb.dbo.sp_add_category @class=N'JOB', @type=N'LOCAL', @name=N'Data Collector'
+	IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
 
 END
 
@@ -953,7 +998,7 @@ IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
 COMMIT TRANSACTION
 GOTO EndSave
 QuitWithRollback:
-    IF (@@TRANCOUNT > 0) ROLLBACK TRANSACTION
+IF (@@TRANCOUNT > 0) ROLLBACK TRANSACTION
 EndSave:
 GO
 
@@ -964,12 +1009,12 @@ GO
 CREATE OR ALTER     procedure [dbo].[spCheckAggregates]
 as
 begin
-    set nocount on;
-    set xact_abort on;
+	set nocount on;
+	set xact_abort on;
 
-		SELECT
+	SELECT
 		T5._Period AS [Период],
-		T5._Fld25112RRef As [ГруппаПланирования], 
+		T5._Fld25112RRef As [ГруппаПланирования],
 		T5._Fld25111RRef As [Геозона],
 		T5._Fld25202 As [ВремяНачала],
 		T5._Fld25203 As [ВремяОкончания],
@@ -982,7 +1027,7 @@ begin
 	into #Temp_IntervalsAll_old
 	FROM
 		dbo._AccumRg25110 T5 With (READCOMMITTED)
-		Where T5._Period Between DateAdd(YEAR,2000,DateAdd(DAY,-1,GETDATE())) AND DateAdd(YEAR,2000,DateAdd(DAY,7,GETDATE()))
+	Where T5._Period Between DateAdd(YEAR,2000,DateAdd(DAY,-1,GETDATE())) AND DateAdd(YEAR,2000,DateAdd(DAY,7,GETDATE()))
 	GROUP BY
 		T5._Period,
 		T5._Fld25112RRef,
@@ -1008,29 +1053,29 @@ begin
 	Where T1.[КоличествоЗаказовЗаИнтервалВремени] <> IsNull(T2.[КоличествоЗаказовЗаИнтервалВремени],9999999)
 
 
-	SELECT   
-		   CAST(CAST([МощностиДоставки]._Period  AS DATE) AS DATETIME) AS [Период], 
-		   [МощностиДоставки]._Fld25105RRef As [ЗонаДоставки],
-			SUM(
+	SELECT
+		CAST(CAST([МощностиДоставки]._Period  AS DATE) AS DATETIME) AS [Период],
+		[МощностиДоставки]._Fld25105RRef As [ЗонаДоставки],
+		SUM(
 				CASE
 					WHEN ([МощностиДоставки]._RecordKind = 0.0) THEN [МощностиДоставки]._Fld25107
 					ELSE -([МощностиДоставки]._Fld25107)
 			END        
-		) AS [МассаОборот],    
-			SUM(
+		) AS [МассаОборот],
+		SUM(
 				CASE
 					WHEN ([МощностиДоставки]._RecordKind = 0.0) THEN [МощностиДоставки]._Fld25108
 					ELSE -([МощностиДоставки]._Fld25108)
 			END        
-		) AS [ОбъемОборот],    
-			SUM(
+		) AS [ОбъемОборот],
+		SUM(
 				CASE
 					WHEN ([МощностиДоставки]._RecordKind = 0.0) THEN [МощностиДоставки]._Fld25201
 					ELSE -([МощностиДоставки]._Fld25201)
 			END        
 		) AS [ВремяНаОбслуживаниеОборот]
-    
-	Into #DeliveryPowerOld	 
+
+	Into #DeliveryPowerOld
 	FROM
 		dbo._AccumRg25104 [МощностиДоставки] With (READCOMMITTED)
 	GROUP BY
@@ -1049,9 +1094,9 @@ begin
 		Left Join dbo.DeliveryPowerAggregate T2 on
 			T1.[Период] = T2.[Период]
 			And T1.[ЗонаДоставки] = T2.[ЗонаДоставки]
-	Where T1.[ВремяНаОбслуживаниеОборот] <> IsNull(T2.[ВремяНаОбслуживаниеОборот],9999999) 
-	Or T1.[МассаОборот] <> IsNull(T2.[МассаОборот],9999999)
-	Or T1.[МассаОборот] <> IsNull(T2.[МассаОборот],9999999)
+	Where T1.[ВремяНаОбслуживаниеОборот] <> IsNull(T2.[ВремяНаОбслуживаниеОборот],9999999)
+		Or T1.[МассаОборот] <> IsNull(T2.[МассаОборот],9999999)
+		Or T1.[МассаОборот] <> IsNull(T2.[МассаОборот],9999999)
 
 	SELECT
 		T1._Fld23831RRef AS [СкладИсточника],
@@ -1069,19 +1114,19 @@ begin
 	SELECT
 		T1.[СкладИсточника] AS [СкладИсточника],
 		T1.[СкладНазначения] AS [СкладНазначения],
-		MIN(T1.[ДатаПрибытия]) AS [ДатаПрибытия] 
+		MIN(T1.[ДатаПрибытия]) AS [ДатаПрибытия]
 	Into #Temp_MinimumWarehouseDatesNew
 	FROM
-		[dbo].[WarehouseDatesAggregate] T1 
-    
+		[dbo].[WarehouseDatesAggregate] T1
+
 	WHERE
-	   T1.[ДатаСобытия] >= DateAdd(YEAR,2000,GETDATE()) 
+	   T1.[ДатаСобытия] >= DateAdd(YEAR,2000,GETDATE())
 	GROUP BY T1.[СкладИсточника],
 	T1.[СкладНазначения]
 
 	Select Top 1000
 		#Temp_MinimumWarehouseDatesOld.[ДатаПрибытия] ,
-		 ISNULL(#Temp_MinimumWarehouseDatesNew.[ДатаПрибытия], GETDATE()) AS [ДатаПрибытияNew]
+		ISNULL(#Temp_MinimumWarehouseDatesNew.[ДатаПрибытия], GETDATE()) AS [ДатаПрибытияNew]
 	Into #ErrorsWarehouseDates
 	From
 		#Temp_MinimumWarehouseDatesOld
@@ -1091,10 +1136,16 @@ begin
 	Where #Temp_MinimumWarehouseDatesOld.[ДатаПрибытия] <> ISNULL(#Temp_MinimumWarehouseDatesNew.[ДатаПрибытия], GETDATE())
 
 
-	Select Sum(t1.c1) as ErrorCount From (
-		Select COUNT(*) AS c1 from #ErrorsIntervals 
-		UNION All Select Count(*) From #ErrorsDeliveryPower 
-		UNION All Select Count(*) From #ErrorsWarehouseDates) As t1
+	Select Sum(t1.c1) as ErrorCount
+	From (
+							Select COUNT(*) AS c1
+			from #ErrorsIntervals
+		UNION All
+			Select Count(*)
+			From #ErrorsDeliveryPower
+		UNION All
+			Select Count(*)
+			From #ErrorsWarehouseDates) As t1
 
 end;
 GO

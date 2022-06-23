@@ -15,6 +15,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using DateTimeService.DatabaseManagementNewServices.Interfaces;
 
 namespace DateTimeService.Controllers
 {
@@ -28,15 +29,17 @@ namespace DateTimeService.Controllers
         private readonly ILoadBalancing _loadBalacing;
         private readonly IGeoZones _geoZones;
         private readonly IMapper _mapper;
+        private readonly IReadableDatabase _readableDatabaseService;
 
         public DateTimeController(ILogger<DateTimeController> logger, IConfiguration configuration, ILoadBalancing loadBalancing,
-                                    IGeoZones geoZones, IMapper mapper)
+                                    IGeoZones geoZones, IMapper mapper, IReadableDatabase readableDatabaseService)
         {
             _logger = logger;
             _configuration = configuration;
             _loadBalacing = loadBalancing;
             _geoZones = geoZones;
             _mapper = mapper;
+            _readableDatabaseService = readableDatabaseService;
         }
 
         [Authorize(Roles = UserRoles.MaxAvailableCount + "," + UserRoles.Admin)]
@@ -332,7 +335,7 @@ namespace DateTimeService.Controllers
                 queryParts.Add(data.CheckQuantity == true ? Queries.AvailableDateWithCount1 : Queries.AvailableDate1);
                 queryParts.Add(customAggs == true ? Queries.AvailableDate2MinimumWarehousesCustom : Queries.AvailableDate2MinimumWarehousesBasic);
                 queryParts.Add(data.CheckQuantity == true ? Queries.AvailableDateWithCount3 : Queries.AvailableDate3);
-                queryParts.Add(customAggs == true ? Queries.AvailableDate4SourcesWithPricesCustom : Queries.AvailableDate4SourcesWithPricesBasic);
+                queryParts.Add(Queries.AvailableDate4SourcesWithPrices);
                 queryParts.Add(data.CheckQuantity == true ? Queries.AvailableDateWithCount5 : Queries.AvailableDate5);
                 queryParts.Add(customAggs == true ? Queries.AvailableDate6IntervalsCustom : Queries.AvailableDate6IntervalsBasic);
                 queryParts.Add(Queries.AvailableDate7);
@@ -940,38 +943,7 @@ namespace DateTimeService.Controllers
             return Ok(result);
         }
 
-        [Route("HealthCheck")]
-        [HttpGet]
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public async Task<IActionResult> HealthCheckAsync()
-        {
-
-            SqlConnection conn;
-
-            try
-            {
-                var dbConnection = await _loadBalacing.GetDatabaseConnectionAsync();
-                conn = dbConnection.Connection;
-            }
-            catch
-            {                
-                return StatusCode(500);
-            }
-            
-
-
-            if (conn == null)
-            {                
-                Dictionary<string, string> errorDesc = new();
-                errorDesc.Add("ErrorDescription", "Не найдено доступное соединение к БД");
-
-                return StatusCode(500, errorDesc);
-            }
-
-            await conn.CloseAsync();
-            return StatusCode(200, new { Status = "Ok"});
-        }
-
+        
         private static string TextFillGoodsTable(RequestIntervalList data, SqlCommand cmdGoodsTable, bool optimizeRowsCount)
         {
             RequestDataAvailableDate convertedData = new()
