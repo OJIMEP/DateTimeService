@@ -560,24 +560,36 @@ begin
   T1._Fld23834,
   T1._Fld23832
 		)
-	select T1.[СкладИсточника], T1.[СкладНазначения], T1.[ДатаПрибытия], T1.[ДатаСобытия]
+	select 
+		IsNull(T1.[СкладИсточника], T2.[СкладИсточника]) AS [СкладИсточника],
+		IsNull(T1.[СкладНазначения], T2.[СкладНазначения]) AS [СкладНазначения], 
+		IsNull(T1.[ДатаПрибытия], T2.[ДатаПрибытия]) AS [ДатаПрибытия], 
+		IsNull(T1.[ДатаСобытия], T2.[ДатаСобытия]) AS [ДатаСобытия], 
+		case when T2.[ДатаПрибытия] is null then 1 else 0 end As newRecord, 
+		case when T1.[ДатаПрибытия] is null then 1 else 0 end As deleteRecord
 	Into #Temp_NewRecords
 	from t T1
-		Left Join [dbo].[WarehouseDatesAggregate] T2
+		Full join [dbo].[WarehouseDatesAggregate] T2
 		ON T1.СкладИсточника = T2.СкладИсточника
 			AND T1.СкладНазначения = T2.СкладНазначения
 			AND T1.ДатаПрибытия = T2.ДатаПрибытия
 			AND T1.ДатаСобытия = T2.ДатаСобытия
-	where RN <= 10
-		AND T2.[ДатаПрибытия] IS NULL;
+	where 
+	Isnull(RN,1) <= 10 
+	AND (T1.[ДатаПрибытия] is null OR T2.[ДатаПрибытия] is null);
 
-	delete from [dbo].[WarehouseDatesAggregate] where [ДатаСобытия] < DateAdd(YEAR,2000,GETDATE())
+	delete T1 from [dbo].[WarehouseDatesAggregate] T1 Inner join #Temp_NewRecords T2 ON T1.СкладИсточника = T2.СкладИсточника
+			AND T1.СкладНазначения = T2.СкладНазначения
+			AND T1.ДатаПрибытия = T2.ДатаПрибытия
+			AND T1.ДатаСобытия = T2.ДатаСобытия 
+			AND T2.deleteRecord = 1
 
 	Insert Into [dbo].[WarehouseDatesAggregate]
 	Select [СкладИсточника], [СкладНазначения], [ДатаПрибытия], [ДатаСобытия]
-	From #Temp_NewRecords;
+	From #Temp_NewRecords
+	Where newRecord = 1;
 
-	Drop Table #Temp_NewRecords
+	Drop Table #Temp_NewRecords;
 
 	commit;
 end;
