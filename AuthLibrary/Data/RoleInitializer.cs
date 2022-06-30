@@ -1,10 +1,8 @@
-﻿using DateTimeService.Data;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using System.Threading.Tasks;
 
-namespace DateTimeService.Areas.Identity.Data
+namespace AuthLibrary.Data
 {
     public class RoleInitializer
     {

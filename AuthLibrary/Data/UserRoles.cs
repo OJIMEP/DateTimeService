@@ -1,4 +1,4 @@
-﻿namespace DateTimeService.Areas.Identity.Data
+﻿namespace AuthLibrary.Data
 {
     public class UserRoles
     {

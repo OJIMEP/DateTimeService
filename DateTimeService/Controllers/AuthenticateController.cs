@@ -1,4 +1,4 @@
-﻿using DateTimeService.Areas.Identity.Data;
+﻿using AuthLibrary.Data;
 using DateTimeService.Areas.Identity.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;

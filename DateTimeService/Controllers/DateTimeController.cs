@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using DateTimeService.Areas.Identity.Data;
+using AuthLibrary.Data;
 using DateTimeService.Data;
 using DateTimeService.Models;
 using Microsoft.AspNetCore.Authorization;
