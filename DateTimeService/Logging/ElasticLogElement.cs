@@ -23,11 +23,13 @@ namespace DateTimeService
         public long GlobalParametersExecution { get; set; }
         public Dictionary<string, string> AdditionalData { get; set; }
         public string Enviroment { get; set; }
+        public string ServiceName { get; set; }
 
         public ElasticLogElement()
         {
             Enviroment = DatabaseList.Enviroment==null ? "Unset" : DatabaseList.Enviroment;
             AdditionalData = new();
+            ServiceName = "DateTime";
         }
     }
 }
