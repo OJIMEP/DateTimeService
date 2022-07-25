@@ -1,19 +1,14 @@
 ﻿using DateTimeService.Areas.Identity.Models;
-using DateTimeService.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
-using System;
-using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
 
-namespace DateTimeService.Areas.Identity.Data
+namespace AuthLibrary.Data
 {
     public interface IUserService
     {
@@ -67,7 +62,7 @@ namespace DateTimeService.Areas.Identity.Data
 
         public async Task<AuthenticateResponse> RefreshTokenAsync(string token, string ipAddress)
         {
-            var user = _context.Users.Include(u => u.RefreshTokens.Where(t =>t.Token == token)).Where(u => u.RefreshTokens.Any(t => t.Token == token)).SingleOrDefault();
+            var user = _context.Users.Include(u => u.RefreshTokens.Where(t => t.Token == token)).Where(u => u.RefreshTokens.Any(t => t.Token == token)).SingleOrDefault();
 
             // return null if no user found with token
             if (user == null) return null;

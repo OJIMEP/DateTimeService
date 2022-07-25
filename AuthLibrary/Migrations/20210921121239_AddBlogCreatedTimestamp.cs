@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore.Migrations;
 
-namespace DateTimeService.Migrations
+namespace AuthLibrary.Migrations
 {
     public partial class AddBlogCreatedTimestamp : Migration
     {

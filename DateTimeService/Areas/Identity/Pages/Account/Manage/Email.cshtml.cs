@@ -1,4 +1,4 @@
-﻿using DateTimeService.Areas.Identity.Data;
+﻿using AuthLibrary.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;

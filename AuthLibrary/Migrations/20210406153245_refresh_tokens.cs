@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore.Migrations;
 using System;
 
-namespace DateTimeService.Migrations
+namespace AuthLibrary.Migrations
 {
     public partial class refresh_tokens : Migration
     {

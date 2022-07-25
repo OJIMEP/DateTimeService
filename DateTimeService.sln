@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30907.101
+# Visual Studio Version 17
+VisualStudioVersion = 17.2.32616.157
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DateTimeService", "DateTimeService\DateTimeService.csproj", "{97214158-616E-4050-AAED-2806B7583A5B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DateTimeService", "DateTimeService\DateTimeService.csproj", "{97214158-616E-4050-AAED-2806B7583A5B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuthLibrary", "AuthLibrary\AuthLibrary.csproj", "{1E781711-ECD4-475C-9037-BA5FEF8F1315}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{97214158-616E-4050-AAED-2806B7583A5B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{97214158-616E-4050-AAED-2806B7583A5B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{97214158-616E-4050-AAED-2806B7583A5B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1E781711-ECD4-475C-9037-BA5FEF8F1315}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1E781711-ECD4-475C-9037-BA5FEF8F1315}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1E781711-ECD4-475C-9037-BA5FEF8F1315}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1E781711-ECD4-475C-9037-BA5FEF8F1315}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

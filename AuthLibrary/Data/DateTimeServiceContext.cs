@@ -1,8 +1,7 @@
-﻿using DateTimeService.Areas.Identity.Data;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
-namespace DateTimeService.Data
+namespace AuthLibrary.Data
 {
     public class DateTimeServiceContext : IdentityDbContext<DateTimeServiceUser>
     {
