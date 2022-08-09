@@ -897,7 +897,7 @@ SELECT
 Into #Temp_BestPriceAfterClosestDate
 FROM
     #Temp_SourcesWithPrices T1 WITH(NOLOCK)
-    INNER JOIN Temp_SupplyDocs T2 WITH(NOLOCK)
+    INNER HASH JOIN Temp_SupplyDocs T2 WITH(NOLOCK)
     ON (T1.НоменклатураСсылка = T2.НоменклатураСсылка)
     AND (T1.ДатаДоступности >= T2.ДатаДоступности)
     AND (T1.ДатаДоступности <= T2.ДатаДоступностиПлюс)
@@ -997,7 +997,7 @@ From
 Group by 
 	T4.НоменклатураСсылка,
 	T4.СкладНазначения
-OPTION (KEEP PLAN, KEEPFIXED PLAN);
+OPTION (HASH GROUP, KEEP PLAN, KEEPFIXED PLAN);
 
 Select
     Top 1 
@@ -1261,7 +1261,7 @@ DATEADD(
         #Temp_IntervalsAll.Период
     ) AS ВремяОкончания,
 	Sum(#Temp_IntervalsAll.КоличествоЗаказовЗаИнтервалВремени) AS КоличествоЗаказовЗаИнтервалВремени,
-    Case when DATEPART(hour,ГеоЗонаВременныеИнтервалы._Fld25128) = 9 then 1 else 0 End AS Стимулировать,
+    Case when ГеоЗонаВременныеИнтервалы._Fld27342 = 0x01 then 1 else 0 End AS Стимулировать,
 #Temp_IntervalsAll.Период,
 #Temp_IntervalsAll.ГруппаПланирования,
 #Temp_IntervalsAll.Геозона,
@@ -1285,7 +1285,8 @@ Group By
 	#Temp_IntervalsAll.ГруппаПланирования,
 	#Temp_IntervalsAll.Геозона,
 	--T2._Fld25137,
-	#Temp_IntervalsAll.Приоритет
+	#Temp_IntervalsAll.Приоритет,
+    ГеоЗонаВременныеИнтервалы._Fld27342
 OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-07-20T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
 
 INsert into #Temp_Intervals
@@ -1305,7 +1306,7 @@ DATEADD(
         #Temp_IntervalsAll.Период
     ) AS ВремяОкончания,
 	Sum(#Temp_IntervalsAll.КоличествоЗаказовЗаИнтервалВремени) AS КоличествоЗаказовЗаИнтервалВремени,
-    Case when DATEPART(hour,ГеоЗонаВременныеИнтервалы._Fld25128) = 9 then 1 else 0 End AS Стимулировать,
+    Case when ГеоЗонаВременныеИнтервалы._Fld27342 = 0x01 then 1 else 0 End AS Стимулировать,
 #Temp_IntervalsAll.Период,
 #Temp_IntervalsAll.ГруппаПланирования,
 #Temp_IntervalsAll.Геозона,
@@ -1328,7 +1329,8 @@ Group By
 	#Temp_IntervalsAll.Период,
 	#Temp_IntervalsAll.ГруппаПланирования,
 	#Temp_IntervalsAll.Геозона,
-	#Temp_IntervalsAll.Приоритет
+	#Temp_IntervalsAll.Приоритет,
+    ГеоЗонаВременныеИнтервалы._Fld27342
 OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-07-20T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
 
 INsert into #Temp_Intervals
@@ -1348,7 +1350,7 @@ DATEADD(
         #Temp_IntervalsAll.Период
     ) AS ВремяОкончания,
 	Sum(#Temp_IntervalsAll.КоличествоЗаказовЗаИнтервалВремени) AS КоличествоЗаказовЗаИнтервалВремени,
-    Case when DATEPART(hour,ГеоЗонаВременныеИнтервалы._Fld25128) = 9 then 1 else 0 End AS Стимулировать,
+    Case when ГеоЗонаВременныеИнтервалы._Fld27342 = 0x01 then 1 else 0 End AS Стимулировать,
     #Temp_IntervalsAll.Период,
     #Temp_IntervalsAll.ГруппаПланирования,
     #Temp_IntervalsAll.Геозона,
@@ -1366,7 +1368,8 @@ Group By
 	#Temp_IntervalsAll.Период,
 	#Temp_IntervalsAll.ГруппаПланирования,
 	#Temp_IntervalsAll.Геозона,
-	#Temp_IntervalsAll.Приоритет
+	#Temp_IntervalsAll.Приоритет,
+    ГеоЗонаВременныеИнтервалы._Fld27342
 OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='4021-07-20T00:00:00',@P_DateTimePeriodEnd='4021-07-24T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
 
 select Период, Max(Приоритет) AS Приоритет into #Temp_PlanningGroupPriority from #Temp_Intervals Group by Период;
@@ -1436,7 +1439,7 @@ SELECT
         date
     ) As ВремяОкончания,
 	0 AS КоличествоЗаказовЗаИнтервалВремени,
-    Case when DATEPART(hour,ГеоЗонаВременныеИнтервалы._Fld25128) = 9 then 1 else 0 End AS Стимулировать
+    Case when ГеоЗонаВременныеИнтервалы._Fld27342 = 0x01 then 1 else 0 End AS Стимулировать
 FROM
     T 
 	Inner Join _Reference114_VT25126 AS ГеоЗонаВременныеИнтервалы  With (NOLOCK) On ГеоЗонаВременныеИнтервалы._Reference114_IDRRef In (Select Геозона From #Temp_GeoData)
