@@ -56,10 +56,10 @@ set @P_ApplyShifting = 1;
 DECLARE @P_DaysToShift numeric(2);
 set @P_DaysToShift = 3;
 
- Set @P_DateTimeNow = '4022-06-15T19:40:00' 
- Set @P_DateTimePeriodBegin = '4022-06-15T00:00:00'
- Set @P_DateTimePeriodEnd = '4022-06-22T00:00:00'
- Set @P_TimeNow = '2001-01-01T19:40:00'
+ Set @P_DateTimeNow = '4022-08-09T15:40:00' 
+ Set @P_DateTimePeriodBegin = '4022-08-09T00:00:00'
+ Set @P_DateTimePeriodEnd = '4022-08-15T00:00:00'
+ Set @P_TimeNow = '2001-01-01T15:40:00'
  Set @P_EmptyDate = '2001-01-01T00:00:00'
  Set @P_MaxDate = '5999-11-11T00:00:00'
 
@@ -503,7 +503,7 @@ WHERE
 		AND	T1.ДатаСобытия BETWEEN @P_DateTimeNow AND DateAdd(DAY,6,@P_DateTimeNow)
 GROUP BY T1.СкладИсточника,
 T1.СкладНазначения
-OPTION (OPTIMIZE FOR (@P_DateTimeNow='4022-06-15T00:00:00'), KEEP PLAN, KEEPFIXED PLAN);
+OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
 SELECT
     T1.НоменклатураСсылка,
