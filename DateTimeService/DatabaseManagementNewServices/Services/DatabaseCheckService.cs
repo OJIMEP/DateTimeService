@@ -446,7 +446,7 @@ namespace DateTimeService.DatabaseManagementNewServices.Services
             {
                 if (_productionEnv)
                 {
-                    _logger.LogError($"Database with key {databaseConnectionWithOutCredentials} has no logs in Elastic");
+                    _logger.LogError($"Database with key {databaseConnectionWithOutCredentials} has no logs in Elastic!");
                 }                
                 return null;
             }
