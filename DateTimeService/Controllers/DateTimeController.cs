@@ -288,6 +288,14 @@ namespace DateTimeService.Controllers
                     Name = "КоличествоДнейСмещенияДоступностиПрослеживаемыхМаркируемыхТоваров",
                     DefaultDouble = 0
                 }
+                // 21век.Левковский 18.10.2022 Старт DEV1C-67918
+                ,
+                new GlobalParam1C
+                {
+                    Name = "ПриоретизироватьСток_64854",
+                    DefaultDouble = 0
+                }
+                // 21век.Левковский 18.10.2022 Финиш DEV1C-67918
             };
             watch.Start();
             GlobalParam1C.FillValues(conn, Parameters1C, _logger);
@@ -389,6 +397,14 @@ namespace DateTimeService.Controllers
 
                 cmd.Parameters.Add("@P_DaysToShift", SqlDbType.Int);
                 cmd.Parameters["@P_DaysToShift"].Value = Parameters1C.First(x => x.Name.Contains("КоличествоДнейСмещенияДоступностиПрослеживаемыхМаркируемыхТоваров")).ValueDouble;
+
+                // 21век.Левковский 18.10.2022 Старт DEV1C-67918
+                if (data.CheckQuantity)
+                {
+                    cmd.Parameters.Add("@P_StockPriority", SqlDbType.Int);
+                    cmd.Parameters["@P_StockPriority"].Value = Parameters1C.First(x => x.Name.Contains("ПриоретизироватьСток_64854")).ValueDouble;
+                }
+                // 21век.Левковский 18.10.2022 Финиш DEV1C-67918
 
                 cmd.CommandTimeout = 5;
 
@@ -703,6 +719,14 @@ namespace DateTimeService.Controllers
                     Name = "КоличествоДнейСмещенияДоступностиПрослеживаемыхМаркируемыхТоваров",
                     DefaultDouble = 0
                 }
+                // 21век.Левковский 18.10.2022 Старт DEV1C-67918
+                ,
+                new GlobalParam1C
+                {
+                    Name = "ПриоретизироватьСток_64854",
+                    DefaultDouble = 0
+                }
+                // 21век.Левковский 18.10.2022 Финиш DEV1C-67918
             };
 
             watch.Start();
@@ -850,6 +874,11 @@ namespace DateTimeService.Controllers
 
                     cmd.Parameters.Add("@P_DaysToShift", SqlDbType.Int);
                     cmd.Parameters["@P_DaysToShift"].Value = Parameters1C.First(x => x.Name.Contains("КоличествоДнейСмещенияДоступностиПрослеживаемыхМаркируемыхТоваров")).ValueDouble;
+
+                    // 21век.Левковский 18.10.2022 Старт DEV1C-67918
+                    cmd.Parameters.Add("@P_StockPriority", SqlDbType.Int);
+                    cmd.Parameters["@P_StockPriority"].Value = Parameters1C.First(x => x.Name.Contains("ПриоретизироватьСток_64854")).ValueDouble;
+                    // 21век.Левковский 18.10.2022 Финиш DEV1C-67918
 
                     cmd.CommandTimeout = 5;
 
