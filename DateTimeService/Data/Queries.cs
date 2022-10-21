@@ -748,25 +748,31 @@ With TempSourcesGrouped AS
 (
 Select
 	T1.НоменклатураСсылка AS НоменклатураСсылка,
-	Sum(T1.Количество) AS Количество
+    Min(Case When T1.ЭтоСклад = 1 Then T1.ДатаДоступности Else @P_MaxDate End) AS ДатаДоступностиСклад,
+	Sum(Case When T1.ЭтоСклад = 1 Then T1.Количество Else 0 End) AS ОстатокНаСкладе,
+	Sum(T1.Количество) AS ОстатокВсего
 From
 	#Temp_Sources T1
-Where T1.ЭтоСклад = 1
+--Where T1.ЭтоСклад = 1
 Group by
 	T1.НоменклатураСсылка
 )
 Select
 	T1.НоменклатураСсылка,
-	min(Case when T1.Количество <= isNull(T2.Количество, 0) Then 1 Else 0 End) As ОстаткаДостаточно
+	isNull(T2.ДатаДоступностиСклад, @P_MaxDate) AS ДатаДоступностиСклад,
+	min(Case when T1.Количество <= isNull(T2.ОстатокВсего, 0) Then 1 Else 0 End) As ОстаткаДостаточно,
+	min(Case when T1.Количество <= isNull(T2.ОстатокНаСкладе, 0) Then 1 Else 0 End) As ОстаткаНаСкладеДостаточно,
+	min(Case when isNull(T2.ОстатокНаСкладе, 0) > 0 Then 1 Else 0 End) As ОстатокЕсть
 Into #Temp_StockSourcesAvailable
 From #Temp_Goods T1
 	left join TempSourcesGrouped T2
 	on T1.НоменклатураСсылка = T2.НоменклатураСсылка
 Where @P_StockPriority = 1
 Group by
+    isNull(T2.ДатаДоступностиСклад, @P_MaxDate),
     T1.НоменклатураСсылка
 Having 
-    min(Case when T1.Количество <= isNull(T2.Количество, 0) Then 1 Else 0 End) = 1;
+    min(Case when 0 < isNull(T2.ОстатокНаСкладе, 0) Then 1 Else 0 End) = 1;
 -- 21век.Левковский 17.10.2022 Финиш DEV1C-67918
 
 With TempSourcesGrouped AS
@@ -803,9 +809,15 @@ From
 			AND Источники1.ДатаДоступности >= Источник2.ДатаДоступности
         -- 21век.Левковский 17.10.2022 Старт DEV1C-67918
 		Inner Join #Temp_StockSourcesAvailable
-		On @P_StockPriority = 1
+		on @P_StockPriority = 1
 			AND Источники1.НоменклатураСсылка = #Temp_StockSourcesAvailable.НоменклатураСсылка
-			AND Источники1.ЭтоСклад = 1
+			AND ((Источники1.ЭтоСклад = 1
+				AND #Temp_StockSourcesAvailable.ОстатокЕсть = 1
+				AND #Temp_StockSourcesAvailable.ОстаткаДостаточно = 1)
+			OR (Источники1.ЭтоСклад = 0
+				AND #Temp_StockSourcesAvailable.ОстаткаДостаточно = 1
+				AND #Temp_StockSourcesAvailable.ОстаткаНаСкладеДостаточно = 0
+				AND Источники1.ДатаДоступности >= #Temp_StockSourcesAvailable.ДатаДоступностиСклад))
 		-- 21век.Левковский 17.10.2022 Финиш DEV1C-67918
 Group by
 	Источники1.НоменклатураСсылка,
@@ -828,7 +840,7 @@ From
 		Left Join #Temp_StockSourcesAvailable
 		On Источники1.НоменклатураСсылка = #Temp_StockSourcesAvailable.НоменклатураСсылка
 Where @P_StockPriority = 0
-    Or #Temp_StockSourcesAvailable.ОстаткаДостаточно is null
+    Or #Temp_StockSourcesAvailable.ОстатокЕсть is null
 Group by
 	Источники1.НоменклатураСсылка,
 	Источники1.ДатаДоступности,
@@ -2956,29 +2968,50 @@ WHERE
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
 -- 21век.Левковский 17.10.2022 Старт DEV1C-67918
+Select
+	T1.НоменклатураСсылка AS НоменклатураСсылка,
+	Min(T1.ДатаДоступности) AS ДатаДоступности,
+	T1.Источник_RRRef,
+	T1.ЭтоСклад,
+	T1.Количество AS Количество
+Into #Temp_SourcesGrouped
+From
+	#Temp_Sources T1
+Group By
+	T1.НоменклатураСсылка,
+	T1.ЭтоСклад,
+	T1.Источник_RRRef,
+	T1.Количество;
+
 With TempSourcesGrouped AS
 (
 Select
 	T1.НоменклатураСсылка AS НоменклатураСсылка,
-	Sum(T1.Количество) AS Количество
+	Min(Case When T1.ЭтоСклад = 1 Then T1.ДатаДоступности Else @P_MaxDate End) AS ДатаДоступностиСклад,
+	Sum(Case When T1.ЭтоСклад = 1 Then T1.Количество Else 0 End) AS ОстатокНаСкладе,
+	Sum(T1.Количество) AS ОстатокВсего
 From
-	#Temp_Sources T1
-Where T1.ЭтоСклад = 1
+	#Temp_SourcesGrouped T1
+--Where T1.ЭтоСклад = 1
 Group By
 	T1.НоменклатураСсылка
 )
 Select
 	T1.НоменклатураСсылка,
-	min(Case when T1.Количество <= isNull(T2.Количество, 0) Then 1 Else 0 End) As ОстаткаДостаточно
+	isNull(T2.ДатаДоступностиСклад, @P_MaxDate) AS ДатаДоступностиСклад,
+	min(Case when T1.Количество <= isNull(T2.ОстатокВсего, 0) Then 1 Else 0 End) As ОстаткаДостаточно,
+	min(Case when T1.Количество <= isNull(T2.ОстатокНаСкладе, 0) Then 1 Else 0 End) As ОстаткаНаСкладеДостаточно,
+	min(Case when 0 < isNull(T2.ОстатокНаСкладе, 0) Then 1 Else 0 End) As ОстатокЕсть
 Into #Temp_StockSourcesAvailable
 From #Temp_Goods T1
 	Left Join TempSourcesGrouped T2
 	On T1.НоменклатураСсылка = T2.НоменклатураСсылка
 Where @P_StockPriority = 1
 Group By
-    T1.НоменклатураСсылка
+    isNull(T2.ДатаДоступностиСклад, @P_MaxDate),
+	T1.НоменклатураСсылка
 Having 
-    min(Case when T1.Количество <= isNull(T2.Количество, 0) Then 1 Else 0 End) = 1;
+    min(Case when 0 < isNull(T2.ОстатокНаСкладе, 0) Then 1 Else 0 End) = 1;
 -- 21век.Левковский 17.10.2022 Финиш DEV1C-67918
 
 With TempSourcesGrouped AS
@@ -3015,9 +3048,15 @@ From
 			AND Источники1.ДатаДоступности >= Источник2.ДатаДоступности
         -- 21век.Левковский 17.10.2022 Старт DEV1C-67918
 		Inner Join #Temp_StockSourcesAvailable
-		On @P_StockPriority = 1
+		on @P_StockPriority = 1
 			AND Источники1.НоменклатураСсылка = #Temp_StockSourcesAvailable.НоменклатураСсылка
-			AND Источники1.ЭтоСклад = 1
+			AND ((Источники1.ЭтоСклад = 1
+				AND #Temp_StockSourcesAvailable.ОстатокЕсть = 1
+				AND #Temp_StockSourcesAvailable.ОстаткаДостаточно = 1)
+			OR (Источники1.ЭтоСклад = 0
+				AND #Temp_StockSourcesAvailable.ОстаткаДостаточно = 1
+				AND #Temp_StockSourcesAvailable.ОстаткаНаСкладеДостаточно = 0
+				AND Источники1.ДатаДоступности >= #Temp_StockSourcesAvailable.ДатаДоступностиСклад))
 		-- 21век.Левковский 17.10.2022 Финиш DEV1C-67918
 Group by
 	Источники1.НоменклатураСсылка,
@@ -3041,7 +3080,7 @@ From
 		Left Join #Temp_StockSourcesAvailable
 		On Источники1.НоменклатураСсылка = #Temp_StockSourcesAvailable.НоменклатураСсылка
 Where @P_StockPriority = 0
-    Or #Temp_StockSourcesAvailable.ОстаткаДостаточно is null
+    Or #Temp_StockSourcesAvailable.ОстатокЕсть is null
 Group By
 	Источники1.НоменклатураСсылка,
 	Источники1.ДатаДоступности,
