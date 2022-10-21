@@ -402,7 +402,7 @@ namespace DateTimeService.Controllers
                 if (data.CheckQuantity)
                 {
                     cmd.Parameters.Add("@P_StockPriority", SqlDbType.Int);
-                    cmd.Parameters["@P_StockPriority"].Value = Parameters1C.First(x => x.Name.Contains("ПриоретизироватьСток_64854")).ValueDouble;
+                    cmd.Parameters["@P_StockPriority"].Value = Parameters1C.First(x => x.Name.Contains("ПриоритизироватьСток_64854")).ValueDouble;
                 }
                 // 21век.Левковский 18.10.2022 Финиш DEV1C-67918
 
