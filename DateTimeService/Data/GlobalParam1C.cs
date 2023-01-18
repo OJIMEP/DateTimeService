@@ -13,6 +13,7 @@ namespace DateTimeService.Data
         public string Name { get; set; }
         public double ValueDouble { get; set; }
         public double DefaultDouble { get; set; }
+        public Boolean UseDefault { get; set; }
 
 
         public static Boolean FillValues(SqlConnection conn, List<GlobalParam1C> names, ILogger<DateTimeController> _logger)
@@ -68,6 +69,14 @@ namespace DateTimeService.Data
                         
 
                         querySuccessful = true;
+                    }
+                }
+
+                foreach (var param in names)
+                {
+                    if (param.UseDefault && param.ValueDouble == 0)
+                    {
+                        param.ValueDouble = param.DefaultDouble;
                     }
                 }
 

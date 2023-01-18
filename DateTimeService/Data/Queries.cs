@@ -1021,13 +1021,28 @@ Group by
 	T4.СкладНазначения
 OPTION (HASH GROUP, KEEP PLAN, KEEPFIXED PLAN);
 
-Select
-    Top 1 
+-- 21век.Левковский 17.10.2022 Старт DEV1C-78330
+With Temp_CountOfGoods AS
+(
+SELECT
+    COUNT(DISTINCT T1.НоменклатураСсылка) as CountOfGoods
+FROM 
+    #Temp_Goods T1 WITH(NOLOCK)
+)
+-- 21век.Левковский 17.10.2022 Финиш DEV1C-78330
+Select Top 1 
 	Max(#Temp_ClosestDatesByGoods.БлижайшаяДата) AS DateAvailable, 
-СкладНазначения AS СкладНазначения
+    СкладНазначения AS СкладНазначения
 Into #Temp_DateAvailable
 from #Temp_ClosestDatesByGoods With (NOLOCK)
+-- 21век.Левковский 17.10.2022 Старт DEV1C-78330
+    LEFT OUTER JOIN Temp_CountOfGoods
+	    ON 1 = 1
+-- 21век.Левковский 17.10.2022 Финиш DEV1C-78330
 Group by СкладНазначения
+-- 21век.Левковский 17.10.2022 Старт DEV1C-78330
+HAVING COUNT(DISTINCT #Temp_ClosestDatesByGoods.НоменклатураСсылка) = MIN(Temp_CountOfGoods.CountOfGoods)
+-- 21век.Левковский 17.10.2022 Финиш DEV1C-78330
 Order by DateAvailable ASC
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 /*Тут закончился процесс оптимальной даты. Склад назначения нужен чтоб потом правильную ГП выбрать*/

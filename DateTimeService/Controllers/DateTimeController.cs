@@ -292,7 +292,7 @@ namespace DateTimeService.Controllers
                 ,
                 new GlobalParam1C
                 {
-                    Name = "ПриоретизироватьСток_64854",
+                    Name = "ПриоритизироватьСток_64854",
                     DefaultDouble = 0
                 }
                 // 21век.Левковский 18.10.2022 Финиш DEV1C-67918
@@ -707,7 +707,8 @@ namespace DateTimeService.Controllers
                 new GlobalParam1C
                 {
                     Name = "Логистика_ЭтажПоУмолчанию",
-                    DefaultDouble = 4
+                    DefaultDouble = 4,
+                    UseDefault = true
                 },
                 new GlobalParam1C
                 {
@@ -723,7 +724,7 @@ namespace DateTimeService.Controllers
                 ,
                 new GlobalParam1C
                 {
-                    Name = "ПриоретизироватьСток_64854",
+                    Name = "ПриоритизироватьСток_64854",
                     DefaultDouble = 0
                 }
                 // 21век.Левковский 18.10.2022 Финиш DEV1C-67918
@@ -877,7 +878,7 @@ namespace DateTimeService.Controllers
 
                     // 21век.Левковский 18.10.2022 Старт DEV1C-67918
                     cmd.Parameters.Add("@P_StockPriority", SqlDbType.Int);
-                    cmd.Parameters["@P_StockPriority"].Value = Parameters1C.First(x => x.Name.Contains("ПриоретизироватьСток_64854")).ValueDouble;
+                    cmd.Parameters["@P_StockPriority"].Value = Parameters1C.First(x => x.Name.Contains("ПриоритизироватьСток_64854")).ValueDouble;
                     // 21век.Левковский 18.10.2022 Финиш DEV1C-67918
 
                     cmd.CommandTimeout = 5;
@@ -906,8 +907,6 @@ namespace DateTimeService.Controllers
                         Parameters1C.First(x => x.Name.Contains("ПроцентДнейАнализаЛучшейЦеныПриОтсрочкеЗаказа")).ValueDouble,
                         useIndexHint);
 
-
-
                     //execute the SQLCommand
                     SqlDataReader dr = cmd.ExecuteReader();
 
@@ -921,7 +920,7 @@ namespace DateTimeService.Controllers
                             var begin = dr.GetDateTime(0).AddMonths(-24000);
                             var end = dr.GetDateTime(1).AddMonths(-24000);
                             var bonus = dr.GetInt32(3) == 1;
-                           
+
                             result.Data.Add(new ResponseIntervalListElement
                             {
                                 Begin = begin,
