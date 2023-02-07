@@ -186,6 +186,24 @@ Group By
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 /*Конец товаров*/
 
+--21век.Левковский 06.02.2023 Старт DEV1C-78996
+/*Маркируемые коды ТНВЭД*/
+SELECT DISTINCT
+T1.КодТНВЭД AS КодТНВЭД
+INTO #Temp_MarkedCodes
+FROM (SELECT
+	T4._Fld27184RRef AS КодТНВЭД
+	FROM (SELECT
+		T3._Fld27184RRef AS КодТНВЭД,
+		MAX(T3._Period) AS MAXPERIOD_
+		FROM dbo._InfoRg27183 T3
+			INNER JOIN #Temp_Goods T5 WITH(NOLOCK)
+			ON (T3._Fld27184RRef = T5.ТНВЭДСсылка)
+		GROUP BY T3._Fld27184RRef) T2
+	INNER JOIN dbo._InfoRg27183 T4
+	ON T2.КодТНВЭД = T4._Fld27184RRef AND T2.MAXPERIOD_ = T4._Period AND T4._Fld28120 = 0x01) T1
+--21век.Левковский 06.02.2023 Финиш DEV1C-78996
+
 /*Размеры корзины в целом для расчета габаритов*/
 SELECT
 CAST(SUM((T2._Fld6000 * T1.Количество)) AS NUMERIC(36, 6)) AS Вес,
@@ -240,6 +258,13 @@ SELECT
     T1.НоменклатураСсылка AS НоменклатураСсылка,
     T2._Fld6000 * T1.Количество AS Вес,
     T2._Fld6006 * T1.Количество AS Объем,
+    --21век.Левковский 06.02.2023 Старт DEV1C-78996
+	SUM(CASE 
+		WHEN MarkedCodes.КодТНВЭД IS NOT NULL AND T1.Количество >= 4
+			THEN T1.Количество * T3.ДополнительноеВремяМаркируемыеТовары
+		ELSE 0
+	END) AS УсловиеПоМаркируемымТоварам,		
+	--21век.Левковский 06.02.2023 Финиш DEV1C-78996
     CASE
         WHEN (
             (T2._Fld6006 > 0.8)
@@ -286,6 +311,9 @@ FROM
             T6._Fld24101 AS Fld24101_,
             T6._Fld24102 AS Fld24102_,
             T6._Fld26615 AS Fld26615_,
+            --21век.Левковский 06.02.2023 Старт DEV1C-78996
+			T6._Fld30450 AS ДополнительноеВремяМаркируемыеТовары,
+			--21век.Левковский 06.02.2023 Старт DEV1C-78996
             T6._Fld26616 AS Fld26616_
         FROM
             (
@@ -296,6 +324,10 @@ FROM
             ) T4
             INNER JOIN dbo._InfoRg24088 T6 ON T4.MAXPERIOD_ = T6._Period
     ) T3 ON 1 = 1
+    --21век.Левковский 06.02.2023 Старт DEV1C-78996
+	LEFT OUTER JOIN #Temp_MarkedCodes AS MarkedCodes
+	ON MarkedCodes.КодТНВЭД = T1.ТНВЭДСсылка
+	--21век.Левковский 06.02.2023 Финиш DEV1C-78996
 GROUP BY
     T1.НоменклатураСсылка,
     T2._Fld6000 * T1.Количество,
@@ -406,6 +438,9 @@ SELECT
 			AND SUM(T1.Вес) >= 600.0 THEN T2.Fld26614_
     END As УсловиеВесОбъем,
     T2.Fld24089_ As МинимальноеВремя,
+    --21век.Левковский 06.02.2023 Старт DEV1C-78996
+	SUM(T1.УсловиеПоМаркируемымТоварам) AS УсловиеПоМаркируемымТоварам,
+	--21век.Левковский 06.02.2023 Финиш DEV1C-78996
     SUM(T1.УсловиеЭтажМассаПоТоварам) As УсловиеЭтажМассаОбщ
 INTO #Temp_Time1
 FROM
@@ -452,7 +487,16 @@ OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
 /*Время обслуживания началось выше и тут итоговая цифра*/
 SELECT
-    ISNULL(T2.МинимальноеВремя, 0) + ISNULL(T2.УсловиеКоличествоСтрок, 0) + ISNULL(T1.УсловиеМинскЧас, 0) + ISNULL(T2.УсловиеЭтажМассаОбщ, 0) + ISNULL(T2.УсловиеВесОбъем, 0) + ISNULL(T1.УсловиеСпособОплаты, 0) AS ВремяВыполнения
+    ISNULL(T2.МинимальноеВремя, 0) 
+	+ ISNULL(T2.УсловиеКоличествоСтрок, 0) 
+	+ ISNULL(T1.УсловиеМинскЧас, 0) 
+	+ ISNULL(T2.УсловиеЭтажМассаОбщ, 0) 
+	+ ISNULL(T2.УсловиеВесОбъем, 0) 
+	+ ISNULL(T1.УсловиеСпособОплаты, 0) 
+	--21век.Левковский 06.02.2023 Старт DEV1C-78996
+	+ ISNULL(T2.УсловиеПоМаркируемымТоварам, 0)
+	--21век.Левковский 06.02.2023 Финиш DEV1C-78996
+	AS ВремяВыполнения
 Into #Temp_TimeService
 FROM
     #Temp_TimeByOrders T1 WITH(NOLOCK)
