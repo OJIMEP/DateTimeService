@@ -260,7 +260,7 @@ SELECT
     T2._Fld6006 * T1.Количество AS Объем,
     --21век.Левковский 06.02.2023 Старт DEV1C-78996
     SUM(CASE 
-        WHEN MarkedCodes.КодТНВЭД IS NOT NULL AND T1.Количество >= 4
+        WHEN MarkedCodes.КодТНВЭД IS NOT NULL AND T1.Количество >= 5
             THEN T1.Количество * T3.ДополнительноеВремяМаркируемыеТовары
         ELSE 0
     END) AS УсловиеПоМаркируемымТоварам,		
