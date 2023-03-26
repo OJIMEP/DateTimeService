@@ -507,11 +507,25 @@ OPTION (KEEP PLAN, KEEPFIXED PLAN);
 /*Группа планирования*/
 Select ГруппыПланирования._IDRRef AS ГруппаПланирования,
 	ГруппыПланирования._Fld23302RRef AS Склад,
-	ГруппыПланирования._Fld25137 AS ВремяДоступностиНаСегодня,
+    --21век.Левковский 06.02.2023 Старт DEV1C-75871
+	--ГруппыПланирования._Fld25137 AS ВремяДоступностиНаСегодня,
+    CASE 
+        WHEN @P_YourTimeDelivery = 1
+            THEN ГруппыПланирования._Fld25137
+        ELSE ГруппыПланирования._Fld25137
+    END AS ВремяДоступностиНаСегодня,
+    --21век.Левковский 06.02.2023 Финиш DEV1C-75871
 	ГруппыПланирования._Fld25138 AS ВремяСтопаСегодня,
 	ГруппыПланирования._Fld25139 AS ВремяДоступностиНаЗавтра,
 	ГруппыПланирования._Fld25140 AS ВремяСтопаЗавтра,
-	IsNull(ГруппыПланирования._Fld25519, @P_EmptyDate)AS ГруппаПланированияДобавляемоеВремя,
+    --21век.Левковский 06.02.2023 Старт DEV1C-75871
+	--IsNull(ГруппыПланирования._Fld25519, @P_EmptyDate)AS ГруппаПланированияДобавляемоеВремя,
+    CASE 
+        WHEN @P_YourTimeDelivery = 1
+            THEN ГруппыПланирования._Fld25519
+        ELSE ГруппыПланирования._Fld25519
+    END AS ГруппаПланированияДобавляемоеВремя,
+    --21век.Левковский 06.02.2023 Финиш DEV1C-75871
 	1 AS Основная,
 	ГруппыПланирования._Description
 Into #Temp_PlanningGroups
@@ -527,11 +541,25 @@ UNION ALL
 Select 
 	ПодчиненнаяГП._IDRRef AS ГруппаПланирования,
 	ГруппыПланирования._Fld23302RRef AS Склад,
-	ПодчиненнаяГП._Fld25137 AS ВремяДоступностиНаСегодня,
+    --21век.Левковский 06.02.2023 Старт DEV1C-75871
+	--ПодчиненнаяГП._Fld25137 AS ВремяДоступностиНаСегодня,
+    CASE 
+        WHEN @P_YourTimeDelivery = 1
+            THEN ПодчиненнаяГП._Fld25137
+        ELSE ПодчиненнаяГП._Fld25137
+    END AS ВремяДоступностиНаСегодня,
+    --21век.Левковский 06.02.2023 Финиш DEV1C-75871
 	ПодчиненнаяГП._Fld25138 AS ВремяСтопаСегодня,
 	ПодчиненнаяГП._Fld25139 AS ВремяДоступностиНаЗавтра,
 	ПодчиненнаяГП._Fld25140 AS ВремяСтопаЗавтра,
-	IsNull(ПодчиненнаяГП._Fld25519, @P_EmptyDate)AS ГруппаПланированияДобавляемоеВремя,
+	--21век.Левковский 06.02.2023 Старт DEV1C-75871
+	--IsNull(ПодчиненнаяГП._Fld25519, @P_EmptyDate)AS ГруппаПланированияДобавляемоеВремя,
+    CASE 
+        WHEN @P_YourTimeDelivery = 1
+            THEN ПодчиненнаяГП._Fld25519
+        ELSE ПодчиненнаяГП._Fld25519
+    END AS ГруппаПланированияДобавляемоеВремя,
+    --21век.Левковский 06.02.2023 Финиш DEV1C-75871
 	0,
 	ПодчиненнаяГП._Description
 From
@@ -1270,6 +1298,14 @@ SELECT
         ),
         T5._Period
     ) AS ВремяОкончания,
+    --21век.Левковский 06.02.2023 Старт DEV1C-75871
+    SUM(
+                CASE
+                    WHEN (T5._RecordKind = 0.0) THEN T5._Fld25113
+                    ELSE -(T5._Fld25113)
+                END
+            ) AS КоличествоЗаказовЗаИнтервалВремениВашеВремя,
+    --21век.Левковский 06.02.2023 Финиш DEV1C-75871
 	SUM(
                 CASE
                     WHEN (T5._RecordKind = 0.0) THEN T5._Fld25113
@@ -1303,6 +1339,21 @@ HAVING
                 END
             ) AS NUMERIC(16, 0)
         ) > 0.0
+        --21век.Левковский 06.02.2023 Старт DEV1C-75871
+        AND CASE
+            WHEN @P_YourTimeDelivery = 1
+                THEN
+                    CAST(
+                        SUM(
+                            CASE
+                                WHEN (T5._RecordKind = 0.0) THEN T5._Fld25113
+                                ELSE -(T5._Fld25113)
+                            END
+                        ) AS NUMERIC(16, 0)
+                    )
+            ELSE 1.0
+        END > 0.0
+        --21век.Левковский 06.02.2023 Финиш DEV1C-75871
     )
 OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'), KEEP PLAN, KEEPFIXED PLAN);
 ;
@@ -1359,6 +1410,10 @@ from #Temp_IntervalsAll
 		AND (NOT (((@P_TimeNow >= T2._Fld25138))))
 WHERE
     #Temp_IntervalsAll.Период = @P_DateTimePeriodBegin
+    --21век.Левковский 06.02.2023 Старт DEV1C-75871
+    AND @P_YourTimeDelivery = 0
+    --21век.Левковский 06.02.2023 Финиш DEV1C-75871
+
 Group By 
 	ГеоЗонаВременныеИнтервалы._Fld25128,
 	ГеоЗонаВременныеИнтервалы._Fld25129,
@@ -1404,6 +1459,10 @@ from #Temp_IntervalsAll
     )
 WHERE
     #Temp_IntervalsAll.Период = DATEADD(DAY, 1, @P_DateTimePeriodBegin)
+    --21век.Левковский 06.02.2023 Старт DEV1C-75871
+    AND @P_YourTimeDelivery = 0
+    --21век.Левковский 06.02.2023 Финиш DEV1C-75871
+
 Group By 
 	ГеоЗонаВременныеИнтервалы._Fld25128,
 	ГеоЗонаВременныеИнтервалы._Fld25129,
@@ -1442,7 +1501,11 @@ from #Temp_IntervalsAll
 		And #Temp_IntervalsAll.ВремяНачалаНачальное >= ГеоЗонаВременныеИнтервалы._Fld25128
 		And #Temp_IntervalsAll.ВремяНачалаНачальное < ГеоЗонаВременныеИнтервалы._Fld25129
 WHERE
-	#Temp_IntervalsAll.Период BETWEEN DATEADD(DAY, 2, @P_DateTimePeriodBegin) AND @P_DateTimePeriodEnd --begin +2
+	#Temp_IntervalsAll.Период BETWEEN DATEADD(DAY, 2, @P_DateTimePeriodBegin) 
+    AND @P_DateTimePeriodEnd --begin +2
+    --21век.Левковский 06.02.2023 Старт DEV1C-75871
+    AND @P_YourTimeDelivery = 0
+    --21век.Левковский 06.02.2023 Финиш DEV1C-75871
 Group By 
 	ГеоЗонаВременныеИнтервалы._Fld25128,
 	ГеоЗонаВременныеИнтервалы._Fld25129,
@@ -1452,6 +1515,150 @@ Group By
 	#Temp_IntervalsAll.Приоритет,
     ГеоЗонаВременныеИнтервалы._Fld27342
 OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'), KEEP PLAN, KEEPFIXED PLAN);
+
+--21век.Левковский 06.02.2023 Старт DEV1C-75871
+Insert Into #Temp_Intervals
+Select
+    DATEADD(
+        SECOND,
+        CAST(
+            DATEDIFF(SECOND, @P_EmptyDate, ГеоЗонаВременныеИнтервалы._Fld25128) AS NUMERIC(12)
+        ),
+        #Temp_IntervalsAll.Период
+    ) As ВремяНачала,
+	DATEADD(
+        SECOND,
+        CAST(
+            DATEDIFF(SECOND, @P_EmptyDate, ГеоЗонаВременныеИнтервалы._Fld25129) AS NUMERIC(12)
+        ),
+        #Temp_IntervalsAll.Период
+    ) AS ВремяОкончания,
+	Sum(#Temp_IntervalsAll.КоличествоЗаказовЗаИнтервалВремени) AS КоличествоЗаказовЗаИнтервалВремени, 
+    Case when ГеоЗонаВременныеИнтервалы._Fld27342 = 0x01 then 1 else 0 End AS Стимулировать,
+    #Temp_IntervalsAll.Период,
+    #Temp_IntervalsAll.ГруппаПланирования,
+    #Temp_IntervalsAll.Геозона,
+    #Temp_IntervalsAll.Приоритет
+From #Temp_IntervalsAll
+	Inner Join _Reference114_VTВАШЕВРЕМЯ ГеоЗонаВременныеИнтервалы With (NOLOCK)
+		On #Temp_IntervalsAll.Геозона = ГеоЗонаВременныеИнтервалы._Reference114_IDRRef
+        And @P_YourTimeDelivery = 1
+		And (
+            (#Temp_IntervalsAll.ВремяНачалаНачальное >= ГеоЗонаВременныеИнтервалы._Fld25128 And #Temp_IntervalsAll.ВремяНачалаНачальное < ГеоЗонаВременныеИнтервалы._Fld25129)
+            Or
+            (#Temp_IntervalsAll.ВремяОкончанияНачальное >= ГеоЗонаВременныеИнтервалы._Fld25128 And #Temp_IntervalsAll.ВремяОкончанияНачальное < ГеоЗонаВременныеИнтервалы._Fld25129)
+            )
+   INNER JOIN dbo._Reference23294 T2 With (NOLOCK) 
+		ON (#Temp_IntervalsAll.ГруппаПланирования = T2._IDRRef)
+		AND (ГеоЗонаВременныеИнтервалы._Fld25128 >= T2._Fld25137)
+		AND (NOT (((@P_TimeNow >= T2._Fld25138))))
+WHERE
+    #Temp_IntervalsAll.Период = @P_DateTimePeriodBegin
+
+Group By 
+	ГеоЗонаВременныеИнтервалы._Fld25128,
+	ГеоЗонаВременныеИнтервалы._Fld25129,
+	#Temp_IntervalsAll.Период,
+	#Temp_IntervalsAll.ГруппаПланирования,
+	#Temp_IntervalsAll.Геозона,
+	--T2._Fld25137,
+	#Temp_IntervalsAll.Приоритет,
+    ГеоЗонаВременныеИнтервалы._Fld27342
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}'), KEEP PLAN, KEEPFIXED PLAN);
+
+Insert Into #Temp_Intervals
+Select
+    DATEADD(
+        SECOND,
+        CAST(
+            DATEDIFF(SECOND, @P_EmptyDate, ГеоЗонаВременныеИнтервалы._Fld25128) AS NUMERIC(12)
+        ),
+        #Temp_IntervalsAll.Период
+    ) As ВремяНачала,
+	DATEADD(
+        SECOND,
+        CAST(
+            DATEDIFF(SECOND, @P_EmptyDate, ГеоЗонаВременныеИнтервалы._Fld25129) AS NUMERIC(12)
+        ),
+        #Temp_IntervalsAll.Период
+    ) AS ВремяОкончания,
+	Sum(#Temp_IntervalsAll.КоличествоЗаказовЗаИнтервалВремени) AS КоличествоЗаказовЗаИнтервалВремени,
+    Case when ГеоЗонаВременныеИнтервалы._Fld27342 = 0x01 then 1 else 0 End AS Стимулировать,
+    #Temp_IntervalsAll.Период,
+    #Temp_IntervalsAll.ГруппаПланирования,
+    #Temp_IntervalsAll.Геозона,
+    #Temp_IntervalsAll.Приоритет
+From #Temp_IntervalsAll
+	Inner Join _Reference114_VTВАШЕВРЕМЯ ГеоЗонаВременныеИнтервалы With (NOLOCK)
+		On #Temp_IntervalsAll.Геозона = ГеоЗонаВременныеИнтервалы._Reference114_IDRRef
+		And @P_YourTimeDelivery = 1
+		And (
+            (#Temp_IntervalsAll.ВремяНачалаНачальное >= ГеоЗонаВременныеИнтервалы._Fld25128 And #Temp_IntervalsAll.ВремяНачалаНачальное < ГеоЗонаВременныеИнтервалы._Fld25129)
+            Or
+            (#Temp_IntervalsAll.ВремяОкончанияНачальное >= ГеоЗонаВременныеИнтервалы._Fld25128 And #Temp_IntervalsAll.ВремяОкончанияНачальное < ГеоЗонаВременныеИнтервалы._Fld25129)
+            )
+  INNER JOIN dbo._Reference23294 T4 With (NOLOCK) ON (#Temp_IntervalsAll.ГруппаПланирования = T4._IDRRef)
+    AND (
+        (@P_TimeNow < T4._Fld25140)
+        OR (ГеоЗонаВременныеИнтервалы._Fld25128 >= T4._Fld25139)
+    )
+WHERE
+    #Temp_IntervalsAll.Период = DATEADD(DAY, 1, @P_DateTimePeriodBegin)
+
+Group By 
+	ГеоЗонаВременныеИнтервалы._Fld25128,
+	ГеоЗонаВременныеИнтервалы._Fld25129,
+	#Temp_IntervalsAll.Период,
+	#Temp_IntervalsAll.ГруппаПланирования,
+	#Temp_IntervalsAll.Геозона,
+	#Temp_IntervalsAll.Приоритет,
+    ГеоЗонаВременныеИнтервалы._Fld27342
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}'), KEEP PLAN, KEEPFIXED PLAN); 
+
+Insert Into #Temp_Intervals
+Select
+    DATEADD(
+        SECOND,
+        CAST(
+            DATEDIFF(SECOND, @P_EmptyDate, ГеоЗонаВременныеИнтервалы._Fld25128) AS NUMERIC(12)
+        ),
+        #Temp_IntervalsAll.Период
+    ) As ВремяНачала,
+	DATEADD(
+        SECOND,
+        CAST(
+            DATEDIFF(SECOND, @P_EmptyDate, ГеоЗонаВременныеИнтервалы._Fld25129) AS NUMERIC(12)
+        ),
+        #Temp_IntervalsAll.Период
+    ) AS ВремяОкончания,
+	Sum(#Temp_IntervalsAll.КоличествоЗаказовЗаИнтервалВремени) AS КоличествоЗаказовЗаИнтервалВремени,
+Case when ГеоЗонаВременныеИнтервалы._Fld27342 = 0x01 then 1 else 0 End AS Стимулировать,
+    #Temp_IntervalsAll.Период,
+    #Temp_IntervalsAll.ГруппаПланирования,
+    #Temp_IntervalsAll.Геозона,
+    #Temp_IntervalsAll.Приоритет
+From #Temp_IntervalsAll
+	Inner Join _Reference114_VT25126 ГеоЗонаВременныеИнтервалы With (NOLOCK)
+		On #Temp_IntervalsAll.Геозона = ГеоЗонаВременныеИнтервалы._Reference114_IDRRef
+		And @P_YourTimeDelivery = 1
+		And (
+            (#Temp_IntervalsAll.ВремяНачалаНачальное >= ГеоЗонаВременныеИнтервалы._Fld25128 And #Temp_IntervalsAll.ВремяНачалаНачальное < ГеоЗонаВременныеИнтервалы._Fld25129)
+            Or
+            (#Temp_IntervalsAll.ВремяОкончанияНачальное >= ГеоЗонаВременныеИнтервалы._Fld25128 And #Temp_IntervalsAll.ВремяОкончанияНачальное < ГеоЗонаВременныеИнтервалы._Fld25129)
+            )
+WHERE
+	#Temp_IntervalsAll.Период BETWEEN DATEADD(DAY, 2, @P_DateTimePeriodBegin) 
+    AND @P_DateTimePeriodEnd --begin +2
+Group By 
+	ГеоЗонаВременныеИнтервалы._Fld25128,
+	ГеоЗонаВременныеИнтервалы._Fld25129,
+	#Temp_IntervalsAll.Период,
+	#Temp_IntervalsAll.ГруппаПланирования,
+	#Temp_IntervalsAll.Геозона,
+	#Temp_IntervalsAll.Приоритет,
+    ГеоЗонаВременныеИнтервалы._Fld27342
+OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'), KEEP PLAN, KEEPFIXED PLAN);
+--21век.Левковский 06.02.2023 Финиш DEV1C-75871
 
 select Период, Max(Приоритет) AS Приоритет into #Temp_PlanningGroupPriority from #Temp_Intervals Group by Период;
 /*Выше закончились рассчитанные интервалы*/
@@ -1523,7 +1730,11 @@ SELECT
     Case when ГеоЗонаВременныеИнтервалы._Fld27342 = 0x01 then 1 else 0 End AS Стимулировать
 FROM
     T 
-	Inner Join _Reference114_VT25126 AS ГеоЗонаВременныеИнтервалы  With (NOLOCK) On ГеоЗонаВременныеИнтервалы._Reference114_IDRRef In (Select Геозона From #Temp_GeoData)
+	Inner Join _Reference114_VT25126 AS ГеоЗонаВременныеИнтервалы  With (NOLOCK) 
+    On ГеоЗонаВременныеИнтервалы._Reference114_IDRRef In (Select Геозона From #Temp_GeoData)
+        --21век.Левковский 06.02.2023 Старт DEV1C-75871
+        And @P_YourTimeDelivery = 0
+        --21век.Левковский 06.02.2023 Финиш DEV1C-75871
 	Inner Join #Temp_DateAvailable On DATEADD(
         SECOND,
         CAST(

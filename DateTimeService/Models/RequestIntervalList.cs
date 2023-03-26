@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
+using DateTimeService.Data;
 
 namespace DateTimeService.Models
 {
@@ -66,10 +67,8 @@ namespace DateTimeService.Models
         [JsonPropertyName("y_coordinate")]
         public string Ycoordinate { get; set; }
 
-
         [JsonPropertyName("order_items")]
         public List<RequestDataCodeItem> OrderItems { get; set; }
-
 
         public Dictionary<string,string> LogicalCheckInputData()
         {
@@ -80,7 +79,7 @@ namespace DateTimeService.Models
                 errors.Add("delivery_type", "Должен быть указан тип доставки или номер имеющегося заказа");
             }
 
-            if (DeliveryType == "courier")
+            if (DeliveryType == Constants.CourierDelivery)
             {
                 if (String.IsNullOrEmpty(AddressId) && (String.IsNullOrEmpty(Xcoordinate) && String.IsNullOrEmpty(Ycoordinate)))
                 {
@@ -107,7 +106,7 @@ namespace DateTimeService.Models
                     errors.Add("order_date", "При курьерской доставке дата заказа должна отсутствовать");
                 }
             }
-            if (DeliveryType == "self")
+            if (DeliveryType == Constants.Self)
             {
                 if (!String.IsNullOrEmpty(AddressId))
                 {

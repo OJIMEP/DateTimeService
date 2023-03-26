@@ -599,10 +599,6 @@ namespace DateTimeService.Controllers
             Stopwatch stopwatchExecution = new();
             stopwatchExecution.Start();
 
-            
-
-            
-
             var logElementLoadBal = new ElasticLogElement
             {
                 Path = HttpContext.Request.Path,
@@ -637,7 +633,6 @@ namespace DateTimeService.Controllers
             }
             watch.Stop();
 
-
             if (conn == null)
             {
                 logElementLoadBal.TimeSQLExecution = 0;
@@ -655,7 +650,6 @@ namespace DateTimeService.Controllers
 
             ResponseIntervalList result = new();
 
-
             var logElement = new ElasticLogElement
             {
                 Path = HttpContext.Request.Path,
@@ -670,6 +664,14 @@ namespace DateTimeService.Controllers
             logElement.AdditionalData.Add("Referer", Request.Headers["Referer"].ToString());
             logElement.AdditionalData.Add("User-Agent", Request.Headers["Referer"].ToString());
             logElement.AdditionalData.Add("RemoteIpAddress", Request.HttpContext.Connection.RemoteIpAddress.ToString());
+
+            var yourTimeDelivery = false;
+
+            if (data.DeliveryType == Constants.YourTimeDelivery)
+            {
+                data.DeliveryType = Constants.CourierDelivery;
+                yourTimeDelivery = true;
+            }
 
             var dataErrors = data.LogicalCheckInputData();
             if (dataErrors.Count > 0)
@@ -747,7 +749,7 @@ namespace DateTimeService.Controllers
 
             bool adressExists = false;
 
-            if (data.DeliveryType == "self" || checkByOrder)
+            if (data.DeliveryType == Constants.Self || checkByOrder)
             {
                 adressExists = true;
                 alwaysCheckGeozone = false;
@@ -880,6 +882,9 @@ namespace DateTimeService.Controllers
                     cmd.Parameters.Add("@P_StockPriority", SqlDbType.Int);
                     cmd.Parameters["@P_StockPriority"].Value = Parameters1C.First(x => x.Name.Contains("ПриоритизироватьСток_64854")).ValueDouble;
                     // 21век.Левковский 18.10.2022 Финиш DEV1C-67918
+
+                    cmd.Parameters.Add("@P_YourTimeDelivery", SqlDbType.Int);
+                    cmd.Parameters["@P_YourTimeDelivery"].Value = yourTimeDelivery ? 1: 0;
 
                     cmd.CommandTimeout = 5;
 
