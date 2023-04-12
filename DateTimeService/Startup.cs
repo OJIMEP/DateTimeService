@@ -4,6 +4,7 @@ using DateTimeService.DatabaseManagementNewServices.Interfaces;
 using DateTimeService.DatabaseManagementNewServices.Services;
 using DateTimeService.DatabaseManagementUtils;
 using DateTimeService.Logging;
+using DateTimeService.Services;
 using Hangfire;
 using Hangfire.MemoryStorage;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -118,6 +119,8 @@ namespace DateTimeService
             services.AddHttpClient<IGeoZones, GeoZones>();
 
             services.AddScoped<IGeoZones, GeoZones>();
+
+            services.AddScoped<IAvailableDeliveryTypesService, AvailableDeliveryTypesService>();
 
             services.AddSwaggerGen();
 

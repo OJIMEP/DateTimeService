@@ -132,6 +132,100 @@
         "x-codegen-request-body-name": "body"
       }
     },
+    "/api/DateTime/AvailableDeliveryTypes": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "tags": [
+          "DateTime"
+        ],
+        "summary": "Получить доступность видов доставки",
+        "description": "Получает список доступных видов доставки",
+        "requestBody": {
+          "description": "содержимое отправляемого запроса",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/payload_availabledeliverytypes"
+              },
+              "examples": {
+                "Доступные виды доставки": {
+                  "$ref": "#/components/examples/available_delivery_types"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "запрос выполнен",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "courier": {
+                      "type": "object",
+                      "properties": {
+                        "available": {
+                          "type": "boolean"
+                        }
+                      }
+                    },
+                    "pickup_point": {
+                      "type": "object",
+                      "properties": {
+                        "available": {
+                          "type": "boolean"
+                        }
+                      }
+                    },
+                    "interval": {
+                      "type": "object",
+                      "properties": {
+                        "available": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "courier": {
+                    "available": true
+                  },
+                  "pickup_point": {
+                    "available": true
+                  },
+                  "interval": {
+                    "available": true
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "некорректные входные данные",
+            "content": {}
+          },
+          "401": {
+            "description": "Не аутентифицирован"
+          },
+          "403": {
+            "description": "Отсутствуют права на данный эндпоинт"
+          },
+          "500": {
+            "description": "внутренняя ошибка сервера",
+            "content": {}
+          }
+        },
+        "x-codegen-request-body-name": "body"
+      }
+    },
     "/api/DateTime/AvailableDate": {
       "post": {
         "security": [
@@ -1042,6 +1136,54 @@
           }
         }
       },
+      "payload_availabledeliverytypes": {
+        "properties": {
+          "city_id": {
+            "type": "string",
+            "description": "Код города",
+            "example": "17030"
+          },
+          "pickup_points": {
+            "type": "array",
+            "description": "Коды пунктов самовывоза",
+            "items": {
+              "type": "string",
+            },
+            "example": [
+              "340",
+              "388"
+            ]
+          },
+          "items": {
+            "properties": {
+              "code": {
+                "type": "string",
+                "description": "Артикул номенклатуры"
+              },
+              "sales_code": {
+                "type": "string",
+                "description": "Код номенклатуры для уценки (goods_id). Если не уценка, то не отправляется в принципе, либо null"
+              },
+              "count": {
+                "type": "number",
+                "description": "Количество товаров"
+              }
+            },
+            "description": "Список артикулов с кодами уценки и количеством",
+            "example": [
+              {
+                "code": "789734",
+                "sales_code": "2242670",
+                "quantity": 1
+              },
+              {
+                "code": "69516",
+                "quantity": 10
+              }
+            ]
+          }
+        }
+      },
       "orderitem": {
         "properties": {
           "code": {
@@ -1237,6 +1379,26 @@
         "value": {
           "order_date": "2021-07-21T16:18:10",
           "order_number": "100.500.900"
+        }
+      },
+      "available_delivery_types": {
+        "value": {
+          "city_id": "17030",
+          "pickup_points": [
+            "340",
+            "388"
+          ],
+          "items": [
+            {
+              "code": "789734",
+              "sales_code": "2242670",
+              "count": 1
+            },
+            {
+              "code": "101937",
+              "count": 2
+            }
+          ]
         }
       },
       "availabledate_basic": {

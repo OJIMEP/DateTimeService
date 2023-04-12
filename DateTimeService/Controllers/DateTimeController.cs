@@ -16,6 +16,11 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using DateTimeService.DatabaseManagementNewServices.Interfaces;
+using DateTimeService.Services;
+using DateTimeService.Models.AvailableDeliveryTypes;
+using Microsoft.Identity.Client;
+using Polly;
+using DateTimeService.Exceptions;
 
 namespace DateTimeService.Controllers
 {
@@ -30,9 +35,12 @@ namespace DateTimeService.Controllers
         private readonly IGeoZones _geoZones;
         private readonly IMapper _mapper;
         private readonly IReadableDatabase _readableDatabaseService;
+        private readonly IAvailableDeliveryTypesService _availableDeliveryTypesService;
 
         public DateTimeController(ILogger<DateTimeController> logger, IConfiguration configuration, ILoadBalancing loadBalancing,
-                                    IGeoZones geoZones, IMapper mapper, IReadableDatabase readableDatabaseService)
+            IGeoZones geoZones, IMapper mapper, IReadableDatabase readableDatabaseService,
+            IAvailableDeliveryTypesService availableDeliveryTypesService
+            )
         {
             _logger = logger;
             _configuration = configuration;
@@ -40,6 +48,7 @@ namespace DateTimeService.Controllers
             _geoZones = geoZones;
             _mapper = mapper;
             _readableDatabaseService = readableDatabaseService;
+            _availableDeliveryTypesService = availableDeliveryTypesService;
         }
 
         [Authorize(Roles = UserRoles.MaxAvailableCount + "," + UserRoles.Admin)]
@@ -976,8 +985,71 @@ namespace DateTimeService.Controllers
             return Ok(result);
         }
 
-        
-        private static string TextFillGoodsTable(RequestIntervalList data, SqlCommand cmdGoodsTable, bool optimizeRowsCount)
+        [Authorize(Roles = UserRoles.IntervalList + "," + UserRoles.Admin)]
+        [Route("AvailableDeliveryTypes")]
+        [HttpPost]
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        public async Task<IActionResult> AvailableDeliveryTypesAsync(RequestAvailableDeliveryTypesDTO inputData)
+        {
+            var data = _mapper.Map<RequestAvailableDeliveryTypes>(inputData);
+
+            var watch = Stopwatch.StartNew();
+
+            var logElement = new ElasticLogElement
+            {
+                Path = HttpContext.Request.Path,
+                Host = HttpContext.Request.Host.ToString(),
+                RequestContent = JsonSerializer.Serialize(inputData),
+                Id = Guid.NewGuid().ToString(),
+                AuthenticatedUser = User.Identity.Name,
+            };
+
+            logElement.AdditionalData.Add("Referer", Request.Headers["Referer"].ToString());
+            logElement.AdditionalData.Add("User-Agent", Request.Headers["Referer"].ToString());
+            logElement.AdditionalData.Add("RemoteIpAddress", Request.HttpContext.Connection.RemoteIpAddress.ToString());
+
+            var dataErrors = data.LogicalCheckInputData();
+            if (dataErrors.Count > 0)
+            {
+                logElement.TimeSQLExecution = 0;
+                logElement.ErrorDescription = "Некорректные входные данные";
+                logElement.Status = "Error";
+                logElement.AdditionalData.Add("InputErrors", JsonSerializer.Serialize(dataErrors));
+                
+                _logger.LogInformation(JsonSerializer.Serialize(logElement));
+
+                return StatusCode(400, dataErrors);
+            }
+
+            var result = new ResponseAvailableDeliveryTypes();
+
+            try
+            {
+                result = await _availableDeliveryTypesService.GetAvailableDeliveryTypes(data);
+            }
+            catch (DbConnectionNotFoundException)
+            {
+                logElement.ErrorDescription = "Available database connection not found";
+                _logger.LogError(JsonSerializer.Serialize(logElement));
+                return StatusCode(500, logElement.ErrorDescription);
+            }
+            catch (Exception ex)
+            {
+                logElement.ErrorDescription = ex.Message;
+                _logger.LogError(JsonSerializer.Serialize(logElement));
+                return StatusCode(500, logElement.ErrorDescription);
+            }
+            finally
+            {
+                watch.Stop();
+                logElement.TimeFullExecution = watch.ElapsedMilliseconds;
+                _logger.LogInformation(JsonSerializer.Serialize(logElement));
+            }
+
+            return Ok(result);
+        }
+
+            private static string TextFillGoodsTable(RequestIntervalList data, SqlCommand cmdGoodsTable, bool optimizeRowsCount)
         {
             RequestDataAvailableDate convertedData = new()
             {
