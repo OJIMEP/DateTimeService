@@ -145,7 +145,7 @@
         "summary": "Получить доступность видов доставки",
         "description": "Получает список доступных видов доставки",
         "requestBody": {
-          "description": "содержимое отправляемого запроса",
+          "description": "Содержимое отправляемого запроса",
           "content": {
             "application/json": {
               "schema": {
@@ -162,7 +162,7 @@
         },
         "responses": {
           "200": {
-            "description": "запрос выполнен",
+            "description": "Запрос выполнен",
             "content": {
               "application/json": {
                 "schema": {
@@ -209,7 +209,7 @@
             }
           },
           "400": {
-            "description": "некорректные входные данные",
+            "description": "Некорректные входные данные",
             "content": {}
           },
           "401": {
@@ -219,7 +219,7 @@
             "description": "Отсутствуют права на данный эндпоинт"
           },
           "500": {
-            "description": "внутренняя ошибка сервера",
+            "description": "Внутренняя ошибка сервера",
             "content": {}
           }
         },
@@ -1147,7 +1147,7 @@
             "type": "array",
             "description": "Коды пунктов самовывоза",
             "items": {
-              "type": "string",
+              "type": "string"
             },
             "example": [
               "340",

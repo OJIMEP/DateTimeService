@@ -1,4 +1,5 @@
-﻿using DateTimeService.Models.AvailableDeliveryTypes;
+﻿using DateTimeService.Logging;
+using DateTimeService.Models.AvailableDeliveryTypes;
 using System.Threading.Tasks;
 
 namespace DateTimeService.Services
@@ -6,5 +7,7 @@ namespace DateTimeService.Services
     public interface IAvailableDeliveryTypesService
     {
         Task<ResponseAvailableDeliveryTypes> GetAvailableDeliveryTypes(RequestAvailableDeliveryTypes inputData);
+
+        LogElementInternal GetLog();
     }
 }

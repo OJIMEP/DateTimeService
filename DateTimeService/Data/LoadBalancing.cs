@@ -35,6 +35,8 @@ namespace DateTimeService.Data
 
             var result = new DbConnection();
 
+            var watch = Stopwatch.StartNew();
+
             var connectionParameters = DatabaseList.Databases;//_configuration.GetSection("OneSDatabases").Get<List<DatabaseConnectionParameter>>();
 
             connectionParameters = _databaseService.GetAllDatabases();
@@ -62,7 +64,6 @@ namespace DateTimeService.Data
                     if (!connParametr.AvailableToUse)
                         continue;
 
-                    Stopwatch watch = new();
                     percentCounter += connParametr.Priority;
                     if ((timeMS <= percentCounter && connParametr.Priority != 0) || firstAvailable)
                         try
@@ -78,7 +79,6 @@ namespace DateTimeService.Data
                                 queryStringCheck = Queries.DatebaseBalancingReplicaTables;
 
 
-                            watch.Start();
                             //sql connection object
                             conn = new(connParametr.Connection);
 
@@ -92,14 +92,14 @@ namespace DateTimeService.Data
                             SqlDataReader dr = await cmd.ExecuteReaderAsync();
 
                             dr.Close();
-                            watch.Stop();
-
+                            
                             //close connection
                             //conn.Close();
                             result.Connection = conn;
                             resultString = connParametr.Connection;
                             result.DatabaseType = connParametr.Type;
                             result.UseAggregations = connParametr.CustomAggregationsAvailable;
+                            result.ConnectionWithoutCredentials = connParametr.ConnectionWithoutCredentials;
                             break;
                         }
                         catch (Exception ex)
@@ -111,10 +111,9 @@ namespace DateTimeService.Data
 
                             var logElement = new ElasticLogElement
                             {
-                                LoadBalancingExecution = watch.ElapsedMilliseconds,
                                 ErrorDescription = ex.Message,
                                 Status = "Error",
-                                DatabaseConnection = LoadBalancing.RemoveCredentialsFromConnectionString(connParametr.Connection)
+                                DatabaseConnection = connParametr.ConnectionWithoutCredentials
                             };
 
                             var logstringElement = JsonSerializer.Serialize(logElement);
@@ -134,6 +133,9 @@ namespace DateTimeService.Data
                 else
                     firstAvailable = true;
             }
+
+            watch.Stop();
+            result.ConnectTimeInMilliseconds = watch.ElapsedMilliseconds;
 
             return result;
         }
@@ -170,7 +172,7 @@ namespace DateTimeService.Data
         public SqlConnection Connection { get; set; }
         public string DatabaseType { get; set; }
         public bool UseAggregations { get; set; }
+        public string ConnectionWithoutCredentials { get; set; } = "";
+        public long ConnectTimeInMilliseconds { get; set; }
     }
-
-
 }

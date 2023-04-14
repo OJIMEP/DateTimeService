@@ -18,9 +18,8 @@ using System.Threading.Tasks;
 using DateTimeService.DatabaseManagementNewServices.Interfaces;
 using DateTimeService.Services;
 using DateTimeService.Models.AvailableDeliveryTypes;
-using Microsoft.Identity.Client;
-using Polly;
 using DateTimeService.Exceptions;
+using DateTimeService.Logging;
 
 namespace DateTimeService.Controllers
 {
@@ -1015,7 +1014,7 @@ namespace DateTimeService.Controllers
                 logElement.ErrorDescription = "Некорректные входные данные";
                 logElement.Status = "Error";
                 logElement.AdditionalData.Add("InputErrors", JsonSerializer.Serialize(dataErrors));
-                
+
                 _logger.LogInformation(JsonSerializer.Serialize(logElement));
 
                 return StatusCode(400, dataErrors);
@@ -1042,14 +1041,22 @@ namespace DateTimeService.Controllers
             finally
             {
                 watch.Stop();
-                logElement.TimeFullExecution = watch.ElapsedMilliseconds;
+                var internalLog = _availableDeliveryTypesService.GetLog();
+
+                logElement.TimeFullExecution = internalLog.TimeFullExecution;
+                logElement.LoadBalancingExecution = internalLog.LoadBalancingExecution;
+                logElement.TimeSQLExecutionFact = internalLog.TimeSqlExecutionFact;
+                logElement.ResponseContent = JsonSerializer.Serialize(result);
+                logElement.Status = internalLog.Status.ToString();
+                logElement.ErrorDescription = JsonSerializer.Serialize(internalLog.ErrorDescriptions);
+
                 _logger.LogInformation(JsonSerializer.Serialize(logElement));
             }
 
             return Ok(result);
         }
 
-            private static string TextFillGoodsTable(RequestIntervalList data, SqlCommand cmdGoodsTable, bool optimizeRowsCount)
+        private static string TextFillGoodsTable(RequestIntervalList data, SqlCommand cmdGoodsTable, bool optimizeRowsCount)
         {
             RequestDataAvailableDate convertedData = new()
             {
