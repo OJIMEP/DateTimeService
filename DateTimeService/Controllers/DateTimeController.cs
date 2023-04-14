@@ -1041,14 +1041,14 @@ namespace DateTimeService.Controllers
             finally
             {
                 watch.Stop();
-                var internalLog = _availableDeliveryTypesService.GetLog();
+                var logInternal = _availableDeliveryTypesService.GetLog();
 
-                logElement.TimeFullExecution = internalLog.TimeFullExecution;
-                logElement.LoadBalancingExecution = internalLog.LoadBalancingExecution;
-                logElement.TimeSQLExecutionFact = internalLog.TimeSqlExecutionFact;
+                logElement.TimeFullExecution = logInternal.TimeFullExecution;
+                logElement.LoadBalancingExecution = logInternal.LoadBalancingExecution;
+                logElement.TimeSQLExecutionFact = logInternal.TimeSqlExecutionFact;
                 logElement.ResponseContent = JsonSerializer.Serialize(result);
-                logElement.Status = internalLog.Status.ToString();
-                logElement.ErrorDescription = JsonSerializer.Serialize(internalLog.ErrorDescriptions);
+                logElement.Status = logInternal.Status.ToString();
+                logElement.ErrorDescription = JsonSerializer.Serialize(logInternal.ErrorDescriptions);
 
                 _logger.LogInformation(JsonSerializer.Serialize(logElement));
             }

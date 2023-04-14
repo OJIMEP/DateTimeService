@@ -9,7 +9,6 @@ using DateTimeService.Exceptions;
 using System.Collections.Generic;
 using DateTimeService.Controllers;
 using Microsoft.Extensions.Logging;
-using DateTimeService.Models;
 using System.Data;
 using System.Linq;
 using DateTimeService.Logging;
