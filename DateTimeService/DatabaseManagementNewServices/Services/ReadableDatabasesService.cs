@@ -513,7 +513,7 @@ namespace DateTimeService.DatabaseManagementNewServices.Services
             return updateResult;
         }
 
-        private void LogUpdatedChanges(string connectionName, string description, string updateDesc, string status = "Ok")
+        private void LogUpdatedChanges(string connectionName, string description, string updateDesc, LogStatus status = LogStatus.Ok)
         {
             var logElement = new ElasticLogElement
             {

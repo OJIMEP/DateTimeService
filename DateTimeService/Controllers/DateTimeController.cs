@@ -15,11 +15,10 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
-using DateTimeService.DatabaseManagementNewServices.Interfaces;
 using DateTimeService.Services;
 using DateTimeService.Models.AvailableDeliveryTypes;
 using DateTimeService.Exceptions;
-using DateTimeService.Logging;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace DateTimeService.Controllers
 {
@@ -30,24 +29,20 @@ namespace DateTimeService.Controllers
     {
         private readonly ILogger<DateTimeController> _logger;
         private readonly IConfiguration _configuration;
-        private readonly ILoadBalancing _loadBalacing;
+        private readonly ILoadBalancing _loadBalancing;
         private readonly IGeoZones _geoZones;
         private readonly IMapper _mapper;
-        private readonly IReadableDatabase _readableDatabaseService;
-        private readonly IAvailableDeliveryTypesService _availableDeliveryTypesService;
+        private readonly IServiceProvider _serviceProvider;
 
         public DateTimeController(ILogger<DateTimeController> logger, IConfiguration configuration, ILoadBalancing loadBalancing,
-            IGeoZones geoZones, IMapper mapper, IReadableDatabase readableDatabaseService,
-            IAvailableDeliveryTypesService availableDeliveryTypesService
-            )
+            IGeoZones geoZones, IMapper mapper, IServiceProvider serviceProvider)
         {
             _logger = logger;
             _configuration = configuration;
-            _loadBalacing = loadBalancing;
+            _loadBalancing = loadBalancing;
             _geoZones = geoZones;
             _mapper = mapper;
-            _readableDatabaseService = readableDatabaseService;
-            _availableDeliveryTypesService = availableDeliveryTypesService;
+            _serviceProvider = serviceProvider;
         }
 
         [Authorize(Roles = UserRoles.MaxAvailableCount + "," + UserRoles.Admin)]
@@ -57,7 +52,7 @@ namespace DateTimeService.Controllers
         {
 
 
-            var dbConnection = await _loadBalacing.GetDatabaseConnectionAsync();
+            var dbConnection = await _loadBalancing.GetDatabaseConnectionAsync();
             var conn = dbConnection.Connection;
 
 
@@ -150,13 +145,13 @@ namespace DateTimeService.Controllers
 
                 logElement.TimeSQLExecution = sqlCommandExecutionTime;
                 logElement.ResponseContent = JsonSerializer.Serialize(result);
-                logElement.Status = "Ok";
+                logElement.Status = LogStatus.Ok;
             }
             catch (Exception ex)
             {
                 logElement.TimeSQLExecution = sqlCommandExecutionTime;
                 logElement.ErrorDescription = ex.Message;
-                logElement.Status = "Error";
+                logElement.Status = LogStatus.Error;
             }
 
             conn.Close();
@@ -201,7 +196,7 @@ namespace DateTimeService.Controllers
             try
             {
                 //connString = await _loadBalacing.GetDatabaseConnectionAsync();
-                var dbConnection = await _loadBalacing.GetDatabaseConnectionAsync();
+                var dbConnection = await _loadBalancing.GetDatabaseConnectionAsync();
                 conn = dbConnection.Connection;
                 databaseType = dbConnection.DatabaseType;
                 customAggs = dbConnection.UseAggregations;
@@ -211,7 +206,7 @@ namespace DateTimeService.Controllers
                 //connString = "";
                 logElementLoadBal.TimeSQLExecution = 0;
                 logElementLoadBal.ErrorDescription = ex.Message;
-                logElementLoadBal.Status = "Error";
+                logElementLoadBal.Status = LogStatus.Error;
                 var logstringElement1 = JsonSerializer.Serialize(logElementLoadBal);
                 _logger.LogInformation(logstringElement1);
                 return StatusCode(503);
@@ -223,7 +218,7 @@ namespace DateTimeService.Controllers
             {
                 logElementLoadBal.TimeSQLExecution = 0;
                 logElementLoadBal.ErrorDescription = "Не найдено доступное соединение к БД";
-                logElementLoadBal.Status = "Error";
+                logElementLoadBal.Status = LogStatus.Error;
                 logElementLoadBal.LoadBalancingExecution = watch.ElapsedMilliseconds;
                 var logstringElement1 = JsonSerializer.Serialize(logElementLoadBal);
                 _logger.LogInformation(logstringElement1);
@@ -258,7 +253,7 @@ namespace DateTimeService.Controllers
             {
                 logElement.TimeSQLExecution = 0;
                 logElement.ErrorDescription = "Некорректные входные данные";
-                logElement.Status = "Error";
+                logElement.Status = LogStatus.Error;
                 logElement.AdditionalData.Add("InputErrors", JsonSerializer.Serialize(dataErrors));
                 var logstringElement1 = JsonSerializer.Serialize(logElement);
 
@@ -476,7 +471,7 @@ namespace DateTimeService.Controllers
 
                 logElement.TimeSQLExecution = sqlCommandExecutionTime;
                 logElement.ResponseContent = JsonSerializer.Serialize(dbResult);
-                logElement.Status = "Ok";
+                logElement.Status = LogStatus.Ok;
                 logElement.AdditionalData.Add("stats", JsonSerializer.Serialize(stats));
                 logElement.AdditionalData.Add("CheckQuantityFact", JsonSerializer.Serialize(data.CheckQuantity));
             }
@@ -484,7 +479,7 @@ namespace DateTimeService.Controllers
             {
                 logElement.TimeSQLExecution = sqlCommandExecutionTime;
                 logElement.ErrorDescription = ex.Message;
-                logElement.Status = "Error";
+                logElement.Status = LogStatus.Error;
             }
 
             conn.Close();
@@ -544,14 +539,14 @@ namespace DateTimeService.Controllers
             {
                 logElement.TimeSQLExecution = sqlCommandExecutionTime;
                 logElement.ErrorDescription = "Duplicated keys in dictionary";
-                logElement.Status = "Error";
+                logElement.Status = LogStatus.Error;
                 logElement.AdditionalData.Add("Key", ex.Message);
             }
             catch (Exception ex)
             {
                 logElement.TimeSQLExecution = sqlCommandExecutionTime;
                 logElement.ErrorDescription = ex.Message;
-                logElement.Status = "Error";
+                logElement.Status = LogStatus.Error;
             }
 
 
@@ -594,7 +589,6 @@ namespace DateTimeService.Controllers
         }
 
 
-
         [Authorize(Roles = UserRoles.IntervalList + "," + UserRoles.Admin)]
         [Route("IntervalList")]
         [HttpPost]
@@ -624,7 +618,7 @@ namespace DateTimeService.Controllers
             {
                 //connString = await _loadBalacing.GetDatabaseConnectionAsync();
                 //conn = await _loadBalacing.GetDatabaseConnectionAsync("");
-                var dbConnection = await _loadBalacing.GetDatabaseConnectionAsync();
+                var dbConnection = await _loadBalancing.GetDatabaseConnectionAsync();
                 conn = dbConnection.Connection;
                 databaseType = dbConnection.DatabaseType;
                 customAggs = dbConnection.UseAggregations;
@@ -634,7 +628,7 @@ namespace DateTimeService.Controllers
                 //connString = "";
                 logElementLoadBal.TimeSQLExecution = 0;
                 logElementLoadBal.ErrorDescription = ex.Message;
-                logElementLoadBal.Status = "Error";
+                logElementLoadBal.Status = LogStatus.Error;
                 var logstringElement1 = JsonSerializer.Serialize(logElementLoadBal);
                 _logger.LogInformation(logstringElement1);
                 return StatusCode(500);
@@ -645,7 +639,7 @@ namespace DateTimeService.Controllers
             {
                 logElementLoadBal.TimeSQLExecution = 0;
                 logElementLoadBal.ErrorDescription = "Не найдено доступное соединение к БД";
-                logElementLoadBal.Status = "Error";
+                logElementLoadBal.Status = LogStatus.Error;
                 logElementLoadBal.LoadBalancingExecution = watch.ElapsedMilliseconds;
                 var logstringElement1 = JsonSerializer.Serialize(logElementLoadBal);
                 _logger.LogInformation(logstringElement1);
@@ -686,7 +680,7 @@ namespace DateTimeService.Controllers
             {
                 logElement.TimeSQLExecution = 0;
                 logElement.ErrorDescription = "Некорректные входные данные";
-                logElement.Status = "Error";
+                logElement.Status = LogStatus.Error;
                 logElement.AdditionalData.Add("InputErrors", JsonSerializer.Serialize(dataErrors));
                 var logstringElement1 = JsonSerializer.Serialize(logElement);
 
@@ -808,7 +802,7 @@ namespace DateTimeService.Controllers
             {
                 logElement.TimeSQLExecution = 0;
                 logElement.ErrorDescription = "Адрес и геозона не найдены!";
-                logElement.Status = "Error";
+                logElement.Status = LogStatus.Error;
             }
             else
                 try
@@ -961,13 +955,13 @@ namespace DateTimeService.Controllers
 
                     logElement.TimeSQLExecution = sqlCommandExecutionTime;
                     logElement.ResponseContent = JsonSerializer.Serialize(resultLog);
-                    logElement.Status = "Ok";
+                    logElement.Status = LogStatus.Ok;
                 }
                 catch (Exception ex)
                 {
                     logElement.TimeSQLExecution = sqlCommandExecutionTime;
                     logElement.ErrorDescription = ex.Message;
-                    logElement.Status = "Error";
+                    logElement.Status = LogStatus.Error;
                 }
 
             conn.Close();
@@ -985,14 +979,12 @@ namespace DateTimeService.Controllers
         }
 
         [Authorize(Roles = UserRoles.IntervalList + "," + UserRoles.Admin)]
-        [Route("AvailableDeliveryTypes")]
+        [Route("IntervalListTest")]
         [HttpPost]
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public async Task<IActionResult> AvailableDeliveryTypesAsync(RequestAvailableDeliveryTypesDTO inputData)
+        public async Task<IActionResult> IntervalListTestAsync(RequestIntervalListDTO inputData)
         {
-            var data = _mapper.Map<RequestAvailableDeliveryTypes>(inputData);
-
-            var watch = Stopwatch.StartNew();
+            var data = _mapper.Map<RequestIntervalList>(inputData);
 
             var logElement = new ElasticLogElement
             {
@@ -1012,7 +1004,7 @@ namespace DateTimeService.Controllers
             {
                 logElement.TimeSQLExecution = 0;
                 logElement.ErrorDescription = "Некорректные входные данные";
-                logElement.Status = "Error";
+                logElement.Status = LogStatus.Error;
                 logElement.AdditionalData.Add("InputErrors", JsonSerializer.Serialize(dataErrors));
 
                 _logger.LogInformation(JsonSerializer.Serialize(logElement));
@@ -1020,11 +1012,12 @@ namespace DateTimeService.Controllers
                 return StatusCode(400, dataErrors);
             }
 
-            var result = new ResponseAvailableDeliveryTypes();
+            var result = new ResponseIntervalList();
+            var dataService = _serviceProvider.GetService<IDataService<RequestIntervalList, ResponseIntervalList>>();
 
             try
             {
-                result = await _availableDeliveryTypesService.GetAvailableDeliveryTypes(data);
+                result = await dataService.GetDataByParam(data);
             }
             catch (DbConnectionNotFoundException)
             {
@@ -1040,21 +1033,76 @@ namespace DateTimeService.Controllers
             }
             finally
             {
-                watch.Stop();
-                var logInternal = _availableDeliveryTypesService.GetLog();
-
-                logElement.TimeFullExecution = logInternal.TimeFullExecution;
-                logElement.LoadBalancingExecution = logInternal.LoadBalancingExecution;
-                logElement.TimeSQLExecutionFact = logInternal.TimeSqlExecutionFact;
-                logElement.ResponseContent = JsonSerializer.Serialize(result);
-                logElement.Status = logInternal.Status.ToString();
-                logElement.ErrorDescription = JsonSerializer.Serialize(logInternal.ErrorDescriptions);
-
+                logElement.FillFromLogElementInternal(dataService.GetLog());
                 _logger.LogInformation(JsonSerializer.Serialize(logElement));
             }
 
             return Ok(result);
         }
+
+
+        [Authorize(Roles = UserRoles.IntervalList + "," + UserRoles.Admin)]
+        [Route("AvailableDeliveryTypes")]
+        [HttpPost]
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        public async Task<IActionResult> AvailableDeliveryTypesAsync(RequestAvailableDeliveryTypesDTO inputData)
+        {
+            var data = _mapper.Map<RequestAvailableDeliveryTypes>(inputData);
+
+            var logElement = new ElasticLogElement
+            {
+                Path = HttpContext.Request.Path,
+                Host = HttpContext.Request.Host.ToString(),
+                RequestContent = JsonSerializer.Serialize(inputData),
+                Id = Guid.NewGuid().ToString(),
+                AuthenticatedUser = User.Identity.Name,
+            };
+
+            logElement.AdditionalData.Add("Referer", Request.Headers["Referer"].ToString());
+            logElement.AdditionalData.Add("User-Agent", Request.Headers["Referer"].ToString());
+            logElement.AdditionalData.Add("RemoteIpAddress", Request.HttpContext.Connection.RemoteIpAddress.ToString());
+
+            var dataErrors = data.LogicalCheckInputData();
+            if (dataErrors.Count > 0)
+            {
+                logElement.TimeSQLExecution = 0;
+                logElement.ErrorDescription = "Некорректные входные данные";
+                logElement.Status = LogStatus.Error;
+                logElement.AdditionalData.Add("InputErrors", JsonSerializer.Serialize(dataErrors));
+
+                _logger.LogInformation(JsonSerializer.Serialize(logElement));
+
+                return StatusCode(400, dataErrors);
+            }
+
+            var result = new ResponseAvailableDeliveryTypes();
+            var dataService = _serviceProvider.GetService<IDataService<RequestAvailableDeliveryTypes, ResponseAvailableDeliveryTypes>>();
+
+            try
+            {
+                result = await dataService.GetDataByParam(data);
+            }
+            catch (DbConnectionNotFoundException)
+            {
+                logElement.ErrorDescription = "Available database connection not found";
+                _logger.LogError(JsonSerializer.Serialize(logElement));
+                return StatusCode(500, logElement.ErrorDescription);
+            }
+            catch (Exception ex)
+            {
+                logElement.ErrorDescription = ex.Message;
+                _logger.LogError(JsonSerializer.Serialize(logElement));
+                return StatusCode(500, logElement.ErrorDescription);
+            }
+            finally
+            {
+                logElement.FillFromLogElementInternal(dataService.GetLog());
+                _logger.LogInformation(JsonSerializer.Serialize(logElement));
+            }
+
+            return Ok(result);
+        }
+
 
         private static string TextFillGoodsTable(RequestIntervalList data, SqlCommand cmdGoodsTable, bool optimizeRowsCount)
         {
@@ -1065,6 +1113,7 @@ namespace DateTimeService.Controllers
 
             return TextFillGoodsTable(convertedData, cmdGoodsTable, optimizeRowsCount, new());
         }
+
 
         public static string TextFillGoodsTable(RequestDataAvailableDate data, SqlCommand cmdGoodsTable, bool optimizeRowsCount, List<string> PickupsList)
         {

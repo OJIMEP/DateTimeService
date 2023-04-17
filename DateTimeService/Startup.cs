@@ -4,6 +4,8 @@ using DateTimeService.DatabaseManagementNewServices.Interfaces;
 using DateTimeService.DatabaseManagementNewServices.Services;
 using DateTimeService.DatabaseManagementUtils;
 using DateTimeService.Logging;
+using DateTimeService.Models;
+using DateTimeService.Models.AvailableDeliveryTypes;
 using DateTimeService.Services;
 using Hangfire;
 using Hangfire.MemoryStorage;
@@ -120,7 +122,8 @@ namespace DateTimeService
 
             services.AddScoped<IGeoZones, GeoZones>();
 
-            services.AddScoped<IAvailableDeliveryTypesService, AvailableDeliveryTypesService>();
+            services.AddScoped<IDataService<RequestAvailableDeliveryTypes, ResponseAvailableDeliveryTypes>, DeliveryTypesDataService>();
+            services.AddScoped<IDataService<RequestIntervalList, ResponseIntervalList>, IntervalListDataService>();
 
             services.AddSwaggerGen();
 

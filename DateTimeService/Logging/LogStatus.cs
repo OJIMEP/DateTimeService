@@ -1,6 +1,6 @@
 ﻿using System.Runtime.Serialization;
 
-namespace DateTimeService.Logging
+namespace DateTimeService
 {
     public enum LogStatus
     {

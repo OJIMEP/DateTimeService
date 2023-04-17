@@ -80,7 +80,7 @@ namespace DateTimeService.DatabaseManagementNewServices.Services
                 {
                     LoadBalancingExecution = 0,
                     ErrorDescription = ex.Message,
-                    Status = "Error",
+                    Status = LogStatus.Error,
                     DatabaseConnection = LoadBalancing.RemoveCredentialsFromConnectionString(databaseConnectionString)
                 };
 
@@ -252,7 +252,7 @@ namespace DateTimeService.DatabaseManagementNewServices.Services
                 {
                     LoadBalancingExecution = 0,
                     ErrorDescription = ex.Message,
-                    Status = "Error",
+                    Status = LogStatus.Error,
                     DatabaseConnection = LoadBalancing.RemoveCredentialsFromConnectionString(databaseConnectionString)
                 };
 
@@ -270,7 +270,7 @@ namespace DateTimeService.DatabaseManagementNewServices.Services
                 {
                     LoadBalancingExecution = 0,
                     ErrorDescription = "Availability false because of ElapsedMilliseconds=" + watch.ElapsedMilliseconds,
-                    Status = "Error",
+                    Status = LogStatus.Error,
                     DatabaseConnection = LoadBalancing.RemoveCredentialsFromConnectionString(databaseConnectionString)
                 };
 
@@ -380,7 +380,7 @@ namespace DateTimeService.DatabaseManagementNewServices.Services
                     var logElement = new ElasticLogElement
                     {
                         ErrorDescription = errodData,
-                        Status = "Error",
+                        Status = LogStatus.Error,
                         DatabaseConnection = elasticUri.ToString()
                     };
 
@@ -398,7 +398,7 @@ namespace DateTimeService.DatabaseManagementNewServices.Services
                 {
                     TimeSQLExecution = 0,
                     ErrorDescription = ex.Message,
-                    Status = "Error",
+                    Status = LogStatus.Error,
                     DatabaseConnection = elasticUri.ToString()
                 };
 
@@ -421,7 +421,7 @@ namespace DateTimeService.DatabaseManagementNewServices.Services
                 {
                     TimeSQLExecution = 0,
                     ErrorDescription = ex.Message,
-                    Status = "Error",
+                    Status = LogStatus.Error,
                     DatabaseConnection = elasticUri.ToString()
                 };
                 logElement.AdditionalData.Add("responseContent", result);

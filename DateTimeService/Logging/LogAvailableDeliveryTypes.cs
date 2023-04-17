@@ -7,7 +7,7 @@ using System.Text.Json;
 
 namespace DateTimeService.Logging
 {
-    public class LogElementInternal
+    public class LogAvailableDeliveryTypes: IServiceLogElement
     {
         public List<long> TimeSqlExecutionFacts { get; set; }
         public long TimeFullExecution { get; set; }
@@ -33,7 +33,13 @@ namespace DateTimeService.Logging
             }
         }
 
-        public LogElementInternal()
+        public string ErrorDescription { get
+            {
+                return JsonSerializer.Serialize(ErrorDescriptions);
+            }
+        }
+
+        public LogAvailableDeliveryTypes()
         {
             AdditionalData = new();
             ErrorDescriptions = new();

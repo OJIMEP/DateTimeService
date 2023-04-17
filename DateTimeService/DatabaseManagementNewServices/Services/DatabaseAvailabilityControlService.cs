@@ -214,7 +214,7 @@ namespace DateTimeService.DatabaseManagementNewServices.Services
                 {
                     LoadBalancingExecution = 0,
                     ErrorDescription = "Send dbcc freeproccache",
-                    Status = "Ok",
+                    Status = LogStatus.Ok,
                     DatabaseConnection = LoadBalancing.RemoveCredentialsFromConnectionString(databaseConnectionString)
                 };
 
@@ -230,7 +230,7 @@ namespace DateTimeService.DatabaseManagementNewServices.Services
                 {
                     LoadBalancingExecution = 0,
                     ErrorDescription = ex.Message,
-                    Status = "Error",
+                    Status = LogStatus.Error,
                     DatabaseConnection = LoadBalancing.RemoveCredentialsFromConnectionString(databaseConnectionString)
                 };
 

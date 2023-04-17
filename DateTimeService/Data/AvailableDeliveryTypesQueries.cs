@@ -955,6 +955,9 @@ Into #Temp_DateAvailable
 From #Temp_ClosestDatesByGoods With (NOLOCK)
 	Left Outer Join Temp_CountOfGoods
 	ON 1 = 1
+Where 
+    @P_IsPickup = 0
+	Or #Temp_ClosestDatesByGoods.СкладНазначения In (Select СкладСсылка From #Temp_PickupPoints)
 Group By СкладНазначения
 Having 
 	COUNT(DISTINCT #Temp_ClosestDatesByGoods.НоменклатураСсылка) = Min(Temp_CountOfGoods.CountOfGoods)

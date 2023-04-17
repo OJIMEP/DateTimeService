@@ -49,13 +49,13 @@ namespace DateTimeService
                     {
                         TimeSQLExecution = 0,
                         ErrorDescription = formatter(state, exception),
-                        Status = "Info"
+                        Status = LogStatus.Info
                     };
 
                     if (exception != null)
                     {
                         logElement.ErrorDescription += ";" + exception.Message;
-                        logElement.Status = "Error";
+                        logElement.Status = LogStatus.Ok;
                         logElement.AdditionalData.Add("StackTrace", exception.StackTrace);
                     }
 

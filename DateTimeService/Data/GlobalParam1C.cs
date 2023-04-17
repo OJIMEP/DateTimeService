@@ -8,6 +8,14 @@ using System.Text.Json;
 
 namespace DateTimeService.Data
 {
+    public static class GlobalParamListExtensions
+    {
+        public static double GetValue(this List<GlobalParam1C> list, string name)
+        {
+            return list.First(x => x.Name.Contains(name)).ValueDouble;
+        }
+    }
+
     public class GlobalParam1C
     {
         public string Name { get; set; }
@@ -93,7 +101,7 @@ namespace DateTimeService.Data
                 {
                     TimeSQLExecution = 0,
                     ErrorDescription = ex.Message,
-                    Status = "Error",
+                    Status = LogStatus.Error,
                     DatabaseConnection = LoadBalancing.RemoveCredentialsFromConnectionString(conn.ConnectionString)
                 };
 

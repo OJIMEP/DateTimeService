@@ -18,28 +18,22 @@ namespace DateTimeService.Data
 
     public class LoadBalancing : ILoadBalancing
     {
-        private readonly IConfiguration _configuration;
         private readonly ILogger<DateTimeController> _logger;
         private readonly IReadableDatabase _databaseService;
 
-        public LoadBalancing(IConfiguration configuration, ILogger<DateTimeController> logger, IReadableDatabase databaseService)
+        public LoadBalancing(ILogger<DateTimeController> logger, IReadableDatabase databaseService)
         {
-            _configuration = configuration;
             _logger = logger;
             _databaseService = databaseService;
         }
 
         public async Task<DbConnection> GetDatabaseConnectionAsync()
         {
-            //string connString = _configuration.GetConnectionString("1CDataSqlConnection");
-
             var result = new DbConnection();
 
             var watch = Stopwatch.StartNew();
 
-            var connectionParameters = DatabaseList.Databases;//_configuration.GetSection("OneSDatabases").Get<List<DatabaseConnectionParameter>>();
-
-            connectionParameters = _databaseService.GetAllDatabases();
+            var connectionParameters = _databaseService.GetAllDatabases();
 
             var timeMS = DateTime.Now.Millisecond % 100;
 
@@ -49,7 +43,6 @@ namespace DateTimeService.Data
 
             var resultString = "";
 
-            //SqlConnection resultConnection = null;
             SqlConnection conn = null;
 
             while (true)
@@ -93,8 +86,6 @@ namespace DateTimeService.Data
 
                             dr.Close();
                             
-                            //close connection
-                            //conn.Close();
                             result.Connection = conn;
                             resultString = connParametr.Connection;
                             result.DatabaseType = connParametr.Type;
@@ -112,7 +103,7 @@ namespace DateTimeService.Data
                             var logElement = new ElasticLogElement
                             {
                                 ErrorDescription = ex.Message,
-                                Status = "Error",
+                                Status = LogStatus.Error,
                                 DatabaseConnection = connParametr.ConnectionWithoutCredentials
                             };
 
@@ -156,8 +147,6 @@ namespace DateTimeService.Data
         }
 
     }
-
-
 
     public class DatabaseConnectionParameter
     {

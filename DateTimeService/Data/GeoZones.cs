@@ -87,7 +87,7 @@ namespace DateTimeService.Data
                 {
                     TimeSQLExecution = 0,
                     ErrorDescription = ex.Message,
-                    Status = "Error",
+                    Status = LogStatus.Error,
                     DatabaseConnection = LoadBalancing.RemoveCredentialsFromConnectionString(conn.ConnectionString)
                 };
 
@@ -166,7 +166,7 @@ namespace DateTimeService.Data
                 {
                     TimeSQLExecution = 0,
                     ErrorDescription = "Некорректные координаты адреса",
-                    Status = "Error",
+                    Status = LogStatus.Error,
                     DatabaseConnection = connString
                 };
                 logElement.AdditionalData.Add("address_id", address_id);
@@ -181,7 +181,7 @@ namespace DateTimeService.Data
                 {
                     TimeSQLExecution = 0,
                     ErrorDescription = ex.Message,
-                    Status = "Error",
+                    Status = LogStatus.Error,
                     DatabaseConnection = connString
                 };
 
@@ -249,7 +249,7 @@ namespace DateTimeService.Data
                     {
                         TimeSQLExecution = 0,
                         ErrorDescription = response.ToString(),
-                        Status = "Error",
+                        Status = LogStatus.Error,
                         DatabaseConnection = connString
                     };
 
@@ -265,7 +265,7 @@ namespace DateTimeService.Data
                 {
                     TimeSQLExecution = 0,
                     ErrorDescription = ex.Message,
-                    Status = "Error",
+                    Status = LogStatus.Error,
                     DatabaseConnection = connString
                 };
 

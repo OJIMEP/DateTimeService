@@ -106,7 +106,7 @@ namespace DateTimeService.Data
             {
                 LoadBalancingExecution = 0,
                 ErrorDescription = "Database list updated",
-                Status = "Ok",
+                Status = LogStatus.Ok,
                 DatabaseConnection = database.ConnectionWithoutCredentials
             };
 

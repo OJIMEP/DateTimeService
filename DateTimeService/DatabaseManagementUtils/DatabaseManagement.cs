@@ -125,7 +125,7 @@ namespace DateTimeService.Data
                     var logElement = new ElasticLogElement
                     {
                         ErrorDescription = errodData,
-                        Status = "Error",
+                        Status = LogStatus.Error,
                         DatabaseConnection = elasticUri.ToString()
                     };
 
@@ -143,7 +143,7 @@ namespace DateTimeService.Data
                 {
                     TimeSQLExecution = 0,
                     ErrorDescription = ex.Message,
-                    Status = "Error",
+                    Status = LogStatus.Error,
                     DatabaseConnection = elasticUri.ToString()
                 };
 
@@ -166,7 +166,7 @@ namespace DateTimeService.Data
                 {
                     TimeSQLExecution = 0,
                     ErrorDescription = ex.Message,
-                    Status = "Error",
+                    Status = LogStatus.Error,
                     DatabaseConnection = elasticUri.ToString()
                 };
                 logElement.AdditionalData.Add("responseContent", result);
@@ -244,7 +244,7 @@ namespace DateTimeService.Data
                                         {
                                             LoadBalancingExecution = 0,
                                             ErrorDescription = "Send dbcc freeproccache",
-                                            Status = "Ok",
+                                            Status = LogStatus.Ok,
                                             DatabaseConnection = database.ConnectionWithoutCredentials
                                         };
 
@@ -258,7 +258,7 @@ namespace DateTimeService.Data
                                         {
                                             LoadBalancingExecution = 0,
                                             ErrorDescription = ex.Message,
-                                            Status = "Error",
+                                            Status = LogStatus.Error,
                                             DatabaseConnection = database.ConnectionWithoutCredentials
                                         };
 
@@ -301,7 +301,7 @@ namespace DateTimeService.Data
                                 {
                                     LoadBalancingExecution = 0,
                                     ErrorDescription = "Checked availability",
-                                    Status = "Ok",
+                                    Status = LogStatus.Ok,
                                     DatabaseConnection = database.ConnectionWithoutCredentials
                                 };
                                 logElement.AdditionalData.Add("Available", checkResult.ToString());
@@ -319,7 +319,7 @@ namespace DateTimeService.Data
                                 {
                                     LoadBalancingExecution = 0,
                                     ErrorDescription = "Database disabled due to zero response time",
-                                    Status = "Error",
+                                    Status = LogStatus.Error,
                                     DatabaseConnection = database.ConnectionWithoutCredentials
                                 };
 
@@ -336,7 +336,7 @@ namespace DateTimeService.Data
                                 {
                                     LoadBalancingExecution = 0,
                                     ErrorDescription = "Database disabled due to big load balance time",
-                                    Status = "Error",
+                                    Status = LogStatus.Error,
                                     DatabaseConnection = database.ConnectionWithoutCredentials
                                 };
 
@@ -353,7 +353,7 @@ namespace DateTimeService.Data
                                 {
                                     LoadBalancingExecution = 0,
                                     ErrorDescription = "Database disabled due to big execution time",
-                                    Status = "Error",
+                                    Status = LogStatus.Error,
                                     DatabaseConnection = database.ConnectionWithoutCredentials
                                 };
 
@@ -394,7 +394,7 @@ namespace DateTimeService.Data
                     {
                         LoadBalancingExecution = 0,
                         ErrorDescription = "Checked availability",
-                        Status = "Ok",
+                        Status = LogStatus.Ok,
                         DatabaseConnection = item.ConnectionWithoutCredentials
                     };
                     logElement.AdditionalData.Add("Available", checkResult.ToString());
@@ -442,7 +442,7 @@ namespace DateTimeService.Data
                         {
                             LoadBalancingExecution = 0,
                             ErrorDescription = item.CustomAggregationsAvailable ? "Enabled aggregations" : "Disabled aggregations",
-                            Status = "Ok",
+                            Status = LogStatus.Ok,
                             DatabaseConnection = item.ConnectionWithoutCredentials
                         };
                         logElement.AdditionalData.Add("Available", item.AvailableToUse.ToString());
@@ -616,7 +616,7 @@ namespace DateTimeService.Data
                 {
                     LoadBalancingExecution = 0,
                     ErrorDescription = "Availability false because of" + ex.Message,
-                    Status = "Error",
+                    Status = LogStatus.Error,
                     DatabaseConnection = LoadBalancing.RemoveCredentialsFromConnectionString(connstring)
                 };
 
@@ -634,7 +634,7 @@ namespace DateTimeService.Data
                 {
                     LoadBalancingExecution = 0,
                     ErrorDescription = "Availability false because of ElapsedMilliseconds=" + watch.ElapsedMilliseconds,
-                    Status = "Error",
+                    Status = LogStatus.Error,
                     DatabaseConnection = LoadBalancing.RemoveCredentialsFromConnectionString(connstring)
                 };
 
@@ -695,7 +695,7 @@ namespace DateTimeService.Data
                 {
                     LoadBalancingExecution = 0,
                     ErrorDescription = ex.Message,
-                    Status = "Error",
+                    Status = LogStatus.Error,
                     DatabaseConnection = LoadBalancing.RemoveCredentialsFromConnectionString(connstring)
                 };
 

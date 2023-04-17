@@ -1,4 +1,5 @@
 ﻿using DateTimeService.Data;
+using DateTimeService.Logging;
 using System.Collections.Generic;
 
 namespace DateTimeService
@@ -12,7 +13,7 @@ namespace DateTimeService
         public string RequestContent { get; set; }
         public long TimeSQLExecution { get; set; }
         public long TimeSQLExecutionFact { get; set; }
-        public string Status { get; set; }
+        public LogStatus Status { get; set; }
         public string ErrorDescription { get; set; }
         public long TimeFullExecution { get; set; }
         public string DatabaseConnection { get; set; }
@@ -27,9 +28,19 @@ namespace DateTimeService
 
         public ElasticLogElement()
         {
-            Enviroment = DatabaseList.Enviroment==null ? "Unset" : DatabaseList.Enviroment;
+            Enviroment = DatabaseList.Enviroment ?? "Unset";
             AdditionalData = new();
             ServiceName = "DateTime";
+        }
+
+        // функция заполняет одноименные поля текущего объекта из параметра типа ILogElementInternal
+        public void FillFromLogElementInternal(IServiceLogElement logElement)
+        {
+            TimeSQLExecution = logElement.TimeSqlExecutionFact;
+            TimeFullExecution = logElement.TimeFullExecution;
+            Status = logElement.Status;
+            ErrorDescription = logElement.ErrorDescription;
+            LoadBalancingExecution = logElement.LoadBalancingExecution;
         }
     }
 }
