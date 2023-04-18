@@ -2563,6 +2563,9 @@ OPTION (HASH GROUP, KEEP PLAN, KEEPFIXED PLAN);";
         public const string AvailableDate6IntervalsBasic = @"With PlanningGroups AS(
 Select Distinct 
 	#Temp_ShipmentDatesDeliveryCourier.ГруппаПланирования,
+    -- 21век.Левковский 18.04.2023 Старт DEV1C-87229
+    #Temp_ShipmentDatesDeliveryCourier.НоменклатураСсылка,
+    -- 21век.Левковский 18.04.2023 Финиш DEV1C-87229
 	#Temp_ShipmentDatesDeliveryCourier.Приоритет
 From #Temp_ShipmentDatesDeliveryCourier
 )
@@ -2579,6 +2582,9 @@ SELECT
         ),
         T5._Period
     ) As ВремяНачала,
+    -- 21век.Левковский 18.04.2023 Старт DEV1C-87229
+    PlanningGroups.НоменклатураСсылка,
+    -- 21век.Левковский 18.04.2023 Финиш DEV1C-87229
 	PlanningGroups.Приоритет
 into #Temp_IntervalsAll
 FROM
@@ -2593,6 +2599,9 @@ GROUP BY
     T5._Fld25111RRef,
     T5._Fld25202,
 	T5._Fld25203,
+    -- 21век.Левковский 18.04.2023 Старт DEV1C-87229
+    PlanningGroups.НоменклатураСсылка,
+    -- 21век.Левковский 18.04.2023 Финиш DEV1C-87229
 	PlanningGroups.Приоритет
 HAVING
     (
@@ -2610,7 +2619,10 @@ OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriod
         public const string AvailableDate6IntervalsCustom = @"With PlanningGroups AS(
 Select Distinct 
 	#Temp_ShipmentDatesDeliveryCourier.ГруппаПланирования,
-	#Temp_ShipmentDatesDeliveryCourier.Приоритет
+	-- 21век.Левковский 18.04.2023 Старт DEV1C-87229
+    #Temp_ShipmentDatesDeliveryCourier.НоменклатураСсылка,
+    -- 21век.Левковский 18.04.2023 Финиш DEV1C-87229
+    #Temp_ShipmentDatesDeliveryCourier.Приоритет
 From #Temp_ShipmentDatesDeliveryCourier
 )
 SELECT
@@ -2626,6 +2638,9 @@ SELECT
 		),
 		T5.Период
 	) As ВремяНачала,
+    -- 21век.Левковский 18.04.2023 Старт DEV1C-87229
+    PlanningGroups.НоменклатураСсылка,
+    -- 21век.Левковский 18.04.2023 Финиш DEV1C-87229
 	PlanningGroups.Приоритет
 into #Temp_IntervalsAll
 FROM
@@ -2641,6 +2656,9 @@ GROUP BY
 	T5.Геозона,
 	T5.ВремяНачала,
 	T5.ВремяОкончания,
+    -- 21век.Левковский 18.04.2023 Старт DEV1C-87229
+    PlanningGroups.НоменклатураСсылка,
+    -- 21век.Левковский 18.04.2023 Финиш DEV1C-87229
 	PlanningGroups.Приоритет
 OPTION (HASH GROUP, OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'),KEEP PLAN, KEEPFIXED PLAN);";
 
@@ -2653,9 +2671,12 @@ DATEADD(
         ),
         #Temp_IntervalsAll.Период
     ) As ВремяНачала,
-#Temp_IntervalsAll.Период,
-#Temp_IntervalsAll.ГруппаПланирования,
-#Temp_IntervalsAll.Геозона,
+    #Temp_IntervalsAll.Период,
+    #Temp_IntervalsAll.ГруппаПланирования,
+    #Temp_IntervalsAll.Геозона,
+    -- 21век.Левковский 18.04.2023 Старт DEV1C-87229
+    #Temp_IntervalsAll.НоменклатураСсылка,
+    -- 21век.Левковский 18.04.2023 Финиш DEV1C-87229
 #Temp_IntervalsAll.Приоритет
 into #Temp_Intervals
 from #Temp_IntervalsAll
@@ -2676,6 +2697,9 @@ Group By
 	#Temp_IntervalsAll.ГруппаПланирования,
 	#Temp_IntervalsAll.Геозона,
 	T2._Fld25137,
+    -- 21век.Левковский 18.04.2023 Старт DEV1C-87229
+    #Temp_IntervalsAll.НоменклатураСсылка,
+    -- 21век.Левковский 18.04.2023 Финиш DEV1C-87229
 	#Temp_IntervalsAll.Приоритет
 OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}'), KEEP PLAN, KEEPFIXED PLAN);
 
@@ -2688,10 +2712,13 @@ DATEADD(
         ),
         #Temp_IntervalsAll.Период
     ) As ВремяНачала,
-#Temp_IntervalsAll.Период,
-#Temp_IntervalsAll.ГруппаПланирования,
-#Temp_IntervalsAll.Геозона,
-#Temp_IntervalsAll.Приоритет
+    #Temp_IntervalsAll.Период,
+    #Temp_IntervalsAll.ГруппаПланирования,
+    #Temp_IntervalsAll.Геозона,
+    -- 21век.Левковский 18.04.2023 Старт DEV1C-87229
+    #Temp_IntervalsAll.НоменклатураСсылка,
+    -- 21век.Левковский 18.04.2023 Финиш DEV1C-87229
+    #Temp_IntervalsAll.Приоритет
 from #Temp_IntervalsAll
 	Inner Join _Reference114_VT25126 ГеоЗонаВременныеИнтервалы With (NOLOCK)
 		On #Temp_IntervalsAll.Геозона = ГеоЗонаВременныеИнтервалы._Reference114_IDRRef
@@ -2710,6 +2737,9 @@ Group By
 	#Temp_IntervalsAll.Период,
 	#Temp_IntervalsAll.ГруппаПланирования,
 	#Temp_IntervalsAll.Геозона,
+    -- 21век.Левковский 18.04.2023 Старт DEV1C-87229
+    #Temp_IntervalsAll.НоменклатураСсылка,
+    -- 21век.Левковский 18.04.2023 Финиш DEV1C-87229
     #Temp_IntervalsAll.Приоритет
 OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}'), KEEP PLAN, KEEPFIXED PLAN);
 
@@ -2722,10 +2752,13 @@ DATEADD(
         ),
         #Temp_IntervalsAll.Период
     ) As ВремяНачала,
-#Temp_IntervalsAll.Период,
-#Temp_IntervalsAll.ГруппаПланирования,
-#Temp_IntervalsAll.Геозона,
-#Temp_IntervalsAll.Приоритет
+    #Temp_IntervalsAll.Период,
+    #Temp_IntervalsAll.ГруппаПланирования,
+    #Temp_IntervalsAll.Геозона,
+    -- 21век.Левковский 18.04.2023 Старт DEV1C-87229
+    #Temp_IntervalsAll.НоменклатураСсылка,
+    -- 21век.Левковский 18.04.2023 Финиш DEV1C-87229
+    #Temp_IntervalsAll.Приоритет
 from #Temp_IntervalsAll
 	Inner Join _Reference114_VT25126 ГеоЗонаВременныеИнтервалы With (NOLOCK)
 		On #Temp_IntervalsAll.Геозона = ГеоЗонаВременныеИнтервалы._Reference114_IDRRef
@@ -2739,6 +2772,9 @@ Group By
 	#Temp_IntervalsAll.Период,
 	#Temp_IntervalsAll.ГруппаПланирования,
 	#Temp_IntervalsAll.Геозона,
+    -- 21век.Левковский 18.04.2023 Старт DEV1C-87229
+    #Temp_IntervalsAll.НоменклатураСсылка,
+    -- 21век.Левковский 18.04.2023 Финиш DEV1C-87229
     #Temp_IntervalsAll.Приоритет
 OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'), KEEP PLAN, KEEPFIXED PLAN);";
 
@@ -2789,7 +2825,10 @@ WHERE
 
         public const string AvailableDate9 = @"Temp_PlanningGroupPriority AS
 (
-select Период, Max(Приоритет) AS Приоритет from #Temp_Intervals Group by Период
+    -- 21век.Левковский 18.04.2023 Старт DEV1C-87229
+    --select Период, Max(Приоритет) AS Приоритет from #Temp_Intervals Group by Период
+    select Период, НоменклатураСсылка, Max(Приоритет) AS Приоритет from #Temp_Intervals Group by Период, НоменклатураСсылка
+    -- 21век.Левковский 18.04.2023 Финиш DEV1C-87229
 )
 SELECT
     T1.НоменклатураСсылка,
@@ -2812,8 +2851,13 @@ Into #Temp_AvailableCourier
 FROM
     #Temp_ShipmentDatesDeliveryCourier T1 WITH(NOLOCK)
     Left JOIN Temp_DeliveryPower T2 --WITH(NOLOCK)
-    Inner JOIN #Temp_Intervals T3 WITH(NOLOCK)
-        Inner Join Temp_PlanningGroupPriority With (NOLOCK) ON T3.Период = Temp_PlanningGroupPriority.Период AND T3.Приоритет = Temp_PlanningGroupPriority.Приоритет
+        Inner JOIN #Temp_Intervals T3 WITH(NOLOCK)
+            Inner Join Temp_PlanningGroupPriority With (NOLOCK) 
+            ON T3.Период = Temp_PlanningGroupPriority.Период 
+            -- 21век.Левковский 18.04.2023 Старт DEV1C-87229
+            AND T3.НоменклатураСсылка = Temp_PlanningGroupPriority.НоменклатураСсылка
+            -- 21век.Левковский 18.04.2023 Финиш DEV1C-87229
+            AND T3.Приоритет = Temp_PlanningGroupPriority.Приоритет
 		ON T3.Период = T2.Дата
 	ON T2.МассаОборот >= T1.Вес
     AND T2.ОбъемОборот >= T1.Объем
