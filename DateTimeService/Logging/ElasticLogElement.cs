@@ -1,5 +1,7 @@
 ﻿using DateTimeService.Data;
 using DateTimeService.Logging;
+using Microsoft.AspNetCore.Http;
+using System;
 using System.Collections.Generic;
 
 namespace DateTimeService
@@ -31,16 +33,18 @@ namespace DateTimeService
             Enviroment = DatabaseList.Enviroment ?? "Unset";
             AdditionalData = new();
             ServiceName = "DateTime";
+            Id = Guid.NewGuid().ToString();
         }
 
-        // функция заполняет одноименные поля текущего объекта из параметра типа ILogElementInternal
-        public void FillFromLogElementInternal(IServiceLogElement logElement)
+        public ElasticLogElement(HttpContext httpContext) : this()
         {
-            TimeSQLExecution = logElement.TimeSqlExecutionFact;
-            TimeFullExecution = logElement.TimeFullExecution;
-            Status = logElement.Status;
-            ErrorDescription = logElement.ErrorDescription;
-            LoadBalancingExecution = logElement.LoadBalancingExecution;
+            Status = LogStatus.Ok;
+            Path = httpContext.Request.Path;
+            Host = httpContext.Request.Host.ToString();
+            AuthenticatedUser = httpContext.User.Identity.Name;
+            AdditionalData.Add("Referer", httpContext.Request.Headers["Referer"].ToString());
+            AdditionalData.Add("User-Agent", httpContext.Request.Headers["User-Agent"].ToString());
+            AdditionalData.Add("RemoteIpAddress", httpContext.Connection.RemoteIpAddress.ToString());
         }
     }
 }

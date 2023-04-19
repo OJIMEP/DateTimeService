@@ -1,8 +1,9 @@
 ﻿using DateTimeService.Controllers;
 using DateTimeService.Data;
 using DateTimeService.Exceptions;
-using DateTimeService.Logging;
 using DateTimeService.Models.AvailableDeliveryTypes;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -19,28 +20,19 @@ namespace DateTimeService.Services
         private readonly IConfiguration _configuration;
         private readonly ILoadBalancing _loadBalancing;
         private readonly ILogger<DateTimeController> _logger;
+        private readonly IHttpContextAccessor _contextAccessor;
 
-        private LogAvailableDeliveryTypes serviceLog;
-
-        public DeliveryTypesDataService(IConfiguration configuration, ILoadBalancing loadBalancing, ILogger<DateTimeController> logger)
+        public DeliveryTypesDataService(IConfiguration configuration, ILoadBalancing loadBalancing, ILogger<DateTimeController> logger, IHttpContextAccessor contextAccessor)
         {
             _configuration = configuration;
             _loadBalancing = loadBalancing;
             _logger = logger;
-        }
-
-        public IServiceLogElement GetLog()
-        {
-            return serviceLog;
+            _contextAccessor = contextAccessor;
         }
 
         public async Task<ResponseAvailableDeliveryTypes> GetDataByParam(RequestAvailableDeliveryTypes inputData)
         {
-            var watch = Stopwatch.StartNew();
-
             var result = new ResponseAvailableDeliveryTypes();
-
-            serviceLog = new LogAvailableDeliveryTypes();
 
             Task<(string, bool)> taskSelf = Task.Run(() => GetDeliveryTypeAvailability(inputData, Constants.Self));
             Task<(string, bool)> taskCourier = Task.Run(() => GetDeliveryTypeAvailability(inputData, Constants.CourierDelivery));
@@ -58,25 +50,21 @@ namespace DateTimeService.Services
                 if (deliveryType == Constants.YourTimeDelivery) { result.YourTime.IsAvailable = taskResult.Item2; }
             }
 
-            watch.Stop();
-            serviceLog.TimeFullExecution = watch.ElapsedMilliseconds;
-
             return result;
         }
 
         private async Task<(string, bool)> GetDeliveryTypeAvailability(RequestAvailableDeliveryTypes inputData, string deliveryType)
         {
-            var deliveryTypeAvailable = false;
-
             var watch = Stopwatch.StartNew();
 
-            DbConnection dbConnection = await GetDbConnection(deliveryType);
+            DbConnection dbConnection = await GetDbConnection();
 
             SqlConnection connection = dbConnection.Connection;
             connection.StatisticsEnabled = true;
 
             SqlCommand command = GetSqlCommand(connection, inputData, deliveryType, dbConnection.DatabaseType);
 
+            bool deliveryTypeAvailable;
             try
             {
                 object result = await command.ExecuteScalarAsync();
@@ -85,17 +73,17 @@ namespace DateTimeService.Services
             }
             catch (Exception ex)
             {
-                serviceLog.AddError(deliveryType, ex.Message);
+                _logger.LogError(ex.Message);
+                throw;
             }
 
             watch.Stop();
-            serviceLog.AddExecutionFact(watch.ElapsedMilliseconds);
-            serviceLog.AddStatistics(connection.RetrieveStatistics());
+            _contextAccessor.HttpContext.Items["TimeSqlExecutionFact"] = watch.ElapsedMilliseconds;
 
             return (deliveryType, deliveryTypeAvailable);
         }
 
-        private async Task<DbConnection> GetDbConnection(string deliveryType)
+        private async Task<DbConnection> GetDbConnection()
         {
             DbConnection dbConnection;
 
@@ -105,18 +93,16 @@ namespace DateTimeService.Services
             {
                 dbConnection = await _loadBalancing.GetDatabaseConnectionAsync();
                 watch.Stop();
-                serviceLog.AddDatabaseConnection(dbConnection.ConnectionWithoutCredentials);
-                serviceLog.AddDbConnectTime(watch.ElapsedMilliseconds);
+                _contextAccessor.HttpContext.Items["DatabaseConnection"] = dbConnection.ConnectionWithoutCredentials;
+                _contextAccessor.HttpContext.Items["LoadBalancingExecution"] = watch.ElapsedMilliseconds;
             }
             catch (Exception ex)
             {
-                serviceLog.AddError(deliveryType, ex.Message);
                 throw new DbConnectionNotFoundException(ex.Message);
             }
 
             if (dbConnection.Connection == null)
             {
-                serviceLog.AddError(deliveryType, "Не найдено доступное соединение к БД");
                 throw new DbConnectionNotFoundException("Не найдено доступное соединение к БД");
             }
 

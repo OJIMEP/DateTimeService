@@ -19,6 +19,8 @@ using DateTimeService.Services;
 using DateTimeService.Models.AvailableDeliveryTypes;
 using DateTimeService.Exceptions;
 using Microsoft.Extensions.DependencyInjection;
+using DateTimeService.Filters;
+using System.ComponentModel.DataAnnotations;
 
 namespace DateTimeService.Controllers
 {
@@ -982,38 +984,19 @@ namespace DateTimeService.Controllers
         [Route("IntervalListTest")]
         [HttpPost]
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        [ServiceFilter(typeof(LogActionFilter))]
         public async Task<IActionResult> IntervalListTestAsync(RequestIntervalListDTO inputData)
         {
             var data = _mapper.Map<RequestIntervalList>(inputData);
 
-            var logElement = new ElasticLogElement
-            {
-                Path = HttpContext.Request.Path,
-                Host = HttpContext.Request.Host.ToString(),
-                RequestContent = JsonSerializer.Serialize(inputData),
-                Id = Guid.NewGuid().ToString(),
-                AuthenticatedUser = User.Identity.Name,
-            };
-
-            logElement.AdditionalData.Add("Referer", Request.Headers["Referer"].ToString());
-            logElement.AdditionalData.Add("User-Agent", Request.Headers["Referer"].ToString());
-            logElement.AdditionalData.Add("RemoteIpAddress", Request.HttpContext.Connection.RemoteIpAddress.ToString());
-
             var dataErrors = data.LogicalCheckInputData();
             if (dataErrors.Count > 0)
             {
-                logElement.TimeSQLExecution = 0;
-                logElement.ErrorDescription = "Некорректные входные данные";
-                logElement.Status = LogStatus.Error;
-                logElement.AdditionalData.Add("InputErrors", JsonSerializer.Serialize(dataErrors));
-
-                _logger.LogInformation(JsonSerializer.Serialize(logElement));
-
-                return StatusCode(400, dataErrors);
+                return BadRequest(dataErrors);
             }
 
             var result = new ResponseIntervalList();
-            var dataService = _serviceProvider.GetService<IDataService<RequestIntervalList, ResponseIntervalList>>();
+            var dataService = _serviceProvider.GetRequiredService<IDataService<RequestIntervalList, ResponseIntervalList>>();
 
             try
             {
@@ -1021,20 +1004,11 @@ namespace DateTimeService.Controllers
             }
             catch (DbConnectionNotFoundException)
             {
-                logElement.ErrorDescription = "Available database connection not found";
-                _logger.LogError(JsonSerializer.Serialize(logElement));
-                return StatusCode(500, logElement.ErrorDescription);
+                return StatusCode(500, "Available database connection not found");
             }
             catch (Exception ex)
             {
-                logElement.ErrorDescription = ex.Message;
-                _logger.LogError(JsonSerializer.Serialize(logElement));
-                return StatusCode(500, logElement.ErrorDescription);
-            }
-            finally
-            {
-                logElement.FillFromLogElementInternal(dataService.GetLog());
-                _logger.LogInformation(JsonSerializer.Serialize(logElement));
+                return StatusCode(500, ex.Message);
             }
 
             return Ok(result);
@@ -1045,38 +1019,19 @@ namespace DateTimeService.Controllers
         [Route("AvailableDeliveryTypes")]
         [HttpPost]
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        [ServiceFilter(typeof(LogActionFilter))]
         public async Task<IActionResult> AvailableDeliveryTypesAsync(RequestAvailableDeliveryTypesDTO inputData)
         {
             var data = _mapper.Map<RequestAvailableDeliveryTypes>(inputData);
-
-            var logElement = new ElasticLogElement
-            {
-                Path = HttpContext.Request.Path,
-                Host = HttpContext.Request.Host.ToString(),
-                RequestContent = JsonSerializer.Serialize(inputData),
-                Id = Guid.NewGuid().ToString(),
-                AuthenticatedUser = User.Identity.Name,
-            };
-
-            logElement.AdditionalData.Add("Referer", Request.Headers["Referer"].ToString());
-            logElement.AdditionalData.Add("User-Agent", Request.Headers["Referer"].ToString());
-            logElement.AdditionalData.Add("RemoteIpAddress", Request.HttpContext.Connection.RemoteIpAddress.ToString());
-
+          
             var dataErrors = data.LogicalCheckInputData();
             if (dataErrors.Count > 0)
             {
-                logElement.TimeSQLExecution = 0;
-                logElement.ErrorDescription = "Некорректные входные данные";
-                logElement.Status = LogStatus.Error;
-                logElement.AdditionalData.Add("InputErrors", JsonSerializer.Serialize(dataErrors));
-
-                _logger.LogInformation(JsonSerializer.Serialize(logElement));
-
-                return StatusCode(400, dataErrors);
+                return BadRequest(dataErrors);
             }
 
             var result = new ResponseAvailableDeliveryTypes();
-            var dataService = _serviceProvider.GetService<IDataService<RequestAvailableDeliveryTypes, ResponseAvailableDeliveryTypes>>();
+            var dataService = _serviceProvider.GetRequiredService<IDataService<RequestAvailableDeliveryTypes, ResponseAvailableDeliveryTypes>>();
 
             try
             {
@@ -1084,20 +1039,11 @@ namespace DateTimeService.Controllers
             }
             catch (DbConnectionNotFoundException)
             {
-                logElement.ErrorDescription = "Available database connection not found";
-                _logger.LogError(JsonSerializer.Serialize(logElement));
-                return StatusCode(500, logElement.ErrorDescription);
+                return StatusCode(500, "Available database connection not found");
             }
             catch (Exception ex)
             {
-                logElement.ErrorDescription = ex.Message;
-                _logger.LogError(JsonSerializer.Serialize(logElement));
-                return StatusCode(500, logElement.ErrorDescription);
-            }
-            finally
-            {
-                logElement.FillFromLogElementInternal(dataService.GetLog());
-                _logger.LogInformation(JsonSerializer.Serialize(logElement));
+                return StatusCode(500, ex.Message);
             }
 
             return Ok(result);

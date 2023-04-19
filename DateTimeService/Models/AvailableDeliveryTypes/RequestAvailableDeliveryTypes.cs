@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace DateTimeService.Models.AvailableDeliveryTypes
 {

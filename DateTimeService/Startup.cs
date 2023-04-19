@@ -3,6 +3,7 @@ using DateTimeService.Data;
 using DateTimeService.DatabaseManagementNewServices.Interfaces;
 using DateTimeService.DatabaseManagementNewServices.Services;
 using DateTimeService.DatabaseManagementUtils;
+using DateTimeService.Filters;
 using DateTimeService.Logging;
 using DateTimeService.Models;
 using DateTimeService.Models.AvailableDeliveryTypes;
@@ -122,8 +123,11 @@ namespace DateTimeService
 
             services.AddScoped<IGeoZones, GeoZones>();
 
-            services.AddScoped<IDataService<RequestAvailableDeliveryTypes, ResponseAvailableDeliveryTypes>, DeliveryTypesDataService>();
+            services.AddTransient<IDataService<RequestAvailableDeliveryTypes, ResponseAvailableDeliveryTypes>, DeliveryTypesDataService>();
             services.AddScoped<IDataService<RequestIntervalList, ResponseIntervalList>, IntervalListDataService>();
+
+            services.AddScoped<LogActionFilter>();
+            services.AddHttpContextAccessor();
 
             services.AddSwaggerGen();
 

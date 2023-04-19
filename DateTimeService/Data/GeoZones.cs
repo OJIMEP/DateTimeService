@@ -12,6 +12,8 @@ using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore.Storage;
+using DateTimeService.Models;
 
 namespace DateTimeService.Data
 {
@@ -20,6 +22,8 @@ namespace DateTimeService.Data
         Task<string> GetGeoZoneID(AdressCoords coords);
         Task<AdressCoords> GetAddressCoordinates(string address_id);
         Boolean AdressExists(SqlConnection conn, string _addressId);
+
+        Task<(bool, string)> CheckAddressGeozone(RequestIntervalList inputData, SqlConnection connection);
     }
 
     public class GeoZones : IGeoZones
@@ -276,6 +280,48 @@ namespace DateTimeService.Data
             return result;
         }
 
+        public async Task<(bool, string)> CheckAddressGeozone(RequestIntervalList inputData, SqlConnection connection)
+        {
+            bool addressExists = false;
+            string zoneId = "";
+
+            bool checkByOrder = !String.IsNullOrEmpty(inputData.OrderNumber) && inputData.OrderDate != default;
+            bool alwaysCheckGeozone = false;
+
+            if (inputData.DeliveryType == Constants.Self || checkByOrder)
+            {
+                addressExists = true;
+            }
+            else
+            {
+                alwaysCheckGeozone = _configuration.GetValue<bool>("alwaysCheckGeozone");
+                if (!alwaysCheckGeozone)
+                {
+                    addressExists = AdressExists(connection, inputData.AddressId);
+                }
+            }
+
+            if (!addressExists || alwaysCheckGeozone)
+            {
+                AdressCoords coords;
+
+                if (!String.IsNullOrEmpty(inputData.Xcoordinate) && !String.IsNullOrEmpty(inputData.Ycoordinate))
+                {
+                    coords = new(inputData.Xcoordinate, inputData.Ycoordinate);
+                }
+                else
+                {
+                    coords = await GetAddressCoordinates(inputData.AddressId);
+                }
+
+                if (coords.AvailableToUse)
+                {
+                    zoneId = await GetGeoZoneID(coords);
+                }
+            }
+
+            return (addressExists, zoneId);
+        }
     }
 
     public class LocationsResponse
