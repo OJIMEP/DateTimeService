@@ -1,16 +1,10 @@
 using AuthLibrary.Data;
-using DateTimeService.Data;
+using DateTimeService.Configuration;
 using DateTimeService.DatabaseManagementNewServices.Interfaces;
-using DateTimeService.DatabaseManagementNewServices.Services;
-using DateTimeService.DatabaseManagementUtils;
-using DateTimeService.Filters;
 using DateTimeService.Logging;
-using DateTimeService.Models;
-using DateTimeService.Models.AvailableDeliveryTypes;
-using DateTimeService.Services;
+using FluentValidation;
 using Hangfire;
 using Hangfire.MemoryStorage;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -24,8 +18,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Net.Http.Headers;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Net.Http;
 using System.Text;
 using System.Threading;
 
@@ -35,10 +29,10 @@ namespace DateTimeService
     {
         public Startup(IConfiguration configuration)
         {
-            Configuration = configuration;
+            _configuration = configuration;
         }
 
-        public IConfiguration Configuration { get; }
+        public IConfiguration _configuration { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
@@ -51,104 +45,18 @@ namespace DateTimeService
             services.AddControllers(options => options.Filters.Add(typeof(Filters.ConnectionResetExceptionFilter)));
 
             // For Entity Framework  
-            services.AddDbContext<DateTimeServiceContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DateTimeServiceContextConnection")));
+            services.AddDbContext<DateTimeServiceContext>(options => options.UseSqlServer(_configuration.GetConnectionString("DateTimeServiceContextConnection")));
 
-            // For Identity  
-            services.AddDefaultIdentity<DateTimeServiceUser>()
-                .AddRoles<IdentityRole>()
-                .AddEntityFrameworkStores<DateTimeServiceContext>()
-                .AddDefaultTokenProviders();
-
-            services.Configure<IdentityOptions>(options =>
-            {
-                // Default Password settings.
-                options.Password.RequireDigit = true;
-                options.Password.RequireLowercase = true;
-                options.Password.RequireNonAlphanumeric = false;
-                options.Password.RequireUppercase = false;
-                options.Password.RequiredLength = 6;
-                options.Password.RequiredUniqueChars = 1;
-            });
-
-            // Adding Authentication  
-            services.AddAuthentication(options =>
-            {
-                options.DefaultAuthenticateScheme = "JWT_OR_COOKIE";
-                options.DefaultChallengeScheme = "JWT_OR_COOKIE";
-                options.DefaultScheme = "JWT_OR_COOKIE";
-            })
-            // Adding Jwt Bearer  
-            .AddJwtBearer(options =>
-            {
-                options.SaveToken = true;
-                options.RequireHttpsMetadata = true;
-                options.TokenValidationParameters = new TokenValidationParameters()
-                {
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidAudience = Configuration["JWT:ValidAudience"],
-                    ValidIssuer = Configuration["JWT:ValidIssuer"],
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["JWT:Secret"])),
-                    ValidateLifetime = true
-                };
-            })
-            .AddPolicyScheme("JWT_OR_COOKIE", "JWT_OR_COOKIE", options =>
-            {
-                // runs on each request
-                options.ForwardDefaultSelector = context =>
-                {
-                    // filter by auth type
-                    string authorization = context.Request.Headers[HeaderNames.Authorization];
-                    if (!string.IsNullOrEmpty(authorization) && authorization.StartsWith("Bearer "))
-                        return JwtBearerDefaults.AuthenticationScheme;
-
-                    // otherwise always check for Identity cookie auth
-                    return IdentityConstants.ApplicationScheme;
-                };
-            });
-            
-
-            
-
-            services.AddAuthorization(builder =>
-            {
-                builder.AddPolicy("Hangfire", policy => policy.RequireRole(UserRoles.Admin));
-            });
-
-            services.AddScoped<IUserService, UserService>();
-
-            services.AddScoped<ILoadBalancing, LoadBalancing>();
-
-            services.AddHttpClient<IGeoZones, GeoZones>();
-
-            services.AddScoped<IGeoZones, GeoZones>();
-
-            services.AddTransient<IDataService<RequestAvailableDeliveryTypes, ResponseAvailableDeliveryTypes>, DeliveryTypesDataService>();
-            services.AddScoped<IDataService<RequestIntervalList, ResponseIntervalList>, IntervalListDataService>();
-
-            services.AddScoped<LogActionFilter>();
-            services.AddHttpContextAccessor();
+            services
+                .AddAuthorizationAuthentication(_configuration)
+                .AddFilters()
+                .AddHttpClients()
+                .AddDatabaseManagement()
+                .AddDataServices()
+                .AddHttpContextAccessor()
+                .AddValidatorsFromAssemblyContaining<Program>(ServiceLifetime.Transient);
 
             services.AddSwaggerGen();
-
-            services.AddHttpClient<DatabaseManagement>("elastic").ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
-            {
-                ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
-            });
-
-            services.AddHttpClient<ILogger, HttpLogger>();
-
-            //new
-            services.AddSingleton<IReadableDatabase, ReadableDatabasesService>();
-            services.AddTransient<IReloadDatabasesService, DatabaseManagementNewServices.Services.ReloadDatabasesFromFileService>();
-            services.AddTransient<IDatabaseCheck, DatabaseCheckService>();
-            services.AddTransient<IDatabaseAvailabilityControl, DatabaseAvailabilityControlService>();
-
-            //old
-            /*services.AddSingleton<IHostedService, DatabaseManagementUtils.ReloadDatabasesFromFileService>();
-            services.AddSingleton<DatabaseManagement>();
-            services.AddSingleton<IHostedService, DatabaseManagementService>();*/
-
 
             services.AddHangfire(x => x.UseMemoryStorage());
             
@@ -156,7 +64,6 @@ namespace DateTimeService
             {
                 options.SchedulePollingInterval = TimeSpan.FromMilliseconds(5000);
             });
-
         }
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory, IServiceProvider serviceProvider)
@@ -168,7 +75,7 @@ namespace DateTimeService
                            ForwardedHeaders.XForwardedProto
             });
 
-            app.UseCors(builder => builder.AllowAnyHeader().AllowAnyMethod().SetIsOriginAllowedToAllowWildcardSubdomains().WithOrigins(Configuration.GetSection("CorsOrigins").Get<List<string>>().ToArray()));
+            app.UseCors(builder => builder.AllowAnyHeader().AllowAnyMethod().SetIsOriginAllowedToAllowWildcardSubdomains().WithOrigins(_configuration.GetSection("CorsOrigins").Get<List<string>>().ToArray()));
 
             app.UseStaticFiles();
             app.UseSwagger();
@@ -185,17 +92,25 @@ namespace DateTimeService
                 app.UseHsts();
             }
 
-            if (Configuration.GetValue<bool>("onlyHttps"))
+            if (_configuration.GetValue<bool>("onlyHttps"))
             {
                 app.UseHttpsRedirection();
             }
             
             app.UseRouting();
 
+            app.Use(async (context, next) =>
+            {
+                // создаем новый экземпляр ConcurrentDictionary для каждого запроса
+                context.Items[typeof(ConcurrentDictionary<object, object>)] = new ConcurrentDictionary<object, object>();
+
+                await next();
+            });
+
             app.UseAuthentication();
             app.UseAuthorization();
 
-            loggerFactory.AddHttp(Configuration["loggerHost"], Configuration.GetValue<int>("loggerPortUdp"), Configuration.GetValue<int>("loggerPortHttp"), Configuration["loggerEnv"]);
+            loggerFactory.AddHttp(_configuration["loggerHost"], _configuration.GetValue<int>("loggerPortUdp"), _configuration.GetValue<int>("loggerPortHttp"), _configuration["loggerEnv"]);
             loggerFactory.CreateLogger("HttpLogger");
 
             app.UseHangfireDashboard();

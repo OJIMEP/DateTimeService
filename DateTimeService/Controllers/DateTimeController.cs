@@ -17,10 +17,9 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using DateTimeService.Services;
 using DateTimeService.Models.AvailableDeliveryTypes;
-using DateTimeService.Exceptions;
-using Microsoft.Extensions.DependencyInjection;
 using DateTimeService.Filters;
-using System.ComponentModel.DataAnnotations;
+using FluentValidation;
+using System.Threading;
 
 namespace DateTimeService.Controllers
 {
@@ -34,17 +33,19 @@ namespace DateTimeService.Controllers
         private readonly ILoadBalancing _loadBalancing;
         private readonly IGeoZones _geoZones;
         private readonly IMapper _mapper;
-        private readonly IServiceProvider _serviceProvider;
+        private readonly IDataService _dataService;
+        private readonly IValidator<RequestAvailableDeliveryTypesDTO> _availableDeliveryTypesValidator;
 
         public DateTimeController(ILogger<DateTimeController> logger, IConfiguration configuration, ILoadBalancing loadBalancing,
-            IGeoZones geoZones, IMapper mapper, IServiceProvider serviceProvider)
+            IGeoZones geoZones, IMapper mapper, IDataService dataService, IValidator<RequestAvailableDeliveryTypesDTO> availableDeliveryTypesValidator)
         {
             _logger = logger;
             _configuration = configuration;
             _loadBalancing = loadBalancing;
             _geoZones = geoZones;
             _mapper = mapper;
-            _serviceProvider = serviceProvider;
+            _dataService = dataService;
+            _availableDeliveryTypesValidator = availableDeliveryTypesValidator;
         }
 
         [Authorize(Roles = UserRoles.MaxAvailableCount + "," + UserRoles.Admin)]
@@ -176,7 +177,7 @@ namespace DateTimeService.Controllers
             OkObjectResult result;
 
             var data = _mapper.Map<RequestDataAvailableDate>(inputDataJson);
-            string databaseType = "";
+            DatabaseType databaseType;
             bool customAggs = false;
             Stopwatch stopwatchExecution = new();
             stopwatchExecution.Start();
@@ -427,7 +428,7 @@ namespace DateTimeService.Controllers
                 var pickupWorkingHoursJoinType = _configuration.GetValue<string>("pickupWorkingHoursJoinType");
 
                 string useIndexHint = _configuration.GetValue<string>("useIndexHintWarehouseDates");// @", INDEX([_InfoRg23830_Custom2])";
-                if (databaseType != "replica_tables" || customAggs)
+                if (databaseType != DatabaseType.ReplicaTables || customAggs)
                 {
                     useIndexHint = "";
                 }
@@ -598,7 +599,7 @@ namespace DateTimeService.Controllers
         public async Task<IActionResult> IntervalListAsync(RequestIntervalListDTO inputData)
         {
             var data = _mapper.Map<RequestIntervalList>(inputData);
-            string databaseType = "";
+            DatabaseType databaseType;
             bool customAggs = false;
             Stopwatch stopwatchExecution = new();
             stopwatchExecution.Start();
@@ -903,7 +904,7 @@ namespace DateTimeService.Controllers
                     }
 
                     string useIndexHint = _configuration.GetValue<string>("useIndexHintWarehouseDates");// @", INDEX([_InfoRg23830_Custom2])";
-                    if (databaseType != "replica_tables")
+                    if (databaseType != DatabaseType.ReplicaTables)
                     {
                         useIndexHint = "";
                     }
@@ -980,14 +981,16 @@ namespace DateTimeService.Controllers
             return Ok(result);
         }
 
+
         [Authorize(Roles = UserRoles.IntervalList + "," + UserRoles.Admin)]
         [Route("IntervalListTest")]
         [HttpPost]
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         [ServiceFilter(typeof(LogActionFilter))]
+        [ServiceFilter(typeof(ServiceExceptionFilter))]
         public async Task<IActionResult> IntervalListTestAsync(RequestIntervalListDTO inputData)
         {
-            var data = _mapper.Map<RequestIntervalList>(inputData);
+            var data = inputData.MapToRequestIntervalList();
 
             var dataErrors = data.LogicalCheckInputData();
             if (dataErrors.Count > 0)
@@ -995,21 +998,7 @@ namespace DateTimeService.Controllers
                 return BadRequest(dataErrors);
             }
 
-            var result = new ResponseIntervalList();
-            var dataService = _serviceProvider.GetRequiredService<IDataService<RequestIntervalList, ResponseIntervalList>>();
-
-            try
-            {
-                result = await dataService.GetDataByParam(data);
-            }
-            catch (DbConnectionNotFoundException)
-            {
-                return StatusCode(500, "Available database connection not found");
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
+            var result = await _dataService.GetIntervalList(data);
 
             return Ok(result);
         }
@@ -1020,31 +1009,14 @@ namespace DateTimeService.Controllers
         [HttpPost]
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         [ServiceFilter(typeof(LogActionFilter))]
-        public async Task<IActionResult> AvailableDeliveryTypesAsync(RequestAvailableDeliveryTypesDTO inputData)
+        [ServiceFilter(typeof(ServiceExceptionFilter))]
+        public async Task<IActionResult> AvailableDeliveryTypesAsync(RequestAvailableDeliveryTypesDTO inputData, CancellationToken token)
         {
-            var data = _mapper.Map<RequestAvailableDeliveryTypes>(inputData);
-          
-            var dataErrors = data.LogicalCheckInputData();
-            if (dataErrors.Count > 0)
-            {
-                return BadRequest(dataErrors);
-            }
+            await _availableDeliveryTypesValidator.ValidateAndThrowAsync(inputData, token);
+            
+            var data = inputData.MapToRequestAvailableDeliveryTypes();
 
-            var result = new ResponseAvailableDeliveryTypes();
-            var dataService = _serviceProvider.GetRequiredService<IDataService<RequestAvailableDeliveryTypes, ResponseAvailableDeliveryTypes>>();
-
-            try
-            {
-                result = await dataService.GetDataByParam(data);
-            }
-            catch (DbConnectionNotFoundException)
-            {
-                return StatusCode(500, "Available database connection not found");
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
+            var result = await _dataService.GetAvailableDeliveryTypes(data, token);
 
             return Ok(result);
         }

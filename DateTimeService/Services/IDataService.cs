@@ -1,10 +1,14 @@
-﻿using DateTimeService.Logging;
+﻿using DateTimeService.Models;
+using DateTimeService.Models.AvailableDeliveryTypes;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace DateTimeService.Services
 {
-    public interface IDataService<in In, Out>
+    public interface IDataService
     {
-        Task<Out> GetDataByParam(In inputData);
+        Task<ResponseAvailableDeliveryTypes> GetAvailableDeliveryTypes(RequestAvailableDeliveryTypes inputData, CancellationToken token = default);
+
+        Task<ResponseIntervalList> GetIntervalList(RequestIntervalList inputData);
     }
 }

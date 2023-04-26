@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.AspNetCore.Http;
+using DateTimeService.Logging;
 
 namespace DateTimeService.Filters
 {
@@ -20,7 +21,6 @@ namespace DateTimeService.Filters
         {
             _logger = logger;
         }
-
         
         public void OnActionExecuting(ActionExecutingContext context)
         {
@@ -36,7 +36,7 @@ namespace DateTimeService.Filters
             }
             catch (Exception ex)
             {
-                _logger.LogError("Error in LogActionFilter", ex);
+                _logger.LogErrorMessage("Error in LogActionFilter", ex);
             }
         }
 
@@ -44,9 +44,6 @@ namespace DateTimeService.Filters
         {
             _watch.Stop();
 
-            var items = context.HttpContext.Items;
-            var requestBody = items["LogRequestBody"] != null ? items["LogRequestBody"].ToString() : "";
-            
             var responseBody = "";
             if (context.Result is ObjectResult objectResult)
             {
@@ -55,14 +52,11 @@ namespace DateTimeService.Filters
 
             var logElement = new ElasticLogElement(context.HttpContext)
             {
-                RequestContent = requestBody,
                 ResponseContent = responseBody,
-                DatabaseConnection = items["DatabaseConnection"] != null ? (string)items["DatabaseConnection"] : "",
-                TimeFullExecution = _watch.ElapsedMilliseconds,
-                TimeSQLExecutionFact = items["TimeSqlExecutionFact"] != null ? (long)items["TimeSqlExecutionFact"] : 0,
-                LoadBalancingExecution = items["LoadBalancingExecution"] != null ? (long)items["LoadBalancingExecution"] : 0,
-                TimeLocationExecution = items["TimeLocationExecution"] != null ? (long)items["TimeLocationExecution"] : 0
+                TimeFullExecution = _watch.ElapsedMilliseconds           
             };
+
+            logElement.FillFromHttpContextItems(context.HttpContext.Items);
 
             if (context.Result is BadRequestObjectResult badRequest)
             {
@@ -75,15 +69,8 @@ namespace DateTimeService.Filters
                 logElement.Status = LogStatus.Error;
                 logElement.ErrorDescription = internalError.Value.ToString();
             }
-            
-            if (logElement.Status == LogStatus.Error) 
-            { 
-                _logger.LogError(JsonSerializer.Serialize(logElement));
-            }
-            else
-            {
-                _logger.LogInformation(JsonSerializer.Serialize(logElement));
-            }
+
+            _logger.LogMessageGen(JsonSerializer.Serialize(logElement));
         }
 
         public string FormatRequestBody(IDictionary<string, object> actionArguments)
@@ -91,11 +78,11 @@ namespace DateTimeService.Filters
             try
             {
                 if (actionArguments != null)
-                    return $"{JsonSerializer.Serialize(actionArguments)}";
+                    return $"{JsonSerializer.Serialize(actionArguments["inputData"])}";
             }
             catch (Exception ex)
             {
-                _logger.LogError("Error in LogActionFilter", ex);
+                _logger.LogErrorMessage("Error in LogActionFilter", ex);
             }
             return "";
         }

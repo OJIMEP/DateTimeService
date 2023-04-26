@@ -1,8 +1,8 @@
 ﻿using DateTimeService.Data;
-using DateTimeService.Logging;
 using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace DateTimeService
 {
@@ -15,6 +15,7 @@ namespace DateTimeService
         public string RequestContent { get; set; }
         public long TimeSQLExecution { get; set; }
         public long TimeSQLExecutionFact { get; set; }
+        [JsonConverter(typeof(JsonStringEnumConverter))]
         public LogStatus Status { get; set; }
         public string ErrorDescription { get; set; }
         public long TimeFullExecution { get; set; }
@@ -45,6 +46,19 @@ namespace DateTimeService
             AdditionalData.Add("Referer", httpContext.Request.Headers["Referer"].ToString());
             AdditionalData.Add("User-Agent", httpContext.Request.Headers["User-Agent"].ToString());
             AdditionalData.Add("RemoteIpAddress", httpContext.Connection.RemoteIpAddress.ToString());
+        }
+
+        public void FillFromHttpContextItems(IDictionary<object, object> items)
+        {
+            try
+            {
+                RequestContent = items.TryGetValue("LogRequestBody", out object request) ? request.ToString() : "";
+                DatabaseConnection = items.TryGetValue("DatabaseConnection", out object connection) ? (string)connection : "";
+                TimeSQLExecutionFact = items.TryGetValue("TimeSqlExecutionFact", out object timeSql) ? (long)timeSql : 0;
+                LoadBalancingExecution = items.TryGetValue("LoadBalancingExecution", out object timeLoad) ? (long)timeLoad : 0;
+                TimeLocationExecution = items.TryGetValue("TimeLocationExecution", out object timeLocation) ? (long)timeLocation : 0;
+            }
+            catch { }
         }
     }
 }

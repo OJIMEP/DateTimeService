@@ -74,9 +74,10 @@ namespace DateTimeService
 
                 try
                 {
-                    if (sendBytes.Length > 60000)
+                    if (sendBytes.Length > 60000) //60000
                     {
                         var result = await httpClient.PostAsync(new Uri("http://" + logsHost + ":" + logsPortHttp.ToString("D")), new StringContent(resultLog, Encoding.UTF8, "application/json"));
+                        Console.WriteLine(result.ToString());
                     }
                     else
                         await udpClient.SendAsync(sendBytes, sendBytes.Length);
@@ -85,10 +86,7 @@ namespace DateTimeService
                 {
                     Console.WriteLine(e.ToString());
                 }
-
-
             }
-
         }
     }
 }

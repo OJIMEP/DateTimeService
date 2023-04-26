@@ -1,4 +1,5 @@
 ﻿using DateTimeService.Data;
+using DateTimeService.DatabaseManagementUtils;
 using System;
 using System.Collections.Generic;
 
@@ -19,7 +20,7 @@ namespace DateTimeService.Models
         public bool CustomAggregationsAvailable { get; set; }
         public int CustomAggsFailCount { get; set; }
         public int TimeCriteriaFailCount { get; set; }
-
+        public DatabaseType DatabaseType { get; set; }
 
         public DatabaseInfo(DatabaseConnectionParameter connectionParameter)
         {
@@ -28,6 +29,13 @@ namespace DateTimeService.Models
             Priority = connectionParameter.Priority;
             Type = connectionParameter.Type;
             ActualPriority = connectionParameter.Priority;
+            DatabaseType = connectionParameter.Type switch
+            {
+                "main" => DatabaseType.Main,
+                "replica_full" => DatabaseType.ReplicaFull,
+                "replica_tables" => DatabaseType.ReplicaTables,
+                _ => DatabaseType.Main
+            };
         }
 
         public object Clone()
@@ -43,7 +51,8 @@ namespace DateTimeService.Models
                 ExistsInFile = ExistsInFile,
                 CustomAggregationsAvailable = CustomAggregationsAvailable,
                 CustomAggsFailCount = CustomAggsFailCount,
-                TimeCriteriaFailCount = TimeCriteriaFailCount
+                TimeCriteriaFailCount = TimeCriteriaFailCount,
+                DatabaseType = DatabaseType
             };
 
             return result;

@@ -21,14 +21,6 @@ namespace DateTimeService.Models
                     opt => { opt.MapFrom(src => src.Code); });
 
             CreateMap<DatabaseInfo, ResponseDatabaseStatusList>();
-
-            CreateMap<RequestAvailableDeliveryTypesDTO, RequestAvailableDeliveryTypes>();
-
-            CreateMap<RequestAvailableDeliveryTypesItemDTO, RequestAvailableDeliveryTypesItem>()
-                .ForMember(dest => dest.Code,
-                    opt => { opt.MapFrom<AvailableDeliveryTypesCodeResolver>(); })
-                .ForMember(dest => dest.Article,
-                    opt => { opt.MapFrom(src => src.Code); });
         }
     }
 }

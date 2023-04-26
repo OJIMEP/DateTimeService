@@ -2,23 +2,24 @@
 {
     public class AvailableDeliveryTypesQueries
     {
-        public const string GoodsRawCreate = @"Create Table #Temp_GoodsRaw   
-(	
-	Article nvarchar(20), 
-	Code nvarchar(20), 
-    Quantity int 
-)
-;";
+        public const string GoodsRawCreate = @"
+            Create Table #Temp_GoodsRaw   
+            (	
+	            Article nvarchar(20), 
+	            Code nvarchar(20), 
+                Quantity int 
+            )
+            ;";
 
         public const string GoodsRawInsert = @"
-INSERT INTO 
-	#Temp_GoodsRaw ( 
-		Article, Code, Quantity 
-	)
-VALUES
-	{0}
-	OPTION (KEEP PLAN, KEEPFIXED PLAN)
-;";
+            INSERT INTO 
+	            #Temp_GoodsRaw ( 
+		            Article, Code, Quantity 
+	            )
+            VALUES
+	            {0}
+	        OPTION (KEEP PLAN, KEEPFIXED PLAN)
+            ;";
 
         public const string AvailableDelivery = @"Select
 	IsNull(ГеозонаСклады._Fld23372RRef, Геозона._Fld23104RRef) As СкладСсылка,

@@ -1,5 +1,4 @@
 ﻿using DateTimeService.Controllers;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -8,12 +7,16 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Data.SqlClient;
 using DateTimeService.DatabaseManagementNewServices.Interfaces;
+using DateTimeService.Models;
+using System.Linq;
+using System.Threading;
+using DateTimeService.Logging;
 
 namespace DateTimeService.Data
 {
     public interface ILoadBalancing
     {
-        Task<DbConnection> GetDatabaseConnectionAsync();
+        Task<DbConnection> GetDatabaseConnectionAsync(CancellationToken token = default);
     }
 
     public class LoadBalancing : ILoadBalancing
@@ -27,7 +30,7 @@ namespace DateTimeService.Data
             _databaseService = databaseService;
         }
 
-        public async Task<DbConnection> GetDatabaseConnectionAsync()
+        public async Task<DbConnection> GetDatabaseConnectionAsync(CancellationToken token = default)
         {
             var result = new DbConnection();
 
@@ -48,49 +51,26 @@ namespace DateTimeService.Data
             while (true)
             {
                 int percentCounter = 0;
-                foreach (var connParametr in connectionParameters)
+                foreach (var connParameter in connectionParameters)
                 {
 
-                    if (firstAvailable && failedConnections.Contains(connParametr.Connection))
+                    if (firstAvailable && failedConnections.Contains(connParameter.Connection))
                         continue;
 
-                    if (!connParametr.AvailableToUse)
+                    if (!connParameter.AvailableToUse)
                         continue;
 
-                    percentCounter += connParametr.Priority;
-                    if ((timeMS <= percentCounter && connParametr.Priority != 0) || firstAvailable)
+                    percentCounter += connParameter.Priority;
+                    if ((timeMS <= percentCounter && connParameter.Priority != 0) || firstAvailable)
                         try
                         {
-                            var queryStringCheck = "";
-                            if (connParametr.Type == "main")
-                                queryStringCheck = Queries.DatebaseBalancingMain;
+                            conn = await GetConnectionByDatabaseInfo(connParameter, token);
 
-                            if (connParametr.Type == "replica_full")
-                                queryStringCheck = Queries.DatebaseBalancingReplicaFull;
-
-                            if (connParametr.Type == "replica_tables")
-                                queryStringCheck = Queries.DatebaseBalancingReplicaTables;
-
-
-                            //sql connection object
-                            conn = new(connParametr.Connection);
-
-
-                            conn.Open();
-
-                            SqlCommand cmd = new(queryStringCheck, conn);
-
-                            cmd.CommandTimeout = 1;
-
-                            SqlDataReader dr = await cmd.ExecuteReaderAsync();
-
-                            dr.Close();
-                            
                             result.Connection = conn;
-                            resultString = connParametr.Connection;
-                            result.DatabaseType = connParametr.Type;
-                            result.UseAggregations = connParametr.CustomAggregationsAvailable;
-                            result.ConnectionWithoutCredentials = connParametr.ConnectionWithoutCredentials;
+                            resultString = connParameter.Connection;
+                            result.DatabaseType = connParameter.DatabaseType;
+                            result.UseAggregations = connParameter.CustomAggregationsAvailable;
+                            result.ConnectionWithoutCredentials = connParameter.ConnectionWithoutCredentials;
                             break;
                         }
                         catch (Exception ex)
@@ -104,19 +84,19 @@ namespace DateTimeService.Data
                             {
                                 ErrorDescription = ex.Message,
                                 Status = LogStatus.Error,
-                                DatabaseConnection = connParametr.ConnectionWithoutCredentials
+                                DatabaseConnection = connParameter.ConnectionWithoutCredentials
                             };
 
                             var logstringElement = JsonSerializer.Serialize(logElement);
 
-                            _logger.LogInformation(logstringElement);
+                            _logger.LogMessageGen(logstringElement);
 
                             if (conn != null && conn.State != System.Data.ConnectionState.Closed)
                             {
                                 conn.Close();
                             }
 
-                            failedConnections.Add(connParametr.Connection);
+                            failedConnections.Add(connParameter.Connection);
                         }
                 }
                 if (resultString.Length > 0 || firstAvailable)
@@ -131,19 +111,37 @@ namespace DateTimeService.Data
             return result;
         }
 
+        private static async Task<SqlConnection> GetConnectionByDatabaseInfo(DatabaseInfo databaseInfo, CancellationToken token = default)
+        {
+            var queryStringCheck = databaseInfo.DatabaseType switch
+            {
+                DatabaseType.Main => Queries.DatabaseBalancingMain,
+                DatabaseType.ReplicaFull => Queries.DatabaseBalancingReplicaFull,
+                DatabaseType.ReplicaTables => Queries.DatabaseBalancingReplicaTables,
+                _ => ""
+            };
+
+            //sql connection object
+            SqlConnection connection = new(databaseInfo.Connection);
+            await connection.OpenAsync(token);
+
+            SqlCommand cmd = new(queryStringCheck, connection)
+            {
+                CommandTimeout = 1
+            };
+
+            SqlDataReader dr = await cmd.ExecuteReaderAsync(token);
+
+            _ = dr.CloseAsync();
+
+            return connection;
+        }
+
         public static string RemoveCredentialsFromConnectionString(string connectionString)
         {
-            var connStringParts = connectionString.Split(";");
-
-            var resultString = "";
-
-            foreach (var item in connStringParts)
-            {
-                if (!item.Contains("Uid") && !item.Contains("User") && !item.Contains("Pwd") && !item.Contains("Password") && item.Length > 0)
-                    resultString += (item + ";");
-            }
-
-            return resultString;
+            return string.Join(";",
+                connectionString.Split(";")
+                    .Where(item => !item.Contains("Uid") && !item.Contains("User") && !item.Contains("Pwd") && !item.Contains("Password") && item.Length > 0));
         }
 
     }
@@ -159,7 +157,7 @@ namespace DateTimeService.Data
     public class DbConnection
     {
         public SqlConnection Connection { get; set; }
-        public string DatabaseType { get; set; }
+        public DatabaseType DatabaseType { get; set; }
         public bool UseAggregations { get; set; }
         public string ConnectionWithoutCredentials { get; set; } = "";
         public long ConnectTimeInMilliseconds { get; set; }
