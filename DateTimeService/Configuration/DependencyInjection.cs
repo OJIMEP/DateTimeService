@@ -21,8 +21,7 @@ namespace DateTimeService.Configuration
         public static IServiceCollection AddFilters(this IServiceCollection services)
         {
             services.AddScoped<LogActionFilter>();
-            services.AddScoped<ServiceExceptionFilter>();
-
+            
             return services;
         }
 

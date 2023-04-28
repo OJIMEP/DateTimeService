@@ -26,12 +26,12 @@ namespace DateTimeService
         public long LoadBalancingExecution { get; set; }
         public long GlobalParametersExecution { get; set; }
         public Dictionary<string, string> AdditionalData { get; set; }
-        public string Enviroment { get; set; }
+        public string Environment { get; set; }
         public string ServiceName { get; set; }
 
         public ElasticLogElement()
         {
-            Enviroment = DatabaseList.Enviroment ?? "Unset";
+            Environment = DatabaseList.Enviroment ?? "Unset";
             AdditionalData = new();
             ServiceName = "DateTime";
             Id = Guid.NewGuid().ToString();

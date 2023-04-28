@@ -317,45 +317,70 @@ namespace DateTimeService.DatabaseManagementNewServices.Services
                 Size = 0
             };
 
-            FilterElement element = new();
-            element.Range = new();
-            element.Range.Add("@timestamp", new { gt = analyzeInterval });
+            FilterElement element = new()
+            {
+                Range = new()
+                {
+                    { "@timestamp", new { gt = analyzeInterval } }
+                }
+            };
 
             searchrequest.Query.Bool.Filter.Add(element);
 
-            element = new();
-            element.Term = new();
-            element.Term.Add("server_host.keyword", new { value = serverIP });
+            element = new()
+            {
+                Term = new()
+                {
+                    { "server_host", new { value = serverIP } }
+                }
+            };
             searchrequest.Query.Bool.Filter.Add(element);
 
-            element = new();
-            element.Term = new();
-            element.Term.Add("DatabaseConnection.keyword", new { value = databaseConnectionWithOutCredentials });
+            element = new()
+            {
+                Term = new()
+                {
+                    { "msg.DatabaseConnection", new { value = databaseConnectionWithOutCredentials } }
+                }
+            };
             searchrequest.Query.Bool.Filter.Add(element);
 
+            AggregationClass rootAgg = new()
+            {
+                Terms = new()
+                {
+                    Field = "msg.DatabaseConnection",
+                    Size = 5
+                },
 
-            AggregationClass rootAgg = new();
-            rootAgg.Terms = new();
-            rootAgg.Terms.Field = "DatabaseConnection.keyword";
-            rootAgg.Terms.Size = 5;
-
-            rootAgg.Aggregations = new();
+                Aggregations = new()
+            };
 
             AggregationClass timePercentile = new();
-            timePercentile.Percentiles = new();
-            timePercentile.Percentiles.Field = "TimeFullExecution";
-            timePercentile.Percentiles.Percents = new double[] { 95, 99, 99.5 };
+            timePercentile.Percentiles = new()
+            {
+                Field = "msg.TimeFullExecution",
+                Percents = new double[] { 95, 99, 99.5 }
+            };
 
             rootAgg.Aggregations.Add("time_percentile", timePercentile);
 
-            AggregationClass loadBal = new();
-            loadBal.Avg = new();
-            loadBal.Avg.Field = "LoadBalancingExecution";
+            AggregationClass loadBal = new()
+            {
+                Avg = new()
+                {
+                    Field = "msg.LoadBalancingExecution"
+                }
+            };
             rootAgg.Aggregations.Add("load_bal", loadBal);
 
-            AggregationClass average = new();
-            average.Avg = new();
-            average.Avg.Field = "TimeFullExecution";
+            AggregationClass average = new()
+            {
+                Avg = new()
+                {
+                    Field = "msg.TimeFullExecution"
+                }
+            };
             rootAgg.Aggregations.Add("week_avg", average);
 
             searchrequest.Aggregations.Add("load_time_outlier", rootAgg);

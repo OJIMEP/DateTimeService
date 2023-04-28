@@ -41,7 +41,6 @@ namespace DateTimeService
         {
             if (formatter != null)
             {
-
                 var logMessage = new ElasticLogMessage();
                 if (!formatter(state, exception).Contains("ResponseContent"))
                 {
@@ -67,7 +66,6 @@ namespace DateTimeService
                     logMessage.Message.Add(formatter(state, exception));
                 }
 
-
                 var resultLog = JsonSerializer.Serialize(logMessage);
 
                 Byte[] sendBytes = Encoding.UTF8.GetBytes(resultLog);
@@ -76,8 +74,9 @@ namespace DateTimeService
                 {
                     if (sendBytes.Length > 60000) //60000
                     {
-                        var result = await httpClient.PostAsync(new Uri("http://" + logsHost + ":" + logsPortHttp.ToString("D")), new StringContent(resultLog, Encoding.UTF8, "application/json"));
-                        Console.WriteLine(result.ToString());
+                        await httpClient.PostAsync(
+                            new Uri("http://" + logsHost + ":" + logsPortHttp.ToString("D")), new StringContent(resultLog, Encoding.UTF8, "application/json")
+                            );
                     }
                     else
                         await udpClient.SendAsync(sendBytes, sendBytes.Length);

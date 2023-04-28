@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using Microsoft.Data.SqlClient;
 using System.Linq;
 using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace DateTimeService.Data
 {
@@ -23,10 +25,8 @@ namespace DateTimeService.Data
         public double DefaultDouble { get; set; }
         public Boolean UseDefault { get; set; }
 
-
-        public static Boolean FillValues(SqlConnection conn, List<GlobalParam1C> names, ILogger<DateTimeController> _logger)
+        public static async Task<bool> FillValues(SqlConnection conn, List<GlobalParam1C> names, ILogger<DateTimeController> _logger, CancellationToken token = default)
         {
-
             bool querySuccessful = false;
 
             try
@@ -59,7 +59,7 @@ namespace DateTimeService.Data
                 //conn.Open();
 
                 //execute the SQLCommand
-                SqlDataReader drParametrs = cmd.ExecuteReader();
+                SqlDataReader drParametrs = await cmd.ExecuteReaderAsync(token);
 
                 //check if there are records
                 if (drParametrs.HasRows)
@@ -89,7 +89,7 @@ namespace DateTimeService.Data
                 }
 
                 //close data reader
-                drParametrs.Close();
+                _ = drParametrs.CloseAsync();
 
                 //close connection
                 //conn.Close();

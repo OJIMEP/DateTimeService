@@ -9,6 +9,6 @@ namespace DateTimeService.Services
     {
         Task<ResponseAvailableDeliveryTypes> GetAvailableDeliveryTypes(RequestAvailableDeliveryTypes inputData, CancellationToken token = default);
 
-        Task<ResponseIntervalList> GetIntervalList(RequestIntervalList inputData);
+        Task<ResponseIntervalList> GetIntervalList(RequestIntervalList inputData, CancellationToken token = default);
     }
 }

@@ -2,25 +2,21 @@ using AuthLibrary.Data;
 using DateTimeService.Configuration;
 using DateTimeService.DatabaseManagementNewServices.Interfaces;
 using DateTimeService.Logging;
+using DateTimeService.Middlewares;
 using FluentValidation;
 using Hangfire;
 using Hangfire.MemoryStorage;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpOverrides;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.Net.Http.Headers;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading;
 
 namespace DateTimeService
@@ -54,6 +50,7 @@ namespace DateTimeService
                 .AddDatabaseManagement()
                 .AddDataServices()
                 .AddHttpContextAccessor()
+                .AddTransient<GlobalExceptionHandlingMiddleware>()
                 .AddValidatorsFromAssemblyContaining<Program>(ServiceLifetime.Transient);
 
             services.AddSwaggerGen();
@@ -109,6 +106,8 @@ namespace DateTimeService
 
             app.UseAuthentication();
             app.UseAuthorization();
+
+            app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 
             loggerFactory.AddHttp(_configuration["loggerHost"], _configuration.GetValue<int>("loggerPortUdp"), _configuration.GetValue<int>("loggerPortHttp"), _configuration["loggerEnv"]);
             loggerFactory.CreateLogger("HttpLogger");

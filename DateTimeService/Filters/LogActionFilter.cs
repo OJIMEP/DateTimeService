@@ -44,6 +44,11 @@ namespace DateTimeService.Filters
         {
             _watch.Stop();
 
+            if (context.Result is null)
+            {
+                return;
+            }
+
             var responseBody = "";
             if (context.Result is ObjectResult objectResult)
             {

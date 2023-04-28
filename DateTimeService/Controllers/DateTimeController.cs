@@ -304,7 +304,7 @@ namespace DateTimeService.Controllers
                 // 21век.Левковский 18.10.2022 Финиш DEV1C-67918
             };
             watch.Start();
-            GlobalParam1C.FillValues(conn, Parameters1C, _logger);
+            await GlobalParam1C.FillValues(conn, Parameters1C, _logger);
             watch.Stop();
             logElement.GlobalParametersExecution = watch.ElapsedMilliseconds;
             watch.Reset();
@@ -738,7 +738,7 @@ namespace DateTimeService.Controllers
             };
 
             watch.Start();
-            GlobalParam1C.FillValues(conn, Parameters1C, _logger);
+            await GlobalParam1C.FillValues(conn, Parameters1C, _logger);
             watch.Stop();
             logElement.GlobalParametersExecution = watch.ElapsedMilliseconds;
             watch.Reset();
@@ -987,7 +987,6 @@ namespace DateTimeService.Controllers
         [HttpPost]
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         [ServiceFilter(typeof(LogActionFilter))]
-        [ServiceFilter(typeof(ServiceExceptionFilter))]
         public async Task<IActionResult> IntervalListTestAsync(RequestIntervalListDTO inputData)
         {
             var data = inputData.MapToRequestIntervalList();
@@ -1009,7 +1008,6 @@ namespace DateTimeService.Controllers
         [HttpPost]
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         [ServiceFilter(typeof(LogActionFilter))]
-        [ServiceFilter(typeof(ServiceExceptionFilter))]
         public async Task<IActionResult> AvailableDeliveryTypesAsync(RequestAvailableDeliveryTypesDTO inputData, CancellationToken token)
         {
             await _availableDeliveryTypesValidator.ValidateAndThrowAsync(inputData, token);
