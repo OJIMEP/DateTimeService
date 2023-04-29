@@ -1690,13 +1690,13 @@ WITH T(date) AS (
 )
 /*Тут мы выбираем даты из регистра*/
 select 
-	#Temp_Intervals.ВремяНачала As ВремяНачала,
-	#Temp_Intervals.ВремяОкончания As ВремяОкончания,
+	#Temp_Intervals.ВремяНачала As StartDate,
+	#Temp_Intervals.ВремяОкончания As EndDate,
 	SUM(
 	#Temp_Intervals.КоличествоЗаказовЗаИнтервалВремени
 	) 
-	AS КоличествоЗаказовЗаИнтервалВремени,
-    #Temp_Intervals.Стимулировать
+	AS OrdersCount,
+    #Temp_Intervals.Стимулировать As Bonus
 Into #Temp_IntervalsWithOutShifting
 From
 #Temp_Intervals With (NOLOCK)
@@ -1723,16 +1723,16 @@ SELECT
             DATEDIFF(SECOND, @P_EmptyDate, ГеоЗонаВременныеИнтервалы._Fld25128) AS NUMERIC(12)
         ),
         date
-    ) As ВремяНачала,
+    ) As StartDate,
 	DATEADD(
         SECOND,
         CAST(
             DATEDIFF(SECOND, @P_EmptyDate, ГеоЗонаВременныеИнтервалы._Fld25129) AS NUMERIC(12)
         ),
         date
-    ) As ВремяОкончания,
-	0 AS КоличествоЗаказовЗаИнтервалВремени,
-    Case when ГеоЗонаВременныеИнтервалы._Fld27342 = 0x01 then 1 else 0 End AS Стимулировать
+    ) As EndDate,
+	0 AS OrdersCount,
+    Case when ГеоЗонаВременныеИнтервалы._Fld27342 = 0x01 then 1 else 0 End AS Bonus
 FROM
     T 
 	Inner Join _Reference114_VT25126 AS ГеоЗонаВременныеИнтервалы  With (NOLOCK) 
@@ -1749,15 +1749,15 @@ FROM
     ) >= #Temp_DateAvailable.DateAvailable
 UNION ALL
 Select 
-	#Temp_AvailablePickUp.ВремяНачала,
-	#Temp_AvailablePickUp.ВремяОкончания,
-	0,
-    0
+	#Temp_AvailablePickUp.ВремяНачала As StartDate,
+	#Temp_AvailablePickUp.ВремяОкончания As EndDate,
+	0 As OrdersCount,
+    0 As Bonus
 From #Temp_AvailablePickUp
 OPTION (OPTIMIZE FOR (@P_DateTimePeriodBegin='{2}',@P_DateTimePeriodEnd='{3}'), KEEP PLAN, KEEPFIXED PLAN);
 
 Select 
-	IntervalsWithOutShifting.ВремяНачала
+	IntervalsWithOutShifting.StartDate
 INTO #Temp_UnavailableDates
 From #Temp_Goods as TempGoods
 inner join dbo._InfoRg28348 as ПрослеживаемыеТоварныеКатегории WITH(NOLOCK)
@@ -1765,16 +1765,16 @@ inner join dbo._InfoRg28348 as ПрослеживаемыеТоварныеКа�
 			and ПрослеживаемыеТоварныеКатегории._Fld28349RRef = TempGoods.ТоварнаяКатегорияСсылка
 			and @P_DateTimeNow <= DateAdd(DAY, @P_DaysToShift, ПрослеживаемыеТоварныеКатегории._Period)  -- количество дней будет из ГП
 inner join #Temp_IntervalsWithOutShifting as IntervalsWithOutShifting
-		on IntervalsWithOutShifting.ВремяНачала between ПрослеживаемыеТоварныеКатегории._period AND DateAdd(DAY, @P_DaysToShift, ПрослеживаемыеТоварныеКатегории._Period)
+		on IntervalsWithOutShifting.StartDate between ПрослеживаемыеТоварныеКатегории._period AND DateAdd(DAY, @P_DaysToShift, ПрослеживаемыеТоварныеКатегории._Period)
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 
 select IntervalsWithOutShifting.* 
 from #Temp_IntervalsWithOutShifting as IntervalsWithOutShifting  
 left join #Temp_UnavailableDates as UnavailableDates 
-	on IntervalsWithOutShifting.ВремяНачала = UnavailableDates.ВремяНачала
+	on IntervalsWithOutShifting.StartDate = UnavailableDates.StartDate
 where 
-	UnavailableDates.ВремяНачала is NULL
-Order by ВремяНачала
+	UnavailableDates.StartDate is NULL
+Order by StartDate
 OPTION (KEEP PLAN, KEEPFIXED PLAN);
 ";
 

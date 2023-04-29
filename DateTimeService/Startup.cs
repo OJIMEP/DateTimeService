@@ -50,6 +50,7 @@ namespace DateTimeService
                 .AddDatabaseManagement()
                 .AddDataServices()
                 .AddHttpContextAccessor()
+                .AddRedis(_configuration)
                 .AddTransient<GlobalExceptionHandlingMiddleware>()
                 .AddValidatorsFromAssemblyContaining<Program>(ServiceLifetime.Transient);
 

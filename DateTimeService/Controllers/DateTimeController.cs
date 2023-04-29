@@ -35,7 +35,7 @@ namespace DateTimeService.Controllers
         private readonly IMapper _mapper;
         private readonly IDataService _dataService;
         private readonly IValidator<RequestAvailableDeliveryTypesDTO> _availableDeliveryTypesValidator;
-
+        
         public DateTimeController(ILogger<DateTimeController> logger, IConfiguration configuration, ILoadBalancing loadBalancing,
             IGeoZones geoZones, IMapper mapper, IDataService dataService, IValidator<RequestAvailableDeliveryTypesDTO> availableDeliveryTypesValidator)
         {
@@ -177,6 +177,7 @@ namespace DateTimeService.Controllers
             OkObjectResult result;
 
             var data = _mapper.Map<RequestDataAvailableDate>(inputDataJson);
+
             DatabaseType databaseType;
             bool customAggs = false;
             Stopwatch stopwatchExecution = new();
@@ -313,7 +314,7 @@ namespace DateTimeService.Controllers
             watch.Start();
             try
             {
-                if (data.Codes.Length == 0 || (data.Codes.Length == 1 && data.Codes[0] == null))
+                if (data.Codes.Count == 0 || (data.Codes.Count == 1 && data.Codes[0] == null))
                 {
                     throw new Exception("Пустой массив кодов");
                 }
@@ -494,7 +495,7 @@ namespace DateTimeService.Controllers
                 foreach (var codeItem in data.Codes)
                 {
 
-                    if (data.Codes.Length == 0 || (data.Codes.Length == 1 && data.Codes[0] == null))
+                    if (data.Codes.Count == 0 || (data.Codes.Count == 1 && data.Codes[0] == null))
                     {
                         break;
                     }
@@ -589,6 +590,31 @@ namespace DateTimeService.Controllers
             _logger.LogInformation(logstringElement);
 
             return result;
+        }
+
+        [Authorize(Roles = UserRoles.AvailableDate + "," + UserRoles.Admin)]
+        [Route("AvailableDateTest")]
+        [HttpPost]
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        [ServiceFilter(typeof(LogActionFilter))]
+        public async Task<IActionResult> AvailableDateTestAsync([FromBody] RequestDataAvailableDateByCodeItemsDTO inputData, CancellationToken token)
+        {
+            var data = inputData.MapToRequestDataAvailableDate();
+
+            var dataErrors = data.LogicalCheckInputData();
+            if (dataErrors.Count > 0)
+            {
+                return BadRequest(dataErrors);
+            }
+
+            if (data.Codes.Count == 0 || (data.Codes.Count == 1 && data.Codes[0] == null))
+            {
+                throw new Exception("Пустой массив кодов");
+            }
+
+            var result = await _dataService.GetAvailableDates(data, token);
+
+            return Ok(result);
         }
 
 
@@ -987,7 +1013,7 @@ namespace DateTimeService.Controllers
         [HttpPost]
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         [ServiceFilter(typeof(LogActionFilter))]
-        public async Task<IActionResult> IntervalListTestAsync(RequestIntervalListDTO inputData)
+        public async Task<IActionResult> IntervalListTestAsync(RequestIntervalListDTO inputData, CancellationToken token)
         {
             var data = inputData.MapToRequestIntervalList();
 
@@ -997,7 +1023,7 @@ namespace DateTimeService.Controllers
                 return BadRequest(dataErrors);
             }
 
-            var result = await _dataService.GetIntervalList(data);
+            var result = await _dataService.GetIntervalList(data, token);
 
             return Ok(result);
         }
@@ -1024,7 +1050,7 @@ namespace DateTimeService.Controllers
         {
             RequestDataAvailableDate convertedData = new()
             {
-                Codes = data.OrderItems.ToArray()
+                Codes = data.OrderItems.ToList()
             };
 
             return TextFillGoodsTable(convertedData, cmdGoodsTable, optimizeRowsCount, new());
@@ -1047,14 +1073,14 @@ namespace DateTimeService.Controllers
                     return x.Quantity > 0;
                 }
                 else return true;
-            }).ToArray();
+            }).ToList();
 
             if (data.CheckQuantity)
             {
                 data.CheckQuantity = data.Codes.Any(x => x.Quantity != 1); //we can use basic query if all quantity is 1
             }
 
-            var maxCodes = data.Codes.Length;
+            var maxCodes = data.Codes.Count;
 
             foreach (var codesElem in data.Codes)
             {
@@ -1069,18 +1095,18 @@ namespace DateTimeService.Controllers
 
             int maxPickups = PickupsList.Count;
 
-            if (data.Codes.Length > 2) maxCodes = 10;
-            if (data.Codes.Length > 10) maxCodes = 30;
-            if (data.Codes.Length > 30) maxCodes = 60;
-            if (data.Codes.Length > 60) maxCodes = 100;
-            if (data.Codes.Length > maxCodes || !optimizeRowsCount) maxCodes = data.Codes.Length;
+            if (data.Codes.Count > 2) maxCodes = 10;
+            if (data.Codes.Count > 10) maxCodes = 30;
+            if (data.Codes.Count > 30) maxCodes = 60;
+            if (data.Codes.Count > 60) maxCodes = 100;
+            if (data.Codes.Count > maxCodes || !optimizeRowsCount) maxCodes = data.Codes.Count;
 
 
             for (int codesCounter = 0; codesCounter < maxCodes; codesCounter++)
             {
 
                 RequestDataCodeItem codesElem;
-                if (codesCounter < data.Codes.Length)
+                if (codesCounter < data.Codes.Count)
                 {
                     codesElem = data.Codes[codesCounter];
                 }

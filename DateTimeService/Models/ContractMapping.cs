@@ -27,6 +27,17 @@ namespace DateTimeService.Models
             };
         }
 
+        public static RequestDataAvailableDate MapToRequestDataAvailableDate(this RequestDataAvailableDateByCodeItemsDTO request)
+        {
+            return new RequestDataAvailableDate
+            {
+                CityId = request.CityId,
+                DeliveryTypes = request.DeliveryTypes,
+                CheckQuantity = request.CheckQuantity,
+                Codes = request.CodeItems.Select(item => item.MapToRequestDataCodeItem()).ToList()
+            };
+        }
+
         public static RequestIntervalList MapToRequestIntervalList(this RequestIntervalListDTO request)
         {
             return new RequestIntervalList

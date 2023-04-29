@@ -13,6 +13,9 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.Net.Http.Headers;
 using System.Text;
 using Microsoft.Extensions.Configuration;
+using DateTimeService.Cache;
+using Microsoft.Extensions.Caching.Distributed;
+using StackExchange.Redis;
 
 namespace DateTimeService.Configuration
 {
@@ -124,6 +127,23 @@ namespace DateTimeService.Configuration
             {
                 builder.AddPolicy("Hangfire", policy => policy.RequireRole(UserRoles.Admin));
             });
+
+            return services;
+        }
+
+        public static IServiceCollection AddRedis(this IServiceCollection services, IConfiguration configuration)
+        {
+            var redisSettings = new RedisSettings();
+
+            configuration.GetSection(nameof(RedisSettings)).Bind(redisSettings);
+
+            services.AddSingleton(redisSettings);
+
+            if (redisSettings.Enabled)
+            {
+                ConnectionMultiplexer redis = ConnectionMultiplexer.Connect(redisSettings.ConnectionString);
+                services.AddSingleton(redis);
+            }         
 
             return services;
         }

@@ -1,12 +1,13 @@
 ﻿using AutoMapper;
+using System.Collections.Generic;
 
 namespace DateTimeService.Models
 {
-    public class CodesToCodeItemsResolver : IValueResolver<RequestDataAvailableDateByCodesDTO, RequestDataAvailableDate, RequestDataCodeItem[]>
+    public class CodesToCodeItemsResolver : IValueResolver<RequestDataAvailableDateByCodesDTO, RequestDataAvailableDate, List<RequestDataCodeItem>>
     {
-        public RequestDataCodeItem[] Resolve(RequestDataAvailableDateByCodesDTO source, RequestDataAvailableDate destination, RequestDataCodeItem[] destMember, ResolutionContext context)
+        public List<RequestDataCodeItem> Resolve(RequestDataAvailableDateByCodesDTO source, RequestDataAvailableDate destination, List<RequestDataCodeItem> destMember, ResolutionContext context)
         {
-            var result = new RequestDataCodeItem[source.Codes.Length];
+            var result = new List<RequestDataCodeItem>();
             for (int i = 0; i < source.Codes.Length; i++)
             {
                 result[i] = new RequestDataCodeItem()

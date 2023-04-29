@@ -47,11 +47,11 @@ namespace DateTimeService.Models
         public bool CheckQuantity { get; set; }
 
         [Required, MinLength(1), JsonPropertyName("codeItems")]
-        public RequestDataCodeItem[] Codes { get; set; }
+        public List<RequestDataCodeItem> Codes { get; set; }
 
         public RequestDataAvailableDate()
         {
-            Codes = Array.Empty<RequestDataCodeItem>();
+            Codes = new List<RequestDataCodeItem>();
         }
 
         public RequestDataAvailableDate(bool fillData)
@@ -78,7 +78,7 @@ namespace DateTimeService.Models
                 itemDTO.PickupPoints = new string[] { "340", "388", "460", "417", "234", "2" };
                 items.Add(itemDTO);
             }
-            Codes = items.ToArray();
+            Codes = items;
         }
 
         public Dictionary<string, string> LogicalCheckInputData()
