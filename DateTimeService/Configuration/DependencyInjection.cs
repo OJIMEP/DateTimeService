@@ -139,11 +139,8 @@ namespace DateTimeService.Configuration
 
             services.AddSingleton(redisSettings);
 
-            if (redisSettings.Enabled)
-            {
-                ConnectionMultiplexer redis = ConnectionMultiplexer.Connect(redisSettings.ConnectionString);
-                services.AddSingleton(redis);
-            }         
+            ConnectionMultiplexer redis = ConnectionMultiplexer.Connect(redisSettings.ConnectionString);
+            services.AddSingleton(redis);       
 
             return services;
         }

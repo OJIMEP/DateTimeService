@@ -1,27 +1,23 @@
-﻿using Azure.Core;
-using Dapper;
+﻿using Dapper;
 using DateTimeService.Cache;
 using DateTimeService.Controllers;
 using DateTimeService.Data;
 using DateTimeService.Exceptions;
 using DateTimeService.Models;
 using DateTimeService.Models.AvailableDeliveryTypes;
-using Hangfire.MemoryStorage.Database;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Diagnostics;
 using System.Linq;
-using System.Security.Policy;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -35,11 +31,11 @@ namespace DateTimeService.Services
         private readonly IHttpContextAccessor _contextAccessor;
         private readonly IGeoZones _geoZones;
         private readonly IMemoryCache _memoryCache;
-        private readonly ConnectionMultiplexer _redis;
         private readonly RedisSettings _redisSettings;
+        private readonly ConnectionMultiplexer _redis;
 
         public DataService(IConfiguration configuration, ILoadBalancing loadBalancing, ILogger<DateTimeController> logger,
-            IHttpContextAccessor contextAccessor, IGeoZones geoZones, IMemoryCache memoryCache, ConnectionMultiplexer redis, RedisSettings redisSettings)
+            IHttpContextAccessor contextAccessor, IGeoZones geoZones, IMemoryCache memoryCache, RedisSettings redisSettings, ConnectionMultiplexer redis)
         {
             _configuration = configuration;
             _loadBalancing = loadBalancing;
@@ -47,8 +43,8 @@ namespace DateTimeService.Services
             _contextAccessor = contextAccessor;
             _geoZones = geoZones;
             _memoryCache = memoryCache;
-            _redis = redis;
             _redisSettings = redisSettings;
+            _redis = redis;
         }
 
         public async Task<ResponseAvailableDeliveryTypes> GetAvailableDeliveryTypes(RequestAvailableDeliveryTypes inputData, CancellationToken token = default)
@@ -128,13 +124,17 @@ namespace DateTimeService.Services
 
         public async Task<ResponseAvailableDateDictBothDates> GetAvailableDates(RequestDataAvailableDate inputData, CancellationToken token = default)
         {
-            inputData.CheckQuantity = inputData.Codes.Any(x => x.Quantity != 1);
+            inputData.CheckQuantity = inputData.CheckQuantity && inputData.Codes.Any(x => x.Quantity > 1);
 
             ResponseAvailableDateDictBothDates result = new();
+
+            _contextAccessor.HttpContext.Items["TotalItems"] = inputData.Codes.Count;
 
             if (!inputData.CheckQuantity)
             {
                 var dataFromCache = await GetFromCache(inputData);
+
+                _contextAccessor.HttpContext.Items["FromCache"] = dataFromCache.Data.Count;
 
                 foreach (var item in dataFromCache.Data)
                 {
@@ -142,7 +142,8 @@ namespace DateTimeService.Services
                 }
 
                 if (result.Data.Count == inputData.Codes.Count)
-                { 
+                {
+                    DeleteEmptyDataFromResult(result);
                     return result; 
                 }
 
@@ -156,12 +157,17 @@ namespace DateTimeService.Services
                 result.Data.Add(item.Key, item.Value);
             }
 
-            await SaveToCache(newDates, inputData.CityId);
+            if (!inputData.CheckQuantity)
+            {
+                await SaveToCache(newDates, inputData.CityId, token);
+            }
+
+            DeleteEmptyDataFromResult(result);
 
             return result;
         }
 
-        public async Task<ResponseAvailableDateDictBothDates> GetAvailableDatesBasic(RequestDataAvailableDate inputData, CancellationToken token = default)
+       public async Task<ResponseAvailableDateDictBothDates> GetAvailableDatesBasic(RequestDataAvailableDate inputData, CancellationToken token = default)
         {
             DbConnection dbConnection = await GetDbConnection(token: token);
 
@@ -231,15 +237,16 @@ namespace DateTimeService.Services
                     {
                         dbResultIndex = dbResult.Code.FindIndex(s => s == codeItem.Code);
                     }
-                    if (dbResultIndex == -1)
-                        continue;
 
-                    resultElement.Courier = inputData.DeliveryTypes.Contains("courier") && dbResult.Courier[dbResultIndex].Year != 3999
+                    if (dbResultIndex != -1)
+                    {
+                        resultElement.Courier = inputData.DeliveryTypes.Contains("courier") && dbResult.Courier[dbResultIndex].Year != 3999
                         ? dbResult.Courier[dbResultIndex].Date.ToString("yyyy-MM-ddTHH:mm:ss")
                         : null;
-                    resultElement.Self = inputData.DeliveryTypes.Contains("self") && dbResult.Self[dbResultIndex].Year != 3999
-                        ? dbResult.Self[dbResultIndex].Date.ToString("yyyy-MM-ddTHH:mm:ss")
-                        : null;
+                        resultElement.Self = inputData.DeliveryTypes.Contains("self") && dbResult.Self[dbResultIndex].Year != 3999
+                            ? dbResult.Self[dbResultIndex].Date.ToString("yyyy-MM-ddTHH:mm:ss")
+                            : null;
+                    }
 
                     if (String.IsNullOrEmpty(codeItem.Code))
                     {
@@ -247,7 +254,7 @@ namespace DateTimeService.Services
                     }
                     else
                     {
-                        resultDict.Data.Add(String.Concat(codeItem.Article, "_", codeItem.SalesCode), resultElement);
+                        resultDict.Data.Add($"{codeItem.Article}_{codeItem.SalesCode}", resultElement);
                     }
                 }
             }
@@ -905,8 +912,6 @@ namespace DateTimeService.Services
 
             var insertRowsLimit = 900;
 
-            var parameters = new List<string>();
-
             data.Codes = data.Codes.Where(x =>
             {
                 if (data.CheckQuantity)
@@ -915,11 +920,6 @@ namespace DateTimeService.Services
                 }
                 else return true;
             }).ToList();
-
-            if (data.CheckQuantity)
-            {
-                data.CheckQuantity = data.Codes.Any(x => x.Quantity != 1); //we can use basic query if all quantity is 1
-            }
 
             var maxCodes = data.Codes.Count;
 
@@ -934,46 +934,36 @@ namespace DateTimeService.Services
                 }
             }
 
-            int maxPickups = PickupsList.Count;
-
             if (data.Codes.Count > 2) maxCodes = 10;
             if (data.Codes.Count > 10) maxCodes = 30;
             if (data.Codes.Count > 30) maxCodes = 60;
             if (data.Codes.Count > 60) maxCodes = 100;
             if (data.Codes.Count > maxCodes || !optimizeRowsCount) maxCodes = data.Codes.Count;
 
+            var parameters = new List<string>();
 
-            for (int codesCounter = 0; codesCounter < maxCodes; codesCounter++)
+            for (int index = 0; index < maxCodes; index++)
             {
+                RequestDataCodeItem item;
 
-                RequestDataCodeItem codesElem;
-                if (codesCounter < data.Codes.Count)
+                if (index < data.Codes.Count)
                 {
-                    codesElem = data.Codes[codesCounter];
+                    item = data.Codes[index];
                 }
                 else
                 {
-                    codesElem = data.Codes[^1];
+                    item = data.Codes[^1];
                 }
 
+                var article = $"@Article{index}";
+                var code = $"@Code{index}";
+                var quantity = $"@Quantity{index}";
 
+                cmdGoodsTable.Parameters.AddWithValue(article, item.Article);
+                cmdGoodsTable.Parameters.AddWithValue(code, string.IsNullOrEmpty(item.Code) ? DBNull.Value : item.Code);
+                cmdGoodsTable.Parameters.AddWithValue(quantity, item.Quantity);
 
-                var parameterString = string.Format("(@Article{0}, @Code{0}, NULL, @Quantity{0})", codesCounter);
-
-
-                //cmdGoodsTable.Parameters.AddWithValue(string.Format("@Article{0}", codesCounter), codesElem.article);
-                cmdGoodsTable.Parameters.Add(string.Format("@Article{0}", codesCounter), SqlDbType.NVarChar, 11);
-                cmdGoodsTable.Parameters[string.Format("@Article{0}", codesCounter)].Value = codesElem.Article;
-
-                cmdGoodsTable.Parameters.Add(string.Format("@Code{0}", codesCounter), SqlDbType.NVarChar, 11);
-                if (String.IsNullOrEmpty(codesElem.Code))
-                    cmdGoodsTable.Parameters[string.Format("@Code{0}", codesCounter)].Value = DBNull.Value;
-                else
-                    cmdGoodsTable.Parameters[string.Format("@Code{0}", codesCounter)].Value = codesElem.Code;
-
-                //cmdGoodsTable.Parameters.AddWithValue(string.Format("@Quantity{0}", codesCounter), codesElem.quantity);
-                cmdGoodsTable.Parameters.Add(string.Format("@Quantity{0}", codesCounter), SqlDbType.Int, 10);
-                cmdGoodsTable.Parameters[string.Format("@Quantity{0}", codesCounter)].Value = codesElem.Quantity;
+                var parameterString = $"({article}, {code}, NULL, {quantity})";
 
                 parameters.Add(parameterString);
 
@@ -984,17 +974,15 @@ namespace DateTimeService.Services
                     parameters.Clear();
                 }
 
-                if (maxPickups > 0)
+                if (item.PickupPoints.Length > 0)
                 {
-                    var PickupParameter = string.Join(",", codesElem.PickupPoints);
+                    var pickupPoint = $"@PickupPoint{index}";
 
-                    cmdGoodsTable.Parameters.Add(string.Format("@PickupPoint{0}", codesCounter), SqlDbType.NVarChar, 45);
-                    cmdGoodsTable.Parameters[string.Format("@PickupPoint{0}", codesCounter)].Value = PickupParameter;
+                    cmdGoodsTable.Parameters.AddWithValue(pickupPoint, string.Join(",", item.PickupPoints));
 
-                    var parameterStringPickup = string.Format("(@Article{0}, @Code{0}, @PickupPoint{0}, @Quantity{0})", codesCounter);
+                    var parameterStringPickup = $"({article}, {code}, {pickupPoint}, {quantity})";
                     parameters.Add(parameterStringPickup);
                 }
-
             }
 
             if (parameters.Count > 0)
@@ -1005,14 +993,15 @@ namespace DateTimeService.Services
             }
 
             return resultString;
-
         }
 
         private async Task<List<GlobalParam1C>> GetGlobalParameters(SqlConnection connection, CancellationToken token = default)
         {
+            var watch = Stopwatch.StartNew();
+
             string key = "GlobalParameters";
             // кешируем ГП в памяти на 1 час, потом они снова обновятся
-            return await _memoryCache.GetOrCreateAsync<List<GlobalParam1C>>(
+            var result = await _memoryCache.GetOrCreateAsync<List<GlobalParam1C>>(
                 key,
                 async entry =>
                 {
@@ -1060,19 +1049,29 @@ namespace DateTimeService.Services
                     await GlobalParam1C.FillValues(connection, parameters, _logger, token);
                     return parameters;
                 });
+
+            watch.Stop();
+            _contextAccessor.HttpContext.Items["GlobalParametersExecution"] = watch.ElapsedMilliseconds;
+
+            return result;
         }
 
-        private async Task SaveToCache(ResponseAvailableDateDictBothDates result, string cityId)
+        private async Task SaveToCache(ResponseAvailableDateDictBothDates result, string cityId, CancellationToken token = default)
         {
-            IDatabase database = _redis.GetDatabase();
+            if (!_redisSettings.Enabled)
+            {
+                return;
+            }
+
             // Время жизни ключей
             var expiry = TimeSpan.FromSeconds(_redisSettings.LifeTime);
+            var db = _redis.GetDatabase(_redisSettings.Database);
 
             // Запись пар ключ-значение в Redis
             foreach (var item in result.Data)
             {
                 var key = $"{item.Key}-{cityId}";
-                await database.StringSetAsync(key, JsonSerializer.Serialize(item.Value), expiry);
+                await db.SetRecord(key, item.Value, expiry);
             }
         }
 
@@ -1080,21 +1079,34 @@ namespace DateTimeService.Services
         {
             var result = new ResponseAvailableDateDictBothDates();
 
-            IDatabase database = _redis.GetDatabase();
-
-            foreach (var item in inputData.Codes)
+            if (!_redisSettings.Enabled)
             {
-                var keyField = item.Code is not null ? item.Code : item.Article;
-                var key = $"{keyField}-{inputData.CityId}";
-
-                string value = await database.StringGetAsync(key);
-
-                if (value is null) { continue; }
-
-                var newItem = JsonSerializer.Deserialize<ResponseAvailableDateDictElementBothDates>(value);
-
-                result.Data.Add(item.Article, newItem);
+                return result;
             }
+
+            var watch = Stopwatch.StartNew();
+
+            var db = _redis.GetDatabase(_redisSettings.Database);
+
+            var redisKeys = inputData.Codes
+                .Select(item => (RedisKey)$"{item.CacheKey}-{inputData.CityId}")
+                .ToArray();
+
+            var values = await db.GetRecords<ResponseAvailableDateDictElementBothDates>(redisKeys);
+
+            for (int i = 0; i < inputData.Codes.Count; i++)
+            {
+                var value = values[i];
+                if (value is not null)
+                {
+                    var key = inputData.Codes[i].CacheKey;
+                    result.Data.Add(key, value);
+                }
+            }
+
+            watch.Stop();
+
+            _contextAccessor.HttpContext.Items["TimeGettingFromCache"] = watch.ElapsedMilliseconds;
 
             return result;
         }
@@ -1110,6 +1122,19 @@ namespace DateTimeService.Services
                 {
                     inputData.Codes.RemoveAt(i);
                 }
+            }
+        }
+
+        private static void DeleteEmptyDataFromResult(ResponseAvailableDateDictBothDates result)
+        {
+            var keysToRemove = result.Data
+                .Where(kvp => kvp.Value.Self is null && kvp.Value.Courier is null)
+                .Select(kvp => kvp.Key)
+                .ToList();
+
+            foreach (var key in keysToRemove)
+            {
+                result.Data.Remove(key);
             }
         }
 

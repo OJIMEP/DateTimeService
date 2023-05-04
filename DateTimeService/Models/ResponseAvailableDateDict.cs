@@ -49,10 +49,10 @@ namespace DateTimeService.Models
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull), JsonPropertyName("sales_code")]
         public string SalesCode { get; set; }
 
-        [JsonPropertyName("courier")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull), JsonPropertyName("courier")]
         public string Courier { get; set; }
 
-        [JsonPropertyName("self")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull), JsonPropertyName("self")]
         public string Self { get; set; }
     }
 

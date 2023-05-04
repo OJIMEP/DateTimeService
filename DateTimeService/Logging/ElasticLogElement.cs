@@ -25,9 +25,12 @@ namespace DateTimeService
         public long TimeLocationExecution { get; set; }
         public long LoadBalancingExecution { get; set; }
         public long GlobalParametersExecution { get; set; }
+        public long TimeGettingFromCache { get; set; }
         public Dictionary<string, string> AdditionalData { get; set; }
         public string Environment { get; set; }
         public string ServiceName { get; set; }
+        public int TotalItems { get; set; }
+        public double FromCachePercent { get; set; }
 
         public ElasticLogElement()
         {
@@ -56,7 +59,12 @@ namespace DateTimeService
                 DatabaseConnection = items.TryGetValue("DatabaseConnection", out object connection) ? (string)connection : "";
                 TimeSQLExecutionFact = items.TryGetValue("TimeSqlExecutionFact", out object timeSql) ? (long)timeSql : 0;
                 LoadBalancingExecution = items.TryGetValue("LoadBalancingExecution", out object timeLoad) ? (long)timeLoad : 0;
+                GlobalParametersExecution = items.TryGetValue("GlobalParametersExecution", out object globalParameters) ? (long)globalParameters : 0;
                 TimeLocationExecution = items.TryGetValue("TimeLocationExecution", out object timeLocation) ? (long)timeLocation : 0;
+                TimeGettingFromCache = items.TryGetValue("TimeGettingFromCache", out object timeCache) ? (long)timeCache : 0;
+                TotalItems = items.TryGetValue("TotalItems", out object totalItems) ? (int)totalItems : 0;
+                var FromCache = items.TryGetValue("FromCache", out object fromCache) ? (int)fromCache : 0;
+                FromCachePercent = TotalItems != 0 ? Math.Round(FromCache / (double)TotalItems * 100, 2) : 0;
             }
             catch { }
         }

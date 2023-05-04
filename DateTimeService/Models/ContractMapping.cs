@@ -62,7 +62,8 @@ namespace DateTimeService.Models
                 Article = request.Code,
                 SalesCode = request.SalesCode,
                 Quantity = request.Quantity,
-                Code = request.SalesCode == null ? null : GetCodeFromSaleCode(request.SalesCode),
+                Code = request.SalesCode is null ? null : GetCodeFromSaleCode(request.SalesCode),
+                CacheKey = request.SalesCode is null ? request.Code : $"{request.Code}_{request.SalesCode}",
                 PickupPoints = request.PickupPoints
             };
         }
